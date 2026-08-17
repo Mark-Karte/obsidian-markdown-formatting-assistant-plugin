@@ -1,12 +1,13 @@
 import { Editor } from 'obsidian';
 import { baseFormatterSetting } from './formatter';
+import { withIds } from './generalFunctions';
 
 export interface greekFormatterSetting extends baseFormatterSetting {
   symbol: string;
   shift: number;
 }
 
-export const greekLowerCaseFormatterSettings = {
+export const greekLowerCaseFormatterSettings = withIds({
   alpha: {
     des: 'alpha',
     icon: 'alpha',
@@ -168,9 +169,9 @@ export const greekLowerCaseFormatterSettings = {
     shift: 6,
     objectType: 'greekFormatterSetting',
   },
-};
+});
 
-export const greekUpperCaseFormatterSettings = {
+export const greekUpperCaseFormatterSettings = withIds({
   // Alpha: {
   //   des: 'Alpha',
   //   icon: 'Alpha',
@@ -326,15 +327,11 @@ export const greekUpperCaseFormatterSettings = {
     shift: 6,
     objectType: 'greekFormatterSetting',
   },
-};
+});
 
 export function greekFormatter(editor: Editor, item: greekFormatterSetting) {
   if (editor) {
-    const isSelection = editor.somethingSelected;
-    const selection = editor.getSelection();
     const curserStart = editor.getCursor('from');
-    const curserEnd = editor.getCursor('to');
-    const line = editor.getLine(curserStart.line);
 
     editor.focus();
     editor.replaceRange(item.symbol, curserStart);

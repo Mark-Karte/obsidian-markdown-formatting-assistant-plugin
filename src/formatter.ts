@@ -1,7 +1,12 @@
 import { Editor } from 'obsidian';
 import * as R from 'ramda';
+import { withIds } from './generalFunctions';
+
 export interface baseFormatterSetting {
+  /** Stable identifier, derived from the table key. Never translated. */
+  id: string;
   objectType: string;
+  /** Display label shown to the user - translatable. */
   des: string;
   icon: string;
   text: string;
@@ -16,7 +21,7 @@ export interface formatterSetting extends baseFormatterSetting {
   enclose: boolean;
 }
 
-export const formatSettings = {
+export const formatSettings = withIds({
   h1: {
     des: 'h1',
     icon: 'h1',
@@ -141,8 +146,9 @@ export const formatSettings = {
     des: 'mermaid_block',
     icon: 'mermaidBlock',
     symbol: '```mermaid \n```',
-    shift: 4,
-    selectionInput: 4,
+    // '```mermaid ' is 11 chars - splitting anywhere else tears the fence apart
+    shift: 11,
+    selectionInput: 11,
     newLine: true,
     enclose: true,
     objectType: 'formatterSetting',
@@ -227,11 +233,11 @@ export const formatSettings = {
     enclose: false,
     objectType: 'formatterSetting',
   },
-};
+});
 
 export function iconFormatter(editor: Editor, item: formatterSetting) {
   if (editor) {
-    const isSelection = editor.somethingSelected;
+    const isSelection = editor.somethingSelected();
     const selection = editor.getSelection();
     const curserStart = editor.getCursor('from');
     const curserEnd = editor.getCursor('to');
@@ -239,7 +245,7 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
 
     editor.focus();
 
-    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].contains(item.des)) {
+    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].contains(item.id)) {
       const reStringExact = '^\\s*' + item.symbol + '+\\s*';
       const reStringAny = '^\\s*#+\\s*';
       const cleanedLine = line.replace(new RegExp(reStringAny, 'g'), '');
@@ -274,13 +280,13 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
         'bold',
         'italic',
         'strikethrough',
-        'code_inline',
+        'codeInline',
         'link',
-        'internal_link',
+        'internalLink',
         'image',
         'underline',
         'highlight',
-      ].contains(item.des)
+      ].contains(item.id)
     ) {
       if (isSelection) {
         editor.replaceSelection(
@@ -298,8 +304,8 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
         editor.setCursor(curserStart.line, curserStart.ch + item.shift);
       }
     } else if (
-      ['code_block'].contains(item.des) ||
-      ['mermaid_block'].contains(item.des)
+      ['codeBlock'].contains(item.id) ||
+      ['mermaidBlock'].contains(item.id)
     ) {
       if (isSelection) {
         const re = new RegExp('^(```).*(```)$', 'gs');
@@ -323,62 +329,63 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
           editor.setCursor(curserStart.line, curserStart.ch + item.shift);
         }
       } else {
-        const pos = curserStart;
-        let replacement = item.symbol;
-        if (line.trim()) {
-          pos.ch = line.length;
-          replacement = '\n' + replacement;
-        } else {
-          pos.ch = 0;
-        }
+        // If the current line already holds text, the block is appended on a
+        // fresh line below it, otherwise it replaces the empty line in place.
+        const hasContent = line.trim().length > 0;
+        const pos = {
+          line: curserStart.line,
+          ch: hasContent ? line.length : 0,
+        };
+        const replacement = hasContent ? '\n' + item.symbol : item.symbol;
 
         editor.replaceRange(replacement, pos);
-        editor.setCursor(curserStart.line, curserStart.ch + item.shift);
+
+        // The opening fence always ends up on its own line, so the shift is
+        // counted from the start of that line - not from the old cursor.
+        editor.setCursor(
+          hasContent ? curserStart.line + 1 : curserStart.line,
+          item.shift,
+        );
       }
     } else if (
-      ['blockquote', 'bullet_list', 'number_list', 'check_list'].contains(
-        item.des,
-      )
+      ['blockquote', 'bulletList', 'numberList', 'checkList'].contains(item.id)
     ) {
-      const reString = ('^\\s*' + item.symbol + '\\s*')
-        .replace('[', '\\[')
-        .replace(']', '\\]');
+      // The symbol goes into a regex, so its own special characters have to be
+      // escaped - '1. ' would otherwise let the dot match anything.
+      const escapedSymbol = item.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const markerRe = new RegExp('^(\\s*)' + escapedSymbol);
+
+      const hasMarker = (text: string) => markerRe.test(text);
+
+      // Indentation is what makes markdown lists nest, so it has to survive
+      // the toggle in both directions. A quote marker belongs in front of the
+      // whole line, a list marker behind the indentation.
+      const addMarker = (text: string) => {
+        if (item.id === 'blockquote') return item.symbol + text;
+        return text.replace(/^(\s*)/, (_full, indent) => indent + item.symbol);
+      };
+
+      const removeMarker = (text: string) => text.replace(markerRe, '$1');
 
       if (isSelection) {
         const selectionLines = selection.split('\n');
+        const allAreItems = selectionLines.every(hasMarker);
 
-        const notAllAreItems = selectionLines.map((lineOfSelection) => {
-          const re = new RegExp(reString, 'g');
-          return re.test(lineOfSelection);
+        const convertedSelectionLines = selectionLines.map((selectionLine) => {
+          if (allAreItems) return removeMarker(selectionLine);
+          return hasMarker(selectionLine)
+            ? selectionLine
+            : addMarker(selectionLine);
         });
 
-        if (!notAllAreItems.contains(false)) {
-          const convertetSelectionLines = selectionLines.map((newLine) => {
-            const re = new RegExp(reString, 'g');
-            return newLine.replace(re, '');
-          });
-          editor.replaceSelection(convertetSelectionLines.join('\n'));
-        } else {
-          const convertetSelectionLines = selectionLines.map((newLine) => {
-            const re = new RegExp(reString, 'g');
-            if (!re.test(newLine.trim())) {
-              return item.symbol + newLine.trim();
-            } else {
-              return newLine;
-            }
-          });
-          editor.replaceSelection(convertetSelectionLines.join('\n'));
-        }
+        editor.replaceSelection(convertedSelectionLines.join('\n'));
       } else {
-        const re = new RegExp(reString, 'gm');
-        const match = line.trim().match(re);
-        let replacment = item.symbol + line.replace(re, '');
+        const replacement = hasMarker(line)
+          ? removeMarker(line)
+          : addMarker(line);
 
-        if (match) {
-          replacment = line.replace(re, '');
-        }
         editor.replaceRange(
-          replacment,
+          replacement,
           { line: curserStart.line, ch: 0 },
           { line: curserStart.line, ch: line.length },
         );

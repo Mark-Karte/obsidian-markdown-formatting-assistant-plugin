@@ -1,0 +1,86 @@
+import { LocaleDictionary } from './en';
+
+export const es: LocaleDictionary = {
+  'command.openPanel': 'Abrir Markdown Formatting Assistant',
+  'command.openCommandSelector': 'Abrir selector de comandos',
+  'command.openCalloutsSelector': 'Abrir selector de llamadas',
+
+  'section.textEdit': 'Texto',
+  'section.tables': 'Tablas',
+  'section.html': 'HTML',
+  'section.latex': 'LaTeX',
+  'section.greekLetters': 'Letras griegas',
+  'section.colors': 'Colores',
+  'section.callouts': 'Llamadas',
+
+  'tables.upcoming': 'próximamente ...',
+  'html.reportMissingTag': '¿Falta una etiqueta? ¡Avísanos!',
+  'latex.introduction': 'Introducción a las matemáticas en LaTeX',
+  'latex.reportMissingFunction': '¿Falta una función de LaTeX? ¡Avísanos!',
+  'greek.lowerCase': 'Minúsculas',
+  'greek.upperCase': 'Mayúsculas',
+  'greek.overview': 'Resumen del alfabeto griego',
+
+  'colors.select': 'Elegir un color',
+  'colors.save': 'Guardar color',
+  'colors.optionColor': ' Añadir "color: {your color}"',
+  'colors.optionBackgroundColor': ' Añadir "background-color: {your color}"',
+  'colors.optionStyleTag': ' Añadir atributo: "style={your color}"',
+  'colors.optionHtmlTag':
+    ' Añadir HTML: "<font color={your color}>{selected text}</font>"',
+  'colors.lastUsed': 'Colores recientes:',
+  'colors.saved': 'Colores guardados:',
+  'colors.editInSettings':
+    'Los colores guardados se pueden editar directamente en los ajustes.',
+  'colors.help': '¿Necesitas ayuda?',
+  'colors.copied': 'Color {color} copiado al portapapeles',
+  'colors.copyFailed': 'No se pudo copiar el color al portapapeles',
+
+  'settings.title': 'Ajustes de Markdown Formatting Assistant',
+  'settings.language.name': 'Idioma',
+  'settings.language.desc':
+    'Idioma de la interfaz del plugin. (requiere reiniciar)',
+  'settings.language.auto': 'Igual que Obsidian',
+  'settings.triggerChar.name': 'Carácter activador',
+  'settings.triggerChar.desc': 'Carácter que activa el autocompletado',
+  'settings.triggerChar.placeholder':
+    'Introduce un carácter para activar el autocompletado',
+  'settings.sidePaneSide.name': 'Lado del panel lateral',
+  'settings.sidePaneSide.desc': 'Elige en qué lado aparece el panel lateral.',
+  'settings.sidePaneSide.placeholder': 'Introduce left o right',
+  'settings.toggleSection.name': 'Sección «{section}»',
+  'settings.toggleSection.desc':
+    'Activar o desactivar la sección «{section}». (requiere reiniciar)',
+  'settings.savedColors.name': 'Colores guardados',
+  'settings.savedColors.desc':
+    'Colores guardados mediante el selector de color. También se tiene en cuenta el orden. Requiere reiniciar Obsidian.',
+  'settings.savedColors.invalidFormat':
+    'El color {color} de la línea {line} tiene un formato incorrecto y no se guardará.',
+
+  'callout.note': 'Nota',
+  'callout.info': 'Información',
+  'callout.todo': 'Tarea',
+  'callout.abstract': 'Resumen',
+  'callout.summary': 'Síntesis',
+  'callout.tldr': 'En resumen',
+  'callout.tip': 'Consejo',
+  'callout.hint': 'Sugerencia',
+  'callout.important': 'Importante',
+  'callout.success': 'Éxito',
+  'callout.check': 'Comprobado',
+  'callout.done': 'Hecho',
+  'callout.question': 'Pregunta',
+  'callout.help': 'Ayuda',
+  'callout.faq': 'Preguntas frecuentes',
+  'callout.warning': 'Advertencia',
+  'callout.caution': 'Precaución',
+  'callout.attention': 'Atención',
+  'callout.failure': 'Fallo',
+  'callout.fail': 'No superado',
+  'callout.missing': 'Ausente',
+  'callout.danger': 'Peligro',
+  'callout.error': 'Error',
+  'callout.bug': 'Error de software',
+  'callout.example': 'Ejemplo',
+  'callout.quote': 'Cita',
+};

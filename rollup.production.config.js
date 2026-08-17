@@ -8,7 +8,9 @@ export default {
   input: 'src/main.ts',
   output: {
     dir: exportFolder,
-    sourcemap: 'inline',
+    // Inline sourcemaps are what made the shipped main.js ~4 MB. The dev
+    // config keeps them; releases do not need them.
+    sourcemap: false,
     format: 'cjs',
     exports: 'default',
   },

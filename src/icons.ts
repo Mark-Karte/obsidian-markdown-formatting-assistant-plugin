@@ -12,7 +12,6 @@ function pathToSvg(icon: string) {
 
 function importIconPaths() {
   let res = {};
-  console.log(iconPaths);
   R.forEachObjIndexed((value, key, obj) => {
     // @ts-ignore
     res = R.mergeLeft(res, R.map(pathToSvg, value));

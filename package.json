@@ -1,8 +1,8 @@
 {
   "name": "obsidian-markdown-formatting-assistant-plugin",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "This plugin improves the writing of MarkDown files",
-  "homepage": "https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin",
+  "homepage": "https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w && openObsidian",
@@ -11,7 +11,7 @@
     "build": "rollup --config rollup.production.config.js"
   },
   "keywords": [],
-  "author": "Reocin <steinegger.daniel@gmail.com>",
+  "author": "Mark Karte and Claude",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -24,7 +24,7 @@
     "tslib": "^2.4.0",
     "typescript": "^4.7.4"
   },
-  "repository": "git@github.com:Reocin/obsidian-markdown-autocomplete.git",
+  "repository": "git@github.com:Mark-Karte/obsidian-markdown-formatting-assistant-plugin.git",
   "dependencies": {
     "@mdi/js": "^7.0.96",
     "@rollup/plugin-json": "^4.1.0",

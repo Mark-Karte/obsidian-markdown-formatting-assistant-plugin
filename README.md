@@ -1,21 +1,29 @@
-> # PLUGIN NOT MAINTAINED anymore
-> If you want to takover the plugin, write me!
-
-
-
-----
 # Obsidian Markdown Formatting Assistant
 
 > This Plugin provides easy to use snippets for Markdown, HTML and Latex and a color picker which shows the history of last used colors. Furthermore, it is possible to save any color you want.
-> Version 0.4.0
+> Version 0.5.0
 
-> If you find a Bug or have a feature request: https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin/issues
+> If you find a Bug or have a feature request: https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues
+
+This is a maintained fork of [Reocin/obsidian-markdown-formatting-assistant-plugin](https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin), which the original author stopped maintaining. It is MIT licensed, as the original is.
 
 ![](assets/Obsidian_Overview.png)
+
+## Languages
+
+The interface is available in 12 languages: English, Беларуская, Deutsch, Español, Français, Italiano, 日本語, 한국어, Português, Русский, Українська and 简体中文.
+
+By default the plugin follows the language Obsidian itself is set to. You can pick a specific one under `Settings → Markdown Formatting Assistant → Language`.
+
+Only what you read is translated. The callout keyword inside `> [!note]` stays English, because that is what Obsidian matches on. The suggestion windows search both the translated label and the original English name, so `warning` and `Предупреждение` both find the same button.
+
+Translations other than English and Russian have not been reviewed by native speakers yet - corrections are very welcome. A language lives in a single file under `src/locales/`, and adding a new one means writing that file and adding one line to `src/locales/index.ts`.
 
 ## Side Panel
 
 The Side Panel can be opened by the Ribbon Icon on the left side. If you changed the side (left or right) of the panel in the settings, just hit this butten/icon again and it will reload on the right side.
+
+The panel follows the width of its pane, so the button grid reflows when you drag the pane wider or narrower.
 
 ### Order and expansion of the Sections
 
@@ -28,6 +36,8 @@ It is possible to change the order of the sections according to the personal wis
 ![](assets/Panel_Overview.png)
 
 ### HTML Section
+
+`<a>` `<abbr>` `<b>` `<br/>` `<center>` `<details>` `<dfn>` `<div>` `<em>` `<font>` `<hr/>` `<i>` `<img>` `<kbd>` `<mark>` `<p>` `<pre>` `<span>` `<strong>` `<sub>` `<summary>` `<sup>` `<table>` `<tbody>` `<td>` `<tfoot>` `<th>` `<thead>` `<tr>` `<u>`
 
 ![](assets/Panel_Overview_Html.png)
 
@@ -44,6 +54,8 @@ It is possible to change the order of the sections according to the personal wis
 ![](assets/Panel_Overview_Greek_Letters.png)
 
 ### Callouts Section
+
+26 callout types, each inserting the corresponding Obsidian callout block.
 
 ![](assets/calloutsMenu.jpg)
 
@@ -106,18 +118,72 @@ For a even easier handling you can select additional options to what should be a
 
 ## Settings
 
+- Language
+
+  - default: same as Obsidian
+  - options: any of the 12 supported languages
+  - Language of the plugin interface.
+
+- Trigger Char
+
+  - default: `\`
+  - The char which triggers the autocompletion.
+
 - Side Pane Side
 
   - default: right
   - options: right, left
   - Defines the side of the side pane. By default the side pane will open on the right side/leaf.
 
+- Section toggles
+
+  - default: all enabled
+  - Every section of the side panel can be turned off individually. Requires a restart.
+
 - Saved Colors
   - default: ""
   - options: any hex color. One hex (#ffffff) color per line.
   - Manages the saved colors. Colors can be added, deleted, edited. The order is also considered.
 
+## Development
+
+```
+npm install
+npm run build
+```
+
+The build lands in `build/` and contains everything Obsidian needs: `main.js`, `manifest.json` and `styles.css`. Copy that folder into `<vault>/.obsidian/plugins/<plugin-id>/` to try it out.
+
+## Credits
+
+Originally written by [Reocin](https://github.com/Reocin). Maintained since version 0.5.0 by Mark Karte and Claude.
+
 ## Changelog
+
+- Version: 0.5.0
+
+  - **Added**
+    - The interface is translated into 12 languages and follows Obsidian's own language setting by default.
+    - New HTML tags: `<i>`, `<b>`, `<em>`, `<strong>`, `<mark>`, `<sup>`, `<sub>`, `<kbd>`, `<pre>`, `<center>`, `<dfn>`, `<abbr>`, `<hr/>`.
+    - New Latex functions: `\sum`, `\int`, `\sqrt`, `\cdot`, `\hat`, `\vec`.
+    - The suggestion windows now match the English command name as well as the translated label.
+  - **Fixed**
+    - Buttons no longer take the "text is selected" path when nothing is selected - that branch had been unreachable in every formatter.
+    - Code block and mermaid insertion put the cursor on the right line, and wrapping a selection in a mermaid block no longer tears the fence apart.
+    - Reordering the side panel sections by drag and drop works again.
+    - Converting to a quote or a list keeps the indentation, so nested lists survive the toggle.
+    - The `<img>` snippet no longer emits a closing tag, which Obsidian rendered as literal text.
+    - Dropping a saved color next to the swatches no longer corrupts the saved color list.
+    - Opening the settings tab no longer reverses the order of the saved colors.
+    - The settings tab renders correctly alongside plugins that read it programmatically, such as Settings Search.
+    - The warning about a malformed saved color now names the right line.
+  - **Changed**
+    - The side panel adapts to the width of its pane instead of being fixed at 300px, on desktop and mobile alike.
+    - The released `main.js` no longer ships an inline source map and is about 20 times smaller.
+    - Removed the `Glyph` callout: it was a duplicate of `Quote` that produced a callout type Obsidian does not know.
+    - Removed the duplicate `pi` entry from the Latex section - the one in the Greek Letters section remains.
+    - Debug output no longer goes to the developer console.
+
 - Version: 0.4.1
   - Added Callouts-Support
 - Version: 0.4.0

@@ -1,3 +1,29 @@
+/* The side panel follows whatever width the user drags its leaf to. */
+#SidePaneRootElement {
+  width: 100%;
+}
+
+.markdown-formatting-assistant-panel {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/*
+ * Obsidian pins .nav-buttons-container to a single scrolling line on mobile,
+ * which is meant for a short toolbar. This panel is a grid of dozens of
+ * buttons, so its rows have to keep wrapping on every platform.
+ */
+.markdown-formatting-assistant-panel .nav-buttons-container {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+/* Colour swatches reflow with the panel instead of sitting in fixed rows. */
+.color-swatch-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 /* Sets all the text color to red! */
 .nav-action-button {
   color: var(--text-muted);
