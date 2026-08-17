@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "inlineSourceMap": true,
-    "inlineSources": true,
     "module": "ESNext",
     "target": "es5",
     "allowJs": true,
@@ -18,5 +16,9 @@
   },
   "include": [
     "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "components"
   ]
 }

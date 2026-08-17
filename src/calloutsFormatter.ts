@@ -1,6 +1,10 @@
 import { Editor } from 'obsidian';
+import { withIds } from './generalFunctions';
 
 export interface calloutsFormatterSetting {
+  /** Stable identifier, derived from the table key. Never translated. */
+  id: string;
+  /** Display label shown to the user - translatable. */
   des: string;
   text: string;
   icon: string;
@@ -12,7 +16,7 @@ export interface calloutsFormatterSetting {
   newLine: boolean;
 }
 
-export const calloutsFormatterSettings = {
+export const calloutsFormatterSettings = withIds({
   note: {
     des: 'note',
     text: 'Note',
@@ -326,26 +330,11 @@ export const calloutsFormatterSettings = {
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
-  glyph: {
-    des: 'glyph',
-    text: 'Glyph',
-    icon: 'quote-glyph',
-    color: 'rgb(158, 158, 158)',
-    bgColor: 'rgba(158, 158, 158,0.1)',
-    symbol: '> [!glyph] \n>  ',
-    shift: 14,
-    selectionInput: 14,
-    newLine: false,
-    objectType: 'calloutsFormatterSetting',
-  },
-  
-  
-
-};
+});
 
 export function calloutsFormatter(editor: Editor, item: calloutsFormatterSetting) {
   if (editor) {
-    const isSelection = editor.somethingSelected;
+    const isSelection = editor.somethingSelected();
     const selection = editor.getSelection();
     const curserStart = editor.getCursor('from');
     const curserEnd = editor.getCursor('to');

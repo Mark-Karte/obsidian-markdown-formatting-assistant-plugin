@@ -1,5 +1,6 @@
 import { Editor } from 'obsidian';
 import { baseFormatterSetting } from './formatter';
+import { withIds } from './generalFunctions';
 
 export interface htmlFormatterSetting extends baseFormatterSetting {
   symbol: string;
@@ -7,7 +8,7 @@ export interface htmlFormatterSetting extends baseFormatterSetting {
   selectionInput: number;
 }
 
-export const htmlFormatterSettings = {
+export const htmlFormatterSettings = withIds({
   br: {
     des: '<br/>',
     symbol: '<br/>',
@@ -31,9 +32,12 @@ export const htmlFormatterSettings = {
   },
   img: {
     des: '<img>',
-    symbol: '<img src="" alt="" width="" height=""></img>',
+    // img is a void element - a closing tag is rendered as literal text
+    symbol: '<img src="" alt="" width="" height="">',
+    // 10 = length of '<img src="', so both the cursor and a selection land
+    // inside the src attribute
     shift: 10,
-    selectionInput: 38,
+    selectionInput: 10,
     objectType: 'htmlFormatterSetting',
   },
   a: {
@@ -128,11 +132,104 @@ export const htmlFormatterSettings = {
     selectionInput: 3,
     objectType: 'htmlFormatterSetting',
   },
-};
+  i: {
+    des: '<i>',
+    symbol: '<i></i>',
+    shift: 3,
+    selectionInput: 3,
+    objectType: 'htmlFormatterSetting',
+  },
+  b: {
+    des: '<b>',
+    symbol: '<b></b>',
+    shift: 3,
+    selectionInput: 3,
+    objectType: 'htmlFormatterSetting',
+  },
+  em: {
+    des: '<em>',
+    symbol: '<em></em>',
+    shift: 4,
+    selectionInput: 4,
+    objectType: 'htmlFormatterSetting',
+  },
+  strong: {
+    des: '<strong>',
+    symbol: '<strong></strong>',
+    shift: 8,
+    selectionInput: 8,
+    objectType: 'htmlFormatterSetting',
+  },
+  mark: {
+    des: '<mark>',
+    symbol: '<mark></mark>',
+    shift: 6,
+    selectionInput: 6,
+    objectType: 'htmlFormatterSetting',
+  },
+  sup: {
+    des: '<sup>',
+    symbol: '<sup></sup>',
+    shift: 5,
+    selectionInput: 5,
+    objectType: 'htmlFormatterSetting',
+  },
+  sub: {
+    des: '<sub>',
+    symbol: '<sub></sub>',
+    shift: 5,
+    selectionInput: 5,
+    objectType: 'htmlFormatterSetting',
+  },
+  kbd: {
+    des: '<kbd>',
+    symbol: '<kbd></kbd>',
+    shift: 5,
+    selectionInput: 5,
+    objectType: 'htmlFormatterSetting',
+  },
+  pre: {
+    des: '<pre>',
+    symbol: '<pre></pre>',
+    shift: 5,
+    selectionInput: 5,
+    objectType: 'htmlFormatterSetting',
+  },
+  center: {
+    des: '<center>',
+    symbol: '<center></center>',
+    shift: 8,
+    selectionInput: 8,
+    objectType: 'htmlFormatterSetting',
+  },
+  dfn: {
+    des: '<dfn>',
+    symbol: '<dfn></dfn>',
+    shift: 5,
+    selectionInput: 5,
+    objectType: 'htmlFormatterSetting',
+  },
+  abbr: {
+    des: '<abbr>',
+    symbol: '<abbr title=""></abbr>',
+    // The cursor goes into the title attribute, while a selection becomes the
+    // visible text after the opening tag - hence the two differ here.
+    shift: 13,
+    selectionInput: 15,
+    objectType: 'htmlFormatterSetting',
+  },
+  hr: {
+    des: '<hr/>',
+    symbol: '<hr/>',
+    shift: 5,
+    selectionInput: 5,
+    objectType: 'htmlFormatterSetting',
+  },
+});
 
 export function htmlFormatter(editor: Editor, item: htmlFormatterSetting) {
   if (editor) {
-    const isSelection = editor.somethingSelected;
+    const isSelection = editor.somethingSelected();
     const selection = editor.getSelection();
     const curserStart = editor.getCursor('from');
     const curserEnd = editor.getCursor('to');

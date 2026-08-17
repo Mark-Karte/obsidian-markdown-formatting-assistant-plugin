@@ -28,8 +28,15 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
 
   // Returns all available suggestions.
   getSuggestions(query: string): baseFormatterSetting[] {
-    const filterFunction = (setting: baseFormatterSetting) =>
-      setting.des.toLowerCase().includes(query.toLowerCase());
+    // Matching the id as well as the label keeps every command reachable by
+    // its English name once the labels get translated.
+    const filterFunction = (setting: baseFormatterSetting) => {
+      const needle = query.toLowerCase();
+      return (
+        setting.des.toLowerCase().includes(needle) ||
+        setting.id.toLowerCase().includes(needle)
+      );
+    };
     // @ts-ignore
     return R.values(R.filter(filterFunction, suggestions));
   }
@@ -51,7 +58,6 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
     cell2.classList.add('command-list-view-text');
     cell2.setText(baseFormatterSetting.des);
 
-    console.log(baseFormatterSetting.objectType);
     if (baseFormatterSetting.objectType === 'formatterSetting') {
       iconDiv.appendChild(svgToElement(baseFormatterSetting.icon));
       cell2.style.color = '#c7254e';
@@ -87,7 +93,6 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
     // @ts-ignore
     const item = baseFormatterSetting;
 
-    console.log(baseFormatterSetting);
     if (item.objectType === 'formatterSetting') {
       // @ts-ignore
       iconFormatter(this.editor, item);

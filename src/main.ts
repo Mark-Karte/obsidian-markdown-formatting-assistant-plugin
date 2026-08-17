@@ -20,6 +20,15 @@ import {
 import plugin from 'rollup-plugin-import-css';
 import { CodeSuggestionModal } from './CommandListView';
 import { CalloutsSuggestionModal } from './CalloutsListView';
+import {
+  AUTO_LOCALE,
+  LOCALE_NAMES,
+  LocaleSetting,
+  SUPPORTED_LOCALES,
+  sectionLabel,
+  setLocale,
+  t,
+} from './i18n';
 
 interface RegionSetting {
   name: string;
@@ -27,26 +36,18 @@ interface RegionSetting {
   visible: boolean;
 }
 export interface PluginSettings {
+  language: LocaleSetting;
   triggerChar: string;
   sidePaneSideLeft: Boolean;
   savedColors: string[];
-  aviabileRegions: string[];
   regionSettings: Array<RegionSetting>;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
+  language: AUTO_LOCALE,
   triggerChar: '\\',
   sidePaneSideLeft: false,
   savedColors: ['#ff0000'],
-  aviabileRegions: [
-    'textEdit',
-    'tabels',
-    'html',
-    'latex',
-    'greekLetters',
-    'colors',
-    'callouts',
-  ],
   regionSettings: [
     { name: 'textEdit', active: true, visible: false },
     { name: 'tables', active: true, visible: false },
@@ -58,6 +59,11 @@ const DEFAULT_SETTINGS: PluginSettings = {
   ],
 };
 
+/** Order the section toggles appear in the settings tab. */
+const SECTION_ORDER = DEFAULT_SETTINGS.regionSettings.map(
+  (region) => region.name,
+);
+
 export default class MarkdownAutocompletePlugin extends Plugin {
   settings: PluginSettings;
   private sidePanelControlView: SidePanelControlView;
@@ -66,6 +72,10 @@ export default class MarkdownAutocompletePlugin extends Plugin {
     console.log('loading obsidian-markdown-formatting-assistant-plugin');
 
     await this.loadSettings();
+
+    // Has to happen before anything renders a label.
+    setLocale(this.settings.language);
+
     addIcons();
 
     this.registerView(SidePanelControlViewType, (leaf) => {
@@ -73,13 +83,13 @@ export default class MarkdownAutocompletePlugin extends Plugin {
       return this.sidePanelControlView;
     });
 
-    this.addRibbonIcon('viewIcon', 'Open Markdown Formatting Assistant', () => {
+    this.addRibbonIcon('viewIcon', t('command.openPanel'), () => {
       this.toggleSidePanelControlView();
     });
 
     this.addCommand({
       id: 'open-command-selector',
-      name: 'Open Command Selector',
+      name: t('command.openCommandSelector'),
       hotkeys: [{ modifiers: ['Alt'], key: 'q' }],
       editorCallback: (editor: Editor, view: MarkdownView) => {
         CodeSuggestionModal.display(this.app, editor);
@@ -88,7 +98,7 @@ export default class MarkdownAutocompletePlugin extends Plugin {
 
     this.addCommand({
       id: 'open-callouts-selector',
-      name: 'Open Callouts Selector',
+      name: t('command.openCalloutsSelector'),
       hotkeys: [{ modifiers: ['Alt'], key: 'c' }],
       editorCallback: (editor: Editor, view: MarkdownView) => {
         CalloutsSuggestionModal.display(this.app, editor);
@@ -101,7 +111,9 @@ export default class MarkdownAutocompletePlugin extends Plugin {
   onunload() {}
 
   async loadSettings() {
-    this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
+    // Merge into a fresh object - assigning onto DEFAULT_SETTINGS would
+    // permanently overwrite the defaults for the rest of the session.
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
 
   async saveSettings() {
@@ -146,26 +158,43 @@ class SettingsTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  close() {
-    console.log('closed');
-    super.hide();
-  }
-
-  async display() {
+  // Must stay synchronous: other plugins (e.g. Settings Search) call display()
+  // and read containerEl straight after, which sees nothing if this returns a
+  // promise instead of a filled container.
+  display() {
     let { containerEl } = this;
 
     containerEl.empty();
 
-    containerEl.createEl('h2', {
-      text: 'Markdown Formatting Assistant Settings',
-    });
+    containerEl.createEl('h2', { text: t('settings.title') });
 
     new Setting(containerEl)
-      .setName('Trigger Char')
-      .setDesc('Char which triggers the autocompletion')
+      .setName(t('settings.language.name'))
+      .setDesc(t('settings.language.desc'))
+      .addDropdown((dropdown) => {
+        dropdown.addOption(AUTO_LOCALE, t('settings.language.auto'));
+        SUPPORTED_LOCALES.forEach((code) =>
+          dropdown.addOption(code, LOCALE_NAMES[code]),
+        );
+
+        dropdown
+          .setValue(this.plugin.settings.language)
+          .onChange(async (value) => {
+            this.plugin.settings.language = value as LocaleSetting;
+            setLocale(this.plugin.settings.language);
+            await this.plugin.saveSettings();
+
+            // Redraw so the change is visible without reopening the tab.
+            this.display();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName(t('settings.triggerChar.name'))
+      .setDesc(t('settings.triggerChar.desc'))
       .addText((text) =>
         text
-          .setPlaceholder('Enter a char to trigger the autocompletion')
+          .setPlaceholder(t('settings.triggerChar.placeholder'))
           .setValue(this.plugin.settings.triggerChar)
           .onChange(async (value) => {
             this.plugin.settings.triggerChar = value;
@@ -174,11 +203,11 @@ class SettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName('Side Pane Side')
-      .setDesc('Choose on which side the Side Pane accours. ()')
+      .setName(t('settings.sidePaneSide.name'))
+      .setDesc(t('settings.sidePaneSide.desc'))
       .addText((text) =>
         text
-          .setPlaceholder('Enter left or right')
+          .setPlaceholder(t('settings.sidePaneSide.placeholder'))
           .setValue(this.plugin.settings.sidePaneSideLeft ? 'left' : 'right')
           .onChange(async (value) => {
             this.plugin.settings.sidePaneSideLeft =
@@ -193,98 +222,39 @@ class SettingsTab extends PluginSettingTab {
       );
     };
 
-    new Setting(containerEl)
-      .setName('Toggle Text Section')
-      .setDesc(
-        'Activate or deactivate the Text Editor section. (restart required)',
-      )
-      .addToggle((comp) => {
-        comp.setValue(getRegion('textEdit').active).onChange(async (e) => {
-          const region = getRegion('textEdit');
+    // One templated pair of strings instead of seven hand-written ones - which
+    // is also how the old copy-paste mix-ups got fixed, where the Tables toggle
+    // described the Greek Letters section.
+    SECTION_ORDER.forEach((regionName) => {
+      const region = getRegion(regionName);
 
-          region.active = e;
-          await this.plugin.saveSettings();
+      // A settings file written by an older version may not list every region.
+      if (!region) return;
+
+      const section = sectionLabel(regionName);
+
+      new Setting(containerEl)
+        .setName(t('settings.toggleSection.name', { section }))
+        .setDesc(t('settings.toggleSection.desc', { section }))
+        .addToggle((comp) => {
+          comp.setValue(region.active).onChange(async (value) => {
+            region.active = value;
+            await this.plugin.saveSettings();
+          });
         });
-      });
+    });
 
     new Setting(containerEl)
-      .setName('Toggle Tabels Section')
-      .setDesc(
-        'Activate or deactivate the Greek Letters section. (restart required)',
-      )
-      .addToggle((comp) => {
-        comp.setValue(getRegion('tables').active).onChange(async (e) => {
-          const region = getRegion('tables');
-
-          region.active = e;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Toggle HTML Section')
-      .setDesc('Activate or deactivate the HTML section. (restart required)')
-      .addToggle((comp) => {
-        comp.setValue(getRegion('html').active).onChange(async (e) => {
-          const region = getRegion('html');
-
-          region.active = e;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Toggle Colors Section')
-      .setDesc('Activate or deactivate the Colors section. (restart required)')
-      .addToggle((comp) => {
-        comp.setValue(getRegion('colors').active).onChange(async (e) => {
-          const region = getRegion('colors');
-
-          region.active = e;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Toggle Latex Section')
-      .setDesc('Activate or deactivate the Latex section. (restart required)')
-      .addToggle((comp) => {
-        comp.setValue(getRegion('latex').active).onChange(async (e) => {
-          const region = getRegion('latex');
-
-          region.active = e;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Toggle Greek Letters Section')
-      .setDesc(
-        'Activate or deactivate the Greek Letters section. (restart required)',
-      )
-      .addToggle((comp) => {
-        comp.setValue(getRegion('greekLetters').active).onChange(async (e) => {
-          const region = getRegion('greekLetters');
-
-          region.active = e;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Saved Colors')
-      .setDesc(
-        'Colors which are saved via the color picker. The order will be also considered. Requiers a restart of obsidian.',
-      )
+      .setName(t('settings.savedColors.name'))
+      .setDesc(t('settings.savedColors.desc'))
       .addTextArea((text) => {
         text.inputEl.style.minHeight = '400px';
 
         text
           .setValue(
-            this.plugin.settings.savedColors
-              .reverse()
-              .map((color, i) => color)
-              .join('\n'),
+            // Copy before reversing - reverse() works in place and used to
+            // flip the stored order every time this tab was opened.
+            this.plugin.settings.savedColors.slice().reverse().join('\n'),
           )
           .onChange(async (value) => {
             let colors = value.split('\n').reverse();
@@ -296,36 +266,21 @@ class SettingsTab extends PluginSettingTab {
           });
 
         text.inputEl.addEventListener('focusout', (ev) => {
-          // @ts-ignore
-          let colors = ev.target.value.split('\n').reverse();
+          const value = (ev.target as HTMLTextAreaElement).value;
 
-          // @ts-ignore
-          let filteredColors = colors.map((color, i) => {
-            const isHex = /^#[0-9A-F]{6}$/i.test(color);
-            if (!isHex) {
-              new Notice(
-                'The color ' +
-                  color +
-                  'on Line' +
-                  (i + 1) +
-                  " has the wrong format and wan't be saved.",
-              );
-            }
+          // Line numbers are counted in the textarea's own order - the old
+          // version reversed the lines first and reported the wrong ones.
+          value.split('\n').forEach((color, index) => {
+            if (color.trim() === '') return;
+            if (/^#[0-9A-F]{6}$/i.test(color)) return;
+
+            new Notice(
+              t('settings.savedColors.invalidFormat', {
+                color,
+                line: index + 1,
+              }),
+            );
           });
-        });
-      });
-
-      new Setting(containerEl)
-      .setName('Toggle Callouts Section')
-      .setDesc(
-        'Activate or deactivate the Callouts section. (restart required)',
-      )
-      .addToggle((comp) => {
-        comp.setValue(getRegion('callouts').active).onChange(async (e) => {
-          const region = getRegion('callouts');
-
-          region.active = e;
-          await this.plugin.saveSettings();
         });
       });
   }

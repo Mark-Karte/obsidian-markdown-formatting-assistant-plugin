@@ -3,6 +3,7 @@ import { calloutsFormatterSetting } from './calloutsFormatter';
 import * as R from 'ramda';
 import { setIcon } from "obsidian";
 import { calloutsFormatterSettings, calloutsFormatter } from './calloutsFormatter';
+import { calloutLabel } from './i18n';
 
 const suggestions = R.values(calloutsFormatterSettings);
 
@@ -15,8 +16,15 @@ export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetti
 
   // Returns all available suggestions.
   getSuggestions(query: string): calloutsFormatterSetting[] {
-    const filterFunction = (setting: calloutsFormatterSetting) =>
-      setting.des.toLowerCase().includes(query.toLowerCase());
+    // Matching the translated label as well as the id keeps callouts findable
+    // both by their Russian name and by the English keyword.
+    const filterFunction = (setting: calloutsFormatterSetting) => {
+      const needle = query.toLowerCase();
+      return (
+        calloutLabel(setting.id).toLowerCase().includes(needle) ||
+        setting.id.toLowerCase().includes(needle)
+      );
+    };
     // @ts-ignore
     return R.values(R.filter(filterFunction, suggestions));
   }
@@ -35,7 +43,7 @@ export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetti
 
     const cell2 = row.createDiv();
     cell2.classList.add('command-list-view-text');
-    cell2.setText(calloutsFormatterSetting.des);
+    cell2.setText(calloutLabel(calloutsFormatterSetting.id));
     cell2.style.color = 'var(--text-muted)';
 
     const spanIcon = document.createElement('span');

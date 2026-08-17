@@ -1,0 +1,86 @@
+import { LocaleDictionary } from './en';
+
+export const uk: LocaleDictionary = {
+  'command.openPanel': 'Відкрити Markdown Formatting Assistant',
+  'command.openCommandSelector': 'Відкрити вибір команд',
+  'command.openCalloutsSelector': 'Відкрити вибір виносок',
+
+  'section.textEdit': 'Текст',
+  'section.tables': 'Таблиці',
+  'section.html': 'HTML',
+  'section.latex': 'LaTeX',
+  'section.greekLetters': 'Грецькі літери',
+  'section.colors': 'Кольори',
+  'section.callouts': 'Виноски',
+
+  'tables.upcoming': 'незабаром ...',
+  'html.reportMissingTag': 'Бракує тега? Повідомте!',
+  'latex.introduction': 'Вступ до математики LaTeX',
+  'latex.reportMissingFunction': 'Бракує функції LaTeX? Повідомте!',
+  'greek.lowerCase': 'Малі літери',
+  'greek.upperCase': 'Великі літери',
+  'greek.overview': 'Огляд грецької абетки',
+
+  'colors.select': 'Вибрати колір',
+  'colors.save': 'Зберегти колір',
+  'colors.optionColor': ' Додати "color: {your color}"',
+  'colors.optionBackgroundColor': ' Додати "background-color: {your color}"',
+  'colors.optionStyleTag': ' Додати атрибут: "style={your color}"',
+  'colors.optionHtmlTag':
+    ' Додати HTML: "<font color={your color}>{selected text}</font>"',
+  'colors.lastUsed': 'Останні кольори:',
+  'colors.saved': 'Збережені кольори:',
+  'colors.editInSettings':
+    'Збережені кольори можна редагувати просто в налаштуваннях.',
+  'colors.help': 'Потрібна допомога?',
+  'colors.copied': 'Колір {color} скопійовано до буфера обміну',
+  'colors.copyFailed': 'Не вдалося скопіювати колір до буфера обміну',
+
+  'settings.title': 'Налаштування Markdown Formatting Assistant',
+  'settings.language.name': 'Мова',
+  'settings.language.desc':
+    'Мова інтерфейсу плагіна. (потрібен перезапуск)',
+  'settings.language.auto': 'Як в Obsidian',
+  'settings.triggerChar.name': 'Символ-тригер',
+  'settings.triggerChar.desc': 'Символ, що запускає автодоповнення',
+  'settings.triggerChar.placeholder':
+    'Введіть символ для запуску автодоповнення',
+  'settings.sidePaneSide.name': 'Сторона панелі',
+  'settings.sidePaneSide.desc': 'З якого боку відкривається бічна панель.',
+  'settings.sidePaneSide.placeholder': 'Введіть left або right',
+  'settings.toggleSection.name': 'Секція «{section}»',
+  'settings.toggleSection.desc':
+    'Увімкнути або вимкнути секцію «{section}». (потрібен перезапуск)',
+  'settings.savedColors.name': 'Збережені кольори',
+  'settings.savedColors.desc':
+    'Кольори, збережені через палітру. Порядок також враховується. Потрібен перезапуск Obsidian.',
+  'settings.savedColors.invalidFormat':
+    'Колір {color} у рядку {line} має хибний формат і не буде збережений.',
+
+  'callout.note': 'Нотатка',
+  'callout.info': 'Інформація',
+  'callout.todo': 'Завдання',
+  'callout.abstract': 'Анотація',
+  'callout.summary': 'Підсумок',
+  'callout.tldr': 'Стисло',
+  'callout.tip': 'Порада',
+  'callout.hint': 'Підказка',
+  'callout.important': 'Важливо',
+  'callout.success': 'Успіх',
+  'callout.check': 'Перевірено',
+  'callout.done': 'Готово',
+  'callout.question': 'Питання',
+  'callout.help': 'Довідка',
+  'callout.faq': 'ЧаПи',
+  'callout.warning': 'Попередження',
+  'callout.caution': 'Обережно',
+  'callout.attention': 'Увага',
+  'callout.failure': 'Невдача',
+  'callout.fail': 'Провал',
+  'callout.missing': 'Відсутнє',
+  'callout.danger': 'Небезпека',
+  'callout.error': 'Помилка',
+  'callout.bug': 'Баг',
+  'callout.example': 'Приклад',
+  'callout.quote': 'Цитата',
+};

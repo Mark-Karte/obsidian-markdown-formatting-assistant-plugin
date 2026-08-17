@@ -34,6 +34,7 @@ import {
 import * as R from 'ramda';
 import MarkdownAutocompletePlugin from './main';
 import { checkIfMarkdownSource } from './generalFunctions';
+import { calloutLabel, sectionLabel, t } from './i18n';
 
 export const SidePanelControlViewType = 'side-panel-control-view';
 
@@ -52,7 +53,7 @@ export class SidePanelControlView extends ItemView {
   }
 
   public getDisplayText(): string {
-    return 'Markdown-Autocomplete';
+    return t('view.displayName');
   }
 
   public getIcon(): string {
@@ -86,16 +87,18 @@ export class SidePanelControlView extends ItemView {
       );
     };
 
-    const mainDiv = rootEl.createDiv({ cls: 'nav-header' });
-    mainDiv.style.maxWidth = '300px';
-    mainDiv.style.minWidth = '300px';
+    // Width is left to the stylesheet - the leaf is user-resizable, so nothing
+    // in here may pin a fixed width.
+    const mainDiv = rootEl.createDiv({
+      cls: 'nav-header markdown-formatting-assistant-panel',
+    });
 
     // --------------
     // Text Edit Section
     // --------------
 
     const addTextEditSection = () => {
-      let content = this.addSelectableHeader(mainDiv, 'textEdit', 'Text Edit');
+      let content = this.addSelectableHeader(mainDiv, 'textEdit');
       this.addTextEditButtons(content);
     };
 
@@ -103,10 +106,10 @@ export class SidePanelControlView extends ItemView {
     // Table Section
     // --------------
     const addTabelsSection = () => {
-      const content = this.addSelectableHeader(mainDiv, 'tables', 'Tables');
+      const content = this.addSelectableHeader(mainDiv, 'tables');
 
       const info = content.createEl('p');
-      info.appendText('upcoming ...');
+      info.appendText(t('tables.upcoming'));
       info.style.textAlign = 'center';
     };
 
@@ -114,7 +117,7 @@ export class SidePanelControlView extends ItemView {
     // HTML Section
     // --------------
     const addHtmlSection = () => {
-      const content = this.addSelectableHeader(mainDiv, 'html', 'HTML');
+      const content = this.addSelectableHeader(mainDiv, 'html');
 
       this.addHtmlButtons(content);
 
@@ -123,19 +126,19 @@ export class SidePanelControlView extends ItemView {
       info.style.marginTop = '10px';
       info.style.marginBottom = '10px';
       const link = info.createEl('a');
-      link.appendText('Do you miss a Tag? report it!');
+      link.appendText(t('html.reportMissingTag'));
       link.style.textAlign = 'center';
 
       link.style.fontSize = '10px';
       link.href =
-        'https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin/issues';
+        'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
     };
 
     // --------------
     // Latex Section
     // --------------
     const addLatexSection = () => {
-      const content = this.addSelectableHeader(mainDiv, 'latex', 'Latex');
+      const content = this.addSelectableHeader(mainDiv, 'latex');
 
       this.addLatexButtons(content);
 
@@ -144,7 +147,7 @@ export class SidePanelControlView extends ItemView {
       info.style.marginTop = '10px';
       info.style.marginBottom = '10px';
       let link = info.createEl('a');
-      link.appendText('Introduction into latex mathematics');
+      link.appendText(t('latex.introduction'));
       link.style.textAlign = 'center';
       link.style.fontSize = '10px';
       link.href = 'https://en.wikibooks.org/wiki/LaTeX/Mathematics';
@@ -154,25 +157,21 @@ export class SidePanelControlView extends ItemView {
       info.style.marginTop = '10px';
       info.style.marginBottom = '10px';
       link = info.createEl('a');
-      link.appendText('Do you miss a latex function? report it!');
+      link.appendText(t('latex.reportMissingFunction'));
       link.style.textAlign = 'center';
 
       link.style.fontSize = '10px';
       link.href =
-        'https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin/issues';
+        'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
     };
     // --------------
     // Greek Section
     // --------------
     const addGreekLettersSection = () => {
-      const content = this.addSelectableHeader(
-        mainDiv,
-        'greekLetters',
-        'Greek Letters',
-      );
+      const content = this.addSelectableHeader(mainDiv, 'greekLetters');
 
       let header = content.createEl('h5');
-      header.appendText('Lower Case');
+      header.appendText(t('greek.lowerCase'));
       header.style.textAlign = 'center';
       header.style.marginTop = '0px';
       header.style.marginBottom = '5px';
@@ -180,7 +179,7 @@ export class SidePanelControlView extends ItemView {
       this.addGreekLowerCaseLetters(content);
 
       header = content.createEl('h5');
-      header.appendText('Upper Case');
+      header.appendText(t('greek.upperCase'));
       header.style.textAlign = 'center';
       header.style.marginTop = '10px';
       header.style.marginBottom = '5px';
@@ -192,7 +191,7 @@ export class SidePanelControlView extends ItemView {
       info.style.marginTop = '10px';
       info.style.marginBottom = '10px';
       const link = info.createEl('a');
-      link.appendText('Overview of greek letters');
+      link.appendText(t('greek.overview'));
       link.style.textAlign = 'center';
 
       link.style.fontSize = '10px';
@@ -203,7 +202,7 @@ export class SidePanelControlView extends ItemView {
     // Colors
     // --------------
     const addColorsSection = () => {
-      const content = this.addSelectableHeader(mainDiv, 'colors', 'Colors');
+      const content = this.addSelectableHeader(mainDiv, 'colors');
       this.addColorBody(content);
     };
 
@@ -212,7 +211,7 @@ export class SidePanelControlView extends ItemView {
     // --------------
 
     const addCalloutsSection = () => {
-      let content = this.addSelectableHeader(mainDiv, 'callouts', 'Callouts');
+      let content = this.addSelectableHeader(mainDiv, 'callouts');
       this.addCalloutsButtons(content);
     };
 
@@ -301,7 +300,7 @@ export class SidePanelControlView extends ItemView {
       addClickEvent(button, key);
       
       const spanText = document.createElement('span');
-      spanText.innerHTML = ' '+item.text;
+      spanText.textContent = ' ' + calloutLabel(item.id);
       const spanIcon = document.createElement('span');
       setIcon(spanIcon, item.icon);
       spanIcon.style.verticalAlign = 'middle';
@@ -425,7 +424,6 @@ export class SidePanelControlView extends ItemView {
   private addTextEditButtons(mainDiv: HTMLElement) {
     const addClickEvent = (btn: HTMLElement, type: string) => {
       btn.onClickEvent(() => {
-        console.log('Clicked Button', btn, type);
         // @ts-ignore
         const formatterSetting = formatSettings[type];
 
@@ -554,12 +552,8 @@ export class SidePanelControlView extends ItemView {
         container = document.getElementById('lastSelectedColorsDiv');
       container.textContent = '';
 
-      const table = container.createEl('table');
-      const tbody = table.createEl('tbody');
-      let row: HTMLElement;
-      R.reverse(SidePanelControlView.lastColors).forEach((color, index) => {
-        if (index % 10 === 0) row = tbody.createEl('tr');
-        const colorBox = row.createEl('td');
+      R.reverse(SidePanelControlView.lastColors).forEach((color) => {
+        const colorBox = container.createDiv();
         colorBox.classList.add('color-icon');
         colorBox.style.backgroundColor = color;
 
@@ -581,13 +575,9 @@ export class SidePanelControlView extends ItemView {
       if (!container) container = document.getElementById('lastSavedColorsDiv');
 
       container.textContent = '';
-      const table = container.createEl('table');
-      const tbody = table.createEl('tbody');
-      let row: HTMLElement;
 
-      R.reverse(this.plugin.settings.savedColors).forEach((color, index) => {
-        if (index % 10 === 0) row = tbody.createEl('tr');
-        const colorBox = row.createEl('td');
+      R.reverse(this.plugin.settings.savedColors).forEach((color) => {
+        const colorBox = container.createDiv();
         colorBox.id = 'lastSavedColorsDiv' + color;
         colorBox.classList.add('color-icon');
         colorBox.style.backgroundColor = color;
@@ -613,27 +603,25 @@ export class SidePanelControlView extends ItemView {
           );
         };
         colorBox.ondrop = async (event) => {
-          if (event && event.target) {
-            // @ts-ignore
-            const id = event.target.id;
-            if (id.indexOf('lastSavedColorsDiv') === 0) {
-              const startColor = this.dragStartColor;
-              const endColor = id.replace('lastSavedColorsDiv', '');
+          const target = event.target as HTMLElement;
+          if (!target || !target.id) return;
 
-              const startIndex = R.indexOf(
-                startColor,
-                this.plugin.settings.savedColors,
-              );
-              const endIndex = R.indexOf(
-                endColor,
-                this.plugin.settings.savedColors,
-              );
-              this.plugin.settings.savedColors[startIndex] = endColor;
-              this.plugin.settings.savedColors[endIndex] = startColor;
-              await this.plugin.saveSettings();
-              drawLastSavedColorIcons();
-            }
-          }
+          const savedColors = this.plugin.settings.savedColors;
+          const startColor = this.dragStartColor;
+          const endColor = target.id.replace('lastSavedColorsDiv', '');
+
+          const startIndex = R.indexOf(startColor, savedColors);
+          const endIndex = R.indexOf(endColor, savedColors);
+
+          // The container carries the id 'lastSavedColorsDiv' itself, so a drop
+          // into the empty space next to the swatches used to resolve to an
+          // empty colour and index -1 - which then wrote junk into the list.
+          if (startIndex < 0 || endIndex < 0 || startIndex === endIndex) return;
+
+          savedColors[startIndex] = endColor;
+          savedColors[endIndex] = startColor;
+          await this.plugin.saveSettings();
+          drawLastSavedColorIcons();
         };
         colorBox.ondragover = (event) => {
           event.preventDefault();
@@ -682,11 +670,10 @@ export class SidePanelControlView extends ItemView {
 
         navigator.clipboard.writeText(color).then(
           () => {
-            // @ts-ignore
-            new Notice('Copied ' + color + ' to clipboard');
+            new Notice(t('colors.copied', { color }));
           },
           () => {
-            new Notice('Could not copy the color to clipboard');
+            new Notice(t('colors.copyFailed'));
           },
         );
       },
@@ -695,13 +682,13 @@ export class SidePanelControlView extends ItemView {
 
     const colorButton = colorSection.createEl('label');
     colorButton.classList.add('nav-action-text-button');
-    colorButton.appendText('Select a Color');
+    colorButton.appendText(t('colors.select'));
     colorButton.style.display = 'block';
     colorButton.htmlFor = 'colorInput';
 
     const colorSaveButton = colorSection.createEl('div');
     colorSaveButton.classList.add('nav-action-text-button');
-    colorSaveButton.appendText('Save Color');
+    colorSaveButton.appendText(t('colors.save'));
     colorSaveButton.style.display = 'block';
     colorSaveButton.onClickEvent(async (ev) => {
       const color = R.last(SidePanelControlView.lastColors);
@@ -725,39 +712,37 @@ export class SidePanelControlView extends ItemView {
       label.style.fontSize = '12px';
     };
 
-    addCheckbox('inputColorTagCheckBox', ' Add "color: {your color}"');
+    addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
     addCheckbox(
       'inputBackgroundColorTagCheckBox',
-      ' Add "background-color: {your color}"',
+      t('colors.optionBackgroundColor'),
     );
-    addCheckbox('inputStyleTagCheckBox', ' Add tag: "style={your color}"');
-    addCheckbox('inputHtmlTagCheckBox', ' Add HTML: "<font color={your color}>{selected text}</font>"');
+    addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
+    addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
 
     const lastSelectedColorsTitle = colorSection.createEl('p');
-    lastSelectedColorsTitle.appendText('Last used colors:');
+    lastSelectedColorsTitle.appendText(t('colors.lastUsed'));
     lastSelectedColorsTitle.style.marginBottom = '0px';
 
     const lastSelectedColors = colorSection.createEl('div');
     lastSelectedColors.id = 'lastSelectedColorsDiv';
-    lastSelectedColors.style.display = 'flex';
+    lastSelectedColors.classList.add('color-swatch-container');
 
     drawLastSelectedColorIcons(lastSelectedColors);
 
     const lastSavedColorsTitle = colorSection.createEl('p');
-    lastSavedColorsTitle.appendText('Saved Colors:');
+    lastSavedColorsTitle.appendText(t('colors.saved'));
     lastSavedColorsTitle.style.marginBottom = '0px';
 
     const settingsInfo = colorSection.createEl('p');
-    settingsInfo.appendText(
-      'Saved colors can be directly edited in the settings.',
-    );
+    settingsInfo.appendText(t('colors.editInSettings'));
     settingsInfo.style.textAlign = 'left';
     settingsInfo.style.fontSize = '10px';
     settingsInfo.style.marginTop = '0px';
 
     const lastSavedColors = colorSection.createEl('div');
     lastSavedColors.id = 'lastSavedColorsDiv';
-    lastSavedColors.style.display = 'flex';
+    lastSavedColors.classList.add('color-swatch-container');
 
     drawLastSavedColorIcons(lastSavedColors);
 
@@ -767,19 +752,17 @@ export class SidePanelControlView extends ItemView {
     info.style.marginBottom = '10px';
 
     const link = info.createEl('a');
-    link.appendText('Do you need some Help?');
+    link.appendText(t('colors.help'));
     link.style.textAlign = 'center';
 
     link.style.fontSize = '10px';
     link.href =
-      'https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin#color-picker';
+      'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker';
   }
 
-  private addSelectableHeader(
-    mainDiv: HTMLElement,
-    regionName: string,
-    sectionTitle: string,
-  ) {
+  private addSelectableHeader(mainDiv: HTMLElement, regionName: string) {
+    const sectionTitle = sectionLabel(regionName);
+
     const getRegion = (name: string) => {
       return this.plugin.settings.regionSettings.find(
         (item) => item.name === name,
@@ -810,21 +793,29 @@ export class SidePanelControlView extends ItemView {
     };
 
     const onDrop = async (event: DragEvent) => {
-      const getId = R.pipe(
-        R.find(R.pipe(R.prop('id'), R.contains('lastSavedHeaderDiv'))),
-        R.prop('id'),
-        R.replace('lastSavedHeaderDiv', ''),
-      );
+      // The drop can land on any descendant of a section header, so walk the
+      // event path up to the header that carries the region id. composedPath()
+      // also yields document and window, which have no id at all.
+      const getDroppedRegionName = (path: EventTarget[]) => {
+        const header = path.find(
+          (target) =>
+            target instanceof HTMLElement &&
+            target.id.startsWith('lastSavedHeaderDiv'),
+        ) as HTMLElement | undefined;
+
+        return header
+          ? header.id.replace('lastSavedHeaderDiv', '')
+          : undefined;
+      };
 
       const start = event.dataTransfer.getData('sectionHeaderMoveId');
-      // @ts-ignore
-      const end = getId(event.path);
+      const end = getDroppedRegionName(event.composedPath());
 
-      if (
-        end &&
-        this.plugin.settings.aviabileRegions.contains(end) &&
-        start !== end
-      ) {
+      const isKnownRegion = this.plugin.settings.regionSettings.some(
+        (region) => region.name === end,
+      );
+
+      if (end && isKnownRegion && start !== end) {
         const startIndex = R.findIndex(
           R.propEq('name', start),
           this.plugin.settings.regionSettings,

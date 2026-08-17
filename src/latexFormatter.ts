@@ -1,4 +1,5 @@
 import { Editor } from 'obsidian';
+import { withIds } from './generalFunctions';
 
 export interface latexFormatterSetting {
   des: string;
@@ -10,7 +11,7 @@ export interface latexFormatterSetting {
   newLine: boolean;
 }
 
-export const latexFormatterSettings = {
+export const latexFormatterSettings = withIds({
   inlineEquation: {
     des: 'inline equation',
     text: '$$x$$',
@@ -62,7 +63,9 @@ export const latexFormatterSettings = {
     objectType: 'latexFormatterSetting',
   },
   div: {
-    des: 'division',
+    // Raises to the power of -1 - this is the reciprocal, not a division.
+    // 'division' is the fraction entry above, whose icon is named that way.
+    des: 'inverse',
     text: 'x<sup>-1</sup>',
     symbol: '^{-1}',
     shift: 5,
@@ -78,16 +81,6 @@ export const latexFormatterSettings = {
     shift: 2,
     selectionInput: 2,
     type: 'text',
-    newLine: false,
-    objectType: 'latexFormatterSetting',
-  },
-  pi: {
-    des: 'pi',
-    text: 'pi',
-    symbol: '\\pi',
-    shift: 3,
-    selectionInput: 3,
-    type: 'icon',
     newLine: false,
     objectType: 'latexFormatterSetting',
   },
@@ -162,7 +155,7 @@ export const latexFormatterSettings = {
     objectType: 'latexFormatterSetting',
   },
   sin2: {
-    des: 'cos^2',
+    des: 'sin^2',
     text: 'sin<sup>2</sup>',
     symbol: '\\sin^2()',
     shift: 7,
@@ -251,11 +244,71 @@ export const latexFormatterSettings = {
     newLine: false,
     objectType: 'latexFormatterSetting',
   },
-};
+  sum: {
+    des: 'sum',
+    text: '&sum;',
+    symbol: '\\sum_{}^{}',
+    shift: 6,
+    selectionInput: 6,
+    type: 'text',
+    newLine: true,
+    objectType: 'latexFormatterSetting',
+  },
+  integral: {
+    des: 'integral',
+    text: '&int;',
+    symbol: '\\int_{}^{}',
+    shift: 6,
+    selectionInput: 6,
+    type: 'text',
+    newLine: false,
+    objectType: 'latexFormatterSetting',
+  },
+  sqrt: {
+    des: 'square root',
+    text: '&radic;',
+    symbol: '\\sqrt{}',
+    shift: 6,
+    selectionInput: 6,
+    type: 'text',
+    newLine: false,
+    objectType: 'latexFormatterSetting',
+  },
+  cdot: {
+    des: 'cdot',
+    text: '&middot;',
+    symbol: '\\cdot',
+    shift: 5,
+    selectionInput: 5,
+    type: 'text',
+    newLine: false,
+    objectType: 'latexFormatterSetting',
+  },
+  hat: {
+    des: 'hat',
+    text: 'hat',
+    symbol: '\\hat{}',
+    shift: 5,
+    selectionInput: 5,
+    type: 'text',
+    newLine: false,
+    objectType: 'latexFormatterSetting',
+  },
+  vec: {
+    des: 'vector',
+    text: 'vec',
+    symbol: '\\vec{}',
+    shift: 5,
+    selectionInput: 5,
+    type: 'text',
+    newLine: false,
+    objectType: 'latexFormatterSetting',
+  },
+});
 
 export function latexFormatter(editor: Editor, item: latexFormatterSetting) {
   if (editor) {
-    const isSelection = editor.somethingSelected;
+    const isSelection = editor.somethingSelected();
     const selection = editor.getSelection();
     const curserStart = editor.getCursor('from');
     const curserEnd = editor.getCursor('to');
