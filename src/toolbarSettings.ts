@@ -64,13 +64,25 @@ export interface namedCommand {
  * settings dialog focused there is no editor, so every command that writes to a
  * note is missing from it. That is all but one of this plugin's and most of
  * Obsidian's, which is exactly what the picker is for.
+ *
+ * This plugin's own commands come first, and that ordering matters rather than
+ * being a courtesy: a suggester renders only its first screenful until a query
+ * narrows it. Obsidian prefixes every command name with the plugin it belongs
+ * to, so sorting the whole register by name buries this one's under M, behind
+ * several hundred of Obsidian's - present, findable by typing, and invisible to
+ * anyone who scrolls.
  */
 export function sortedCommands<T extends namedCommand>(
   commands: Record<string, T>,
 ): T[] {
-  return Object.values(commands || {}).sort((a, b) =>
-    (a.name || '').localeCompare(b.name || ''),
-  );
+  const all = Object.values(commands || {});
+  const byName = (a: T, b: T) => (a.name || '').localeCompare(b.name || '');
+  const isOwn = (command: T) => (command.id || '').startsWith(`${PLUGIN_ID}:`);
+
+  return [
+    ...all.filter(isOwn).sort(byName),
+    ...all.filter((command) => !isOwn(command)).sort(byName),
+  ];
 }
 
 /**

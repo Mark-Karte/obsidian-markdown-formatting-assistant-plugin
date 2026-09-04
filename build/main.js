@@ -5990,6 +5990,21 @@ var CommandPickerModal = /** @class */ (function (_super) {
     CommandPickerModal.prototype.getItemText = function (command) {
         return command.name;
     };
+    /**
+     * With nothing typed, keep the order the list arrived in - this plugin's
+     * commands first.
+     *
+     * The fuzzy matcher scores an empty query the same for everything, so the
+     * order it returns rests on the sort being stable, which is not a promise
+     * worth relying on for the one view every user sees before typing.
+     */
+    CommandPickerModal.prototype.getSuggestions = function (query) {
+        if (query.trim())
+            return _super.prototype.getSuggestions.call(this, query);
+        // Nothing was searched for, so there is nothing to highlight.
+        var matches = [];
+        return this.choices.map(function (item) { return ({ item: item, match: { score: 0, matches: matches } }); });
+    };
     CommandPickerModal.prototype.onChooseItem = function (command) {
         this.onPick(command.id);
     };
@@ -6000,6 +6015,10 @@ var CommandPickerModal = /** @class */ (function (_super) {
         modal.choices = available.filter(function (command) { return !taken.includes(command.id); });
         modal.onPick = onPick;
         modal.setPlaceholder(placeholder);
+        // Well above the default, which is a screenful. This plugin's own commands
+        // are at the head of the list and there are fifty of them, so the default
+        // would show those and nothing else to browse past.
+        modal.limit = 150;
         modal.open();
     };
     return CommandPickerModal;
@@ -6134,11 +6153,19 @@ var DEFAULT_TOOLBAR = {
  * settings dialog focused there is no editor, so every command that writes to a
  * note is missing from it. That is all but one of this plugin's and most of
  * Obsidian's, which is exactly what the picker is for.
+ *
+ * This plugin's own commands come first, and that ordering matters rather than
+ * being a courtesy: a suggester renders only its first screenful until a query
+ * narrows it. Obsidian prefixes every command name with the plugin it belongs
+ * to, so sorting the whole register by name buries this one's under M, behind
+ * several hundred of Obsidian's - present, findable by typing, and invisible to
+ * anyone who scrolls.
  */
 function sortedCommands(commands) {
-    return Object.values(commands || {}).sort(function (a, b) {
-        return (a.name || '').localeCompare(b.name || '');
-    });
+    var all = Object.values(commands || {});
+    var byName = function (a, b) { return (a.name || '').localeCompare(b.name || ''); };
+    var isOwn = function (command) { return (command.id || '').startsWith("".concat(PLUGIN_ID, ":")); };
+    return __spreadArray(__spreadArray([], all.filter(isOwn).sort(byName), true), all.filter(function (command) { return !isOwn(command); }).sort(byName), true);
 }
 /**
  * Rebuilds the stored list into something safe to render.

@@ -1,4 +1,10 @@
-import { App, Command, FuzzySuggestModal } from 'obsidian';
+import {
+  App,
+  Command,
+  FuzzyMatch,
+  FuzzySuggestModal,
+  SearchMatches,
+} from 'obsidian';
 
 /**
  * Picks a command to put on the toolbar.
@@ -21,6 +27,23 @@ export class CommandPickerModal extends FuzzySuggestModal<Command> {
     return command.name;
   }
 
+  /**
+   * With nothing typed, keep the order the list arrived in - this plugin's
+   * commands first.
+   *
+   * The fuzzy matcher scores an empty query the same for everything, so the
+   * order it returns rests on the sort being stable, which is not a promise
+   * worth relying on for the one view every user sees before typing.
+   */
+  public getSuggestions(query: string): FuzzyMatch<Command>[] {
+    if (query.trim()) return super.getSuggestions(query);
+
+    // Nothing was searched for, so there is nothing to highlight.
+    const matches: SearchMatches = [];
+
+    return this.choices.map((item) => ({ item, match: { score: 0, matches } }));
+  }
+
   public onChooseItem(command: Command): void {
     this.onPick(command.id);
   }
@@ -39,6 +62,12 @@ export class CommandPickerModal extends FuzzySuggestModal<Command> {
     modal.choices = available.filter((command) => !taken.includes(command.id));
     modal.onPick = onPick;
     modal.setPlaceholder(placeholder);
+
+    // Well above the default, which is a screenful. This plugin's own commands
+    // are at the head of the list and there are fifty of them, so the default
+    // would show those and nothing else to browse past.
+    modal.limit = 150;
+
     modal.open();
   }
 }

@@ -65,17 +65,44 @@ test('an editor command is offered even though it cannot run right now', () => {
   );
 });
 
-test('commands are sorted by name, which groups a plugin together', () => {
+test("this plugin's own commands come first", () => {
+  // Not a courtesy: a suggester renders one screenful until a query narrows
+  // it. Sorted purely by name these land under M, behind several hundred of
+  // Obsidian's - reachable by typing and invisible to anyone who scrolls,
+  // which is exactly the report this fixed.
   const registry = {
-    c: { id: 'c', name: 'Assistant: H1' },
-    a: { id: 'a', name: 'Bookmarks: Show' },
-    b: { id: 'b', name: 'Assistant: Bold' },
+    a: { id: 'bookmarks:show', name: 'Bookmarks: Show' },
+    b: { id: `${PLUGIN_ID}:h1`, name: 'Markdown Formatting Assistant: H1' },
+    c: { id: 'app:go-back', name: 'App: Go back' },
+  };
+
+  assert.deepEqual(
+    sortedCommands(registry).map((command) => command.id),
+    [`${PLUGIN_ID}:h1`, 'app:go-back', 'bookmarks:show'],
+  );
+});
+
+test('within each group the order is by name', () => {
+  const registry = {
+    a: { id: `${PLUGIN_ID}:h1`, name: 'Assistant: H1' },
+    b: { id: 'zzz:one', name: 'Zebra: One' },
+    c: { id: `${PLUGIN_ID}:bold`, name: 'Assistant: Bold' },
+    d: { id: 'aaa:two', name: 'Alpha: Two' },
   };
 
   assert.deepEqual(
     sortedCommands(registry).map((command) => command.name),
-    ['Assistant: Bold', 'Assistant: H1', 'Bookmarks: Show'],
+    ['Assistant: Bold', 'Assistant: H1', 'Alpha: Two', 'Zebra: One'],
   );
+});
+
+test('a command whose id merely contains the plugin id is not treated as ours', () => {
+  const registry = {
+    a: { id: `other:${PLUGIN_ID}:x`, name: 'Other: X' },
+    b: { id: `${PLUGIN_ID}:bold`, name: 'Assistant: Bold' },
+  };
+
+  assert.equal(sortedCommands(registry)[0].id, `${PLUGIN_ID}:bold`);
 });
 
 test('a nameless or missing register does not throw', () => {
