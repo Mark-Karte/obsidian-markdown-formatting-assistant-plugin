@@ -70,6 +70,19 @@ export const en = {
     'Colours kept for the palette in the side panel. Pick one to add it, click a swatch to remove it.',
   'settings.savedColors.empty': 'No saved colours yet.',
   'settings.savedColors.removeHint': 'click to remove',
+  'settings.toolbar.name': 'Toolbar above the note',
+  'settings.toolbar.desc': 'A row of buttons at the top of the editor, so the side panel can stay closed. Desktop only - on mobile Obsidian already has a toolbar above the keyboard.',
+  'settings.toolbar.empty': 'No buttons yet. Add one below.',
+  'settings.toolbar.unavailable': 'Unavailable: {id}',
+  'settings.toolbar.remove': 'Remove from the toolbar',
+  'settings.toolbar.add': 'Add a button',
+  'settings.toolbar.addDesc': 'Any command in the vault can go on the toolbar, including Obsidian’s own and other plugins’. Drag the rows to reorder them. Up to {max} buttons.',
+  'settings.toolbar.pick': 'Search every command',
+  'settings.toolbar.align.name': 'Button alignment',
+  'settings.toolbar.align.desc': 'Where the buttons sit in the row.',
+  'settings.toolbar.align.left': 'Left',
+  'settings.toolbar.align.center': 'Center',
+  'settings.toolbar.align.right': 'Right',
 
   // Callout button labels. Only the label is translated - the callout type
   // inside '> [!note]' is a keyword Obsidian matches in English.

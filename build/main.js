@@ -82,6 +82,16 @@ function __generator(thisArg, body) {
     }
 }
 
+function __spreadArray(to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+}
+
 function _isPlaceholder(a) {
   return a != null && typeof a === 'object' && a['@@functional/placeholder'] === true;
 }
@@ -3959,6 +3969,19 @@ var en = {
     'settings.savedColors.desc': 'Colours kept for the palette in the side panel. Pick one to add it, click a swatch to remove it.',
     'settings.savedColors.empty': 'No saved colours yet.',
     'settings.savedColors.removeHint': 'click to remove',
+    'settings.toolbar.name': 'Toolbar above the note',
+    'settings.toolbar.desc': 'A row of buttons at the top of the editor, so the side panel can stay closed. Desktop only - on mobile Obsidian already has a toolbar above the keyboard.',
+    'settings.toolbar.empty': 'No buttons yet. Add one below.',
+    'settings.toolbar.unavailable': 'Unavailable: {id}',
+    'settings.toolbar.remove': 'Remove from the toolbar',
+    'settings.toolbar.add': 'Add a button',
+    'settings.toolbar.addDesc': 'Any command in the vault can go on the toolbar, including Obsidian’s own and other plugins’. Drag the rows to reorder them. Up to {max} buttons.',
+    'settings.toolbar.pick': 'Search every command',
+    'settings.toolbar.align.name': 'Button alignment',
+    'settings.toolbar.align.desc': 'Where the buttons sit in the row.',
+    'settings.toolbar.align.left': 'Left',
+    'settings.toolbar.align.center': 'Center',
+    'settings.toolbar.align.right': 'Right',
     // Callout button labels. Only the label is translated - the callout type
     // inside '> [!note]' is a keyword Obsidian matches in English.
     'callout.note': 'Note',
@@ -4064,6 +4087,19 @@ var be = {
     'callout.quote': 'Цытата',
     'settings.savedColors.empty': 'Захаваных колераў пакуль няма.',
     'settings.savedColors.removeHint': 'націсніце, каб выдаліць',
+    'settings.toolbar.name': 'Панэль над нататкай',
+    'settings.toolbar.desc': 'Шэраг кнопак уверсе рэдактара, каб бакавую панэль можна было закрыць. Толькі на камп’ютары — на мабільных у Obsidian ужо ёсць свая панэль над клавіятурай.',
+    'settings.toolbar.empty': 'Кнопак пакуль няма. Дадайце ніжэй.',
+    'settings.toolbar.unavailable': 'Недаступная: {id}',
+    'settings.toolbar.remove': 'Прыбраць з панэлі',
+    'settings.toolbar.add': 'Дадаць кнопку',
+    'settings.toolbar.addDesc': 'На панэль можна пакласці любую каманду сховішча, у тым ліку каманды самога Obsidian і іншых плагінаў. Парадак мяняецца перацягваннем. Да {max} кнопак.',
+    'settings.toolbar.pick': 'Пошук па ўсіх камандах',
+    'settings.toolbar.align.name': 'Выраўноўванне кнопак',
+    'settings.toolbar.align.desc': 'Дзе кнопкі стаяць у радзе.',
+    'settings.toolbar.align.left': 'Па левым краі',
+    'settings.toolbar.align.center': 'Па цэнтры',
+    'settings.toolbar.align.right': 'Па правым краі',
     'settings.calloutTitles.name': 'Пісаць загаловак выноскі',
     'settings.calloutTitles.desc': 'Устаўляць назву выноскі як загаловак, каб у нататцы яна адлюстроўвалася на вашай мове. Ключавое слова ўнутры [!note] заўсёды застаецца англійскім — менавіта па ім Obsidian вызначае тып.',
 };
@@ -4143,6 +4179,19 @@ var de = {
     'callout.quote': 'Zitat',
     'settings.savedColors.empty': 'Noch keine gespeicherten Farben.',
     'settings.savedColors.removeHint': 'zum Entfernen klicken',
+    'settings.toolbar.name': 'Leiste über der Notiz',
+    'settings.toolbar.desc': 'Eine Reihe Schaltflächen oben im Editor, damit das Seitenpanel geschlossen bleiben kann. Nur am Desktop – auf Mobilgeräten hat Obsidian bereits eine Leiste über der Tastatur.',
+    'settings.toolbar.empty': 'Noch keine Schaltflächen. Füge unten eine hinzu.',
+    'settings.toolbar.unavailable': 'Nicht verfügbar: {id}',
+    'settings.toolbar.remove': 'Von der Leiste entfernen',
+    'settings.toolbar.add': 'Schaltfläche hinzufügen',
+    'settings.toolbar.addDesc': 'Jeder Befehl im Vault kann auf die Leiste, auch Obsidians eigene und die anderer Plugins. Die Reihenfolge änderst du per Ziehen. Bis zu {max} Schaltflächen.',
+    'settings.toolbar.pick': 'Alle Befehle durchsuchen',
+    'settings.toolbar.align.name': 'Ausrichtung der Schaltflächen',
+    'settings.toolbar.align.desc': 'Wo die Schaltflächen in der Reihe sitzen.',
+    'settings.toolbar.align.left': 'Links',
+    'settings.toolbar.align.center': 'Mittig',
+    'settings.toolbar.align.right': 'Rechts',
     'settings.calloutTitles.name': 'Callout-Überschrift schreiben',
     'settings.calloutTitles.desc': 'Den Namen des Callouts als Überschrift einfügen, damit die Notiz ihn in deiner Sprache zeigt. Das Schlüsselwort in [!note] bleibt immer englisch - daran erkennt Obsidian den Typ.',
 };
@@ -4222,6 +4271,19 @@ var es = {
     'callout.quote': 'Cita',
     'settings.savedColors.empty': 'Todavía no hay colores guardados.',
     'settings.savedColors.removeHint': 'pulsa para quitar',
+    'settings.toolbar.name': 'Barra sobre la nota',
+    'settings.toolbar.desc': 'Una fila de botones en la parte superior del editor, para poder cerrar el panel lateral. Solo en escritorio: en móvil Obsidian ya tiene una barra sobre el teclado.',
+    'settings.toolbar.empty': 'Todavía no hay botones. Añade uno abajo.',
+    'settings.toolbar.unavailable': 'No disponible: {id}',
+    'settings.toolbar.remove': 'Quitar de la barra',
+    'settings.toolbar.add': 'Añadir un botón',
+    'settings.toolbar.addDesc': 'Cualquier comando del almacén puede ir en la barra, incluidos los de Obsidian y los de otros plugins. Arrastra las filas para reordenarlas. Hasta {max} botones.',
+    'settings.toolbar.pick': 'Buscar en todos los comandos',
+    'settings.toolbar.align.name': 'Alineación de los botones',
+    'settings.toolbar.align.desc': 'Dónde se colocan los botones en la fila.',
+    'settings.toolbar.align.left': 'Izquierda',
+    'settings.toolbar.align.center': 'Centro',
+    'settings.toolbar.align.right': 'Derecha',
     'settings.calloutTitles.name': 'Escribir el título de la llamada',
     'settings.calloutTitles.desc': 'Insertar el nombre de la llamada como título, para que la nota lo muestre en tu idioma. La palabra clave dentro de [!note] siempre queda en inglés: es la que reconoce Obsidian.',
 };
@@ -4301,6 +4363,19 @@ var fr = {
     'callout.quote': 'Citation',
     'settings.savedColors.empty': 'Aucune couleur enregistrée pour l’instant.',
     'settings.savedColors.removeHint': 'cliquer pour retirer',
+    'settings.toolbar.name': 'Barre au-dessus de la note',
+    'settings.toolbar.desc': 'Une rangée de boutons en haut de l’éditeur, pour pouvoir garder le panneau latéral fermé. Bureau uniquement : sur mobile, Obsidian dispose déjà d’une barre au-dessus du clavier.',
+    'settings.toolbar.empty': 'Aucun bouton pour l’instant. Ajoutez-en un ci-dessous.',
+    'settings.toolbar.unavailable': 'Indisponible : {id}',
+    'settings.toolbar.remove': 'Retirer de la barre',
+    'settings.toolbar.add': 'Ajouter un bouton',
+    'settings.toolbar.addDesc': 'N’importe quelle commande du coffre peut aller sur la barre, y compris celles d’Obsidian et des autres extensions. Glissez les lignes pour les réordonner. Jusqu’à {max} boutons.',
+    'settings.toolbar.pick': 'Rechercher parmi toutes les commandes',
+    'settings.toolbar.align.name': 'Alignement des boutons',
+    'settings.toolbar.align.desc': 'Où les boutons se placent dans la rangée.',
+    'settings.toolbar.align.left': 'Gauche',
+    'settings.toolbar.align.center': 'Centre',
+    'settings.toolbar.align.right': 'Droite',
     'settings.calloutTitles.name': 'Écrire le titre de l’encadré',
     'settings.calloutTitles.desc': 'Insérer le nom de l’encadré comme titre, afin que la note l’affiche dans votre langue. Le mot-clé dans [!note] reste toujours en anglais : c’est lui qu’Obsidian reconnaît.',
 };
@@ -4380,6 +4455,19 @@ var it = {
     'callout.quote': 'Citazione',
     'settings.savedColors.empty': 'Nessun colore salvato per ora.',
     'settings.savedColors.removeHint': 'tocca per rimuovere',
+    'settings.toolbar.name': 'Barra sopra la nota',
+    'settings.toolbar.desc': 'Una fila di pulsanti in cima all’editor, così il pannello laterale può restare chiuso. Solo su desktop: su mobile Obsidian ha già una barra sopra la tastiera.',
+    'settings.toolbar.empty': 'Nessun pulsante per ora. Aggiungine uno qui sotto.',
+    'settings.toolbar.unavailable': 'Non disponibile: {id}',
+    'settings.toolbar.remove': 'Togli dalla barra',
+    'settings.toolbar.add': 'Aggiungi un pulsante',
+    'settings.toolbar.addDesc': 'Sulla barra può finire qualsiasi comando del vault, compresi quelli di Obsidian e di altri plugin. Trascina le righe per riordinarle. Fino a {max} pulsanti.',
+    'settings.toolbar.pick': 'Cerca fra tutti i comandi',
+    'settings.toolbar.align.name': 'Allineamento dei pulsanti',
+    'settings.toolbar.align.desc': 'Dove stanno i pulsanti nella riga.',
+    'settings.toolbar.align.left': 'Sinistra',
+    'settings.toolbar.align.center': 'Centro',
+    'settings.toolbar.align.right': 'Destra',
     'settings.calloutTitles.name': 'Scrivere il titolo del riquadro',
     'settings.calloutTitles.desc': 'Inserire il nome del riquadro come titolo, così la nota lo mostra nella tua lingua. La parola chiave dentro [!note] resta sempre in inglese: è quella che Obsidian riconosce.',
 };
@@ -4459,6 +4547,19 @@ var ja = {
     'callout.quote': '引用',
     'settings.savedColors.empty': '保存された色はまだありません。',
     'settings.savedColors.removeHint': 'クリックで削除',
+    'settings.toolbar.name': 'ノート上部のツールバー',
+    'settings.toolbar.desc': 'エディタの上部にボタンを並べます。サイドパネルを閉じたままにできます。デスクトップ専用です。モバイルの Obsidian にはキーボード上のツールバーがすでにあります。',
+    'settings.toolbar.empty': 'ボタンはまだありません。下から追加してください。',
+    'settings.toolbar.unavailable': '利用できません: {id}',
+    'settings.toolbar.remove': 'ツールバーから外す',
+    'settings.toolbar.add': 'ボタンを追加',
+    'settings.toolbar.addDesc': 'Obsidian 自身や他プラグインのものも含め、保管庫のどのコマンドでもツールバーに置けます。行をドラッグすると並べ替えられます。最大 {max} 個。',
+    'settings.toolbar.pick': 'すべてのコマンドを検索',
+    'settings.toolbar.align.name': 'ボタンの配置',
+    'settings.toolbar.align.desc': '行の中でボタンを寄せる位置です。',
+    'settings.toolbar.align.left': '左寄せ',
+    'settings.toolbar.align.center': '中央',
+    'settings.toolbar.align.right': '右寄せ',
     'settings.calloutTitles.name': 'コールアウトの見出しを書き込む',
     'settings.calloutTitles.desc': 'コールアウト名を見出しとして挿入し、ノートで選択した言語のまま表示されるようにします。[!note] の中のキーワードは常に英語のままです。Obsidian はそれで種類を判別します。',
 };
@@ -4538,6 +4639,19 @@ var ko = {
     'callout.quote': '인용',
     'settings.savedColors.empty': '저장된 색상이 아직 없습니다.',
     'settings.savedColors.removeHint': '클릭하면 삭제',
+    'settings.toolbar.name': '노트 위 도구 모음',
+    'settings.toolbar.desc': '편집기 상단에 버튼을 한 줄로 놓아 사이드 패널을 닫아 둘 수 있습니다. 데스크톱 전용입니다. 모바일에서는 Obsidian이 이미 키보드 위에 도구 모음을 제공합니다.',
+    'settings.toolbar.empty': '아직 버튼이 없습니다. 아래에서 추가하세요.',
+    'settings.toolbar.unavailable': '사용할 수 없음: {id}',
+    'settings.toolbar.remove': '도구 모음에서 제거',
+    'settings.toolbar.add': '버튼 추가',
+    'settings.toolbar.addDesc': 'Obsidian 자체 명령과 다른 플러그인의 명령을 포함해 보관소의 어떤 명령이든 도구 모음에 올릴 수 있습니다. 행을 끌어 순서를 바꾸세요. 최대 {max}개.',
+    'settings.toolbar.pick': '모든 명령 검색',
+    'settings.toolbar.align.name': '버튼 정렬',
+    'settings.toolbar.align.desc': '버튼이 줄에서 놓이는 위치입니다.',
+    'settings.toolbar.align.left': '왼쪽',
+    'settings.toolbar.align.center': '가운데',
+    'settings.toolbar.align.right': '오른쪽',
     'settings.calloutTitles.name': '콜아웃 제목 삽입',
     'settings.calloutTitles.desc': '콜아웃 이름을 제목으로 넣어 노트에 선택한 언어로 표시되게 합니다. [!note] 안의 키워드는 항상 영어로 유지되며, Obsidian 은 그것으로 종류를 판별합니다.',
 };
@@ -4617,6 +4731,19 @@ var pt = {
     'callout.quote': 'Citação',
     'settings.savedColors.empty': 'Ainda não há cores guardadas.',
     'settings.savedColors.removeHint': 'clique para remover',
+    'settings.toolbar.name': 'Barra acima da nota',
+    'settings.toolbar.desc': 'Uma linha de botões no topo do editor, para o painel lateral poder ficar fechado. Apenas no computador — no telemóvel o Obsidian já tem uma barra acima do teclado.',
+    'settings.toolbar.empty': 'Ainda não há botões. Adicione um abaixo.',
+    'settings.toolbar.unavailable': 'Indisponível: {id}',
+    'settings.toolbar.remove': 'Remover da barra',
+    'settings.toolbar.add': 'Adicionar um botão',
+    'settings.toolbar.addDesc': 'Qualquer comando do cofre pode ir para a barra, incluindo os do próprio Obsidian e os de outros plugins. Arraste as linhas para reordenar. Até {max} botões.',
+    'settings.toolbar.pick': 'Procurar em todos os comandos',
+    'settings.toolbar.align.name': 'Alinhamento dos botões',
+    'settings.toolbar.align.desc': 'Onde os botões ficam na linha.',
+    'settings.toolbar.align.left': 'Esquerda',
+    'settings.toolbar.align.center': 'Centro',
+    'settings.toolbar.align.right': 'Direita',
     'settings.calloutTitles.name': 'Escrever o título do destaque',
     'settings.calloutTitles.desc': 'Inserir o nome do destaque como título, para que a nota o mostre no seu idioma. A palavra-chave dentro de [!note] permanece sempre em inglês - é por ela que o Obsidian identifica o tipo.',
 };
@@ -4699,6 +4826,19 @@ var ru = {
     'callout.quote': 'Цитата',
     'settings.savedColors.empty': 'Сохранённых цветов пока нет.',
     'settings.savedColors.removeHint': 'нажмите, чтобы удалить',
+    'settings.toolbar.name': 'Панель над заметкой',
+    'settings.toolbar.desc': 'Ряд кнопок вверху редактора, чтобы боковую панель можно было закрыть. Только на компьютере — на мобильных у Obsidian уже есть своя панель над клавиатурой.',
+    'settings.toolbar.empty': 'Кнопок пока нет. Добавьте ниже.',
+    'settings.toolbar.unavailable': 'Недоступна: {id}',
+    'settings.toolbar.remove': 'Убрать с панели',
+    'settings.toolbar.add': 'Добавить кнопку',
+    'settings.toolbar.addDesc': 'На панель можно положить любую команду хранилища, включая команды самого Obsidian и других плагинов. Порядок меняется перетаскиванием. До {max} кнопок.',
+    'settings.toolbar.pick': 'Поиск по всем командам',
+    'settings.toolbar.align.name': 'Выравнивание кнопок',
+    'settings.toolbar.align.desc': 'Где кнопки стоят в ряду.',
+    'settings.toolbar.align.left': 'По левому краю',
+    'settings.toolbar.align.center': 'По центру',
+    'settings.toolbar.align.right': 'По правому краю',
     'settings.calloutTitles.name': 'Писать заголовок коллаута',
     'settings.calloutTitles.desc': 'Вставлять название коллаута как заголовок, чтобы в заметке оно отображалось на вашем языке. Ключевое слово внутри [!note] всегда остаётся английским — именно по нему Obsidian опознаёт тип.',
 };
@@ -4778,6 +4918,19 @@ var uk = {
     'callout.quote': 'Цитата',
     'settings.savedColors.empty': 'Збережених кольорів поки немає.',
     'settings.savedColors.removeHint': 'натисніть, щоб видалити',
+    'settings.toolbar.name': 'Панель над нотаткою',
+    'settings.toolbar.desc': 'Ряд кнопок угорі редактора, щоб бічну панель можна було закрити. Лише на комп’ютері — на мобільних Obsidian уже має власну панель над клавіатурою.',
+    'settings.toolbar.empty': 'Кнопок поки немає. Додайте нижче.',
+    'settings.toolbar.unavailable': 'Недоступна: {id}',
+    'settings.toolbar.remove': 'Прибрати з панелі',
+    'settings.toolbar.add': 'Додати кнопку',
+    'settings.toolbar.addDesc': 'На панель можна покласти будь-яку команду сховища, зокрема команди самого Obsidian та інших плагінів. Порядок змінюється перетягуванням. До {max} кнопок.',
+    'settings.toolbar.pick': 'Пошук за всіма командами',
+    'settings.toolbar.align.name': 'Вирівнювання кнопок',
+    'settings.toolbar.align.desc': 'Де кнопки стоять у ряду.',
+    'settings.toolbar.align.left': 'За лівим краєм',
+    'settings.toolbar.align.center': 'По центру',
+    'settings.toolbar.align.right': 'За правим краєм',
     'settings.calloutTitles.name': 'Писати заголовок виноски',
     'settings.calloutTitles.desc': 'Вставляти назву виноски як заголовок, щоб у нотатці вона відображалася вашою мовою. Ключове слово всередині [!note] завжди залишається англійським — саме за ним Obsidian розпізнає тип.',
 };
@@ -4858,6 +5011,19 @@ var zh = {
     'callout.quote': '引用',
     'settings.savedColors.empty': '暂无已保存的颜色。',
     'settings.savedColors.removeHint': '点击删除',
+    'settings.toolbar.name': '笔记上方的工具栏',
+    'settings.toolbar.desc': '在编辑器顶部显示一排按钮，这样就可以关闭侧边栏。仅限桌面端——移动端 Obsidian 已经在键盘上方提供了工具栏。',
+    'settings.toolbar.empty': '暂无按钮，请在下方添加。',
+    'settings.toolbar.unavailable': '不可用：{id}',
+    'settings.toolbar.remove': '从工具栏移除',
+    'settings.toolbar.add': '添加按钮',
+    'settings.toolbar.addDesc': '库中的任何命令都可以放到工具栏上，包括 Obsidian 自带的命令和其他插件的命令。拖动行即可调整顺序。最多 {max} 个按钮。',
+    'settings.toolbar.pick': '搜索全部命令',
+    'settings.toolbar.align.name': '按钮对齐',
+    'settings.toolbar.align.desc': '按钮在这一行中的位置。',
+    'settings.toolbar.align.left': '左对齐',
+    'settings.toolbar.align.center': '居中',
+    'settings.toolbar.align.right': '右对齐',
     'settings.calloutTitles.name': '写入标注标题',
     'settings.calloutTitles.desc': '把标注名称作为标题插入，这样笔记中就会显示你所选语言的名称。[!note] 中的关键字始终保持英文，Obsidian 依靠它识别类型。',
 };
@@ -5862,6 +6028,63 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
 }(obsidian.SuggestModal));
 
 /**
+ * Picks a command to put on the toolbar.
+ *
+ * Fuzzy search over everything the vault has registered, which is the point of
+ * building the toolbar out of command ids: Obsidian's own commands and other
+ * plugins' are as eligible as this plugin's, so the row can be assembled around
+ * how someone actually writes rather than around what this plugin happens to
+ * provide.
+ */
+var CommandPickerModal = /** @class */ (function (_super) {
+    __extends(CommandPickerModal, _super);
+    function CommandPickerModal() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.choices = [];
+        _this.onPick = function () { };
+        return _this;
+    }
+    CommandPickerModal.prototype.getItems = function () {
+        return this.choices;
+    };
+    CommandPickerModal.prototype.getItemText = function (command) {
+        return command.name;
+    };
+    /**
+     * With nothing typed, keep the order the list arrived in - this plugin's
+     * commands first.
+     *
+     * The fuzzy matcher scores an empty query the same for everything, so the
+     * order it returns rests on the sort being stable, which is not a promise
+     * worth relying on for the one view every user sees before typing.
+     */
+    CommandPickerModal.prototype.getSuggestions = function (query) {
+        if (query.trim())
+            return _super.prototype.getSuggestions.call(this, query);
+        // Nothing was searched for, so there is nothing to highlight.
+        var matches = [];
+        return this.choices.map(function (item) { return ({ item: item, match: { score: 0, matches: matches } }); });
+    };
+    CommandPickerModal.prototype.onChooseItem = function (command) {
+        this.onPick(command.id);
+    };
+    CommandPickerModal.open = function (app, available, taken, placeholder, onPick) {
+        var modal = new CommandPickerModal(app);
+        // Already on the toolbar means nothing to add: a second button would run
+        // the same command, and removing one would appear to remove both.
+        modal.choices = available.filter(function (command) { return !taken.includes(command.id); });
+        modal.onPick = onPick;
+        modal.setPlaceholder(placeholder);
+        // Well above the default, which is a screenful. This plugin's own commands
+        // are at the head of the list and there are fifty of them, so the default
+        // would show those and nothing else to browse past.
+        modal.limit = 150;
+        modal.open();
+    };
+    return CommandPickerModal;
+}(obsidian.FuzzySuggestModal));
+
+/**
  * Names for Obsidian's own command palette and hotkey list. A leaf module with
  * no imports, so the tests can reach it - see the note in textPlacement.ts.
  *
@@ -5878,6 +6101,19 @@ function commandName(label) {
     // 'h1' through 'h6' keep their shape on purpose: that is what the panel
     // button says and what people type when they search for it.
     return words.charAt(0).toUpperCase() + words.slice(1);
+}
+/**
+ * What to write on a toolbar button for a command that has no icon.
+ *
+ * Obsidian prefixes a command's name with the plugin it came from, so the
+ * useful part is whatever follows the last colon - and even that is often a
+ * sentence. Two characters is what fits a square button; the full name is on
+ * the tooltip either way.
+ */
+function shortLabel(name) {
+    var parts = (name || '').split(':');
+    var tail = parts[parts.length - 1].trim();
+    return tail.slice(0, 2);
 }
 
 /**
@@ -5900,6 +6136,10 @@ function registerFormattingCommands(plugin, writeCalloutTitle) {
             // The table key rather than the label, so a binding survives a rename.
             id: item.id,
             name: commandName(item.des),
+            // The panel's own icons, registered with addIcon at load. Obsidian shows
+            // these on mobile and in the ribbon, and the editor toolbar reads them
+            // straight off the command rather than keeping a second table.
+            icon: item.icon,
             // editorCallback rather than callback: these all write to a note, and
             // Obsidian then hides them when no editor has focus.
             editorCallback: function (editor) { return iconFormatter(editor, item); },
@@ -5915,6 +6155,7 @@ function registerFormattingCommands(plugin, writeCalloutTitle) {
             // nothing would say so.
             id: "callout-".concat(item.id),
             name: "".concat(t('section.callouts'), ": ").concat(calloutLabel(item.id)),
+            icon: item.icon,
             editorCallback: function (editor) {
                 // Read when the command runs rather than when it is registered, so the
                 // setting takes effect without a restart.
@@ -5923,6 +6164,243 @@ function registerFormattingCommands(plugin, writeCalloutTitle) {
         });
     });
 }
+
+/**
+ * What the toolbar stores and how that list is kept sane. A leaf module with
+ * no imports, so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The toolbar is a list of Obsidian command ids and nothing else. That is the
+ * whole design: anything registered as a command can sit on it, including
+ * Obsidian's own and other plugins', not merely this one's buttons.
+ */
+/**
+ * Must match the `id` in manifest.json - Obsidian namespaces every command by
+ * it, so the default buttons below would resolve to nothing if the two drifted.
+ * There is a test on exactly that.
+ */
+var PLUGIN_ID = 'obsidian-markdown-formatting-assistant-plugin';
+/**
+ * A ceiling rather than a design limit. The toolbar wraps, so a long list
+ * costs the user their writing space rather than breaking anything - but a
+ * settings file that somehow grew unbounded should not take the editor with it.
+ */
+var MAX_TOOLBAR_COMMANDS = 40;
+/** Everyday formatting, in the order a toolbar usually reads. */
+var DEFAULT_TOOLBAR_COMMANDS = [
+    'h1',
+    'h2',
+    'h3',
+    'bold',
+    'italic',
+    'strikethrough',
+    'highlight',
+    'codeInline',
+    'blockquote',
+    'bulletList',
+    'numberList',
+    'checkList',
+    'link',
+].map(function (id) { return "".concat(PLUGIN_ID, ":").concat(id); });
+var TOOLBAR_ALIGNMENTS = [
+    'left',
+    'center',
+    'right',
+];
+var DEFAULT_TOOLBAR = {
+    enabled: false,
+    commands: DEFAULT_TOOLBAR_COMMANDS,
+    // Left, because that is where the text starts.
+    alignment: 'left',
+};
+/** Anything unrecognised falls back to the default rather than to no layout. */
+function normaliseToolbarAlignment(value) {
+    return TOOLBAR_ALIGNMENTS.includes(value)
+        ? value
+        : DEFAULT_TOOLBAR.alignment;
+}
+/**
+ * Every registered command, in the order a person would look for one.
+ *
+ * Takes the whole register on purpose. Obsidian also offers `listCommands()`,
+ * which answers a different question - what can run *right now* - and with the
+ * settings dialog focused there is no editor, so every command that writes to a
+ * note is missing from it. That is all but one of this plugin's and most of
+ * Obsidian's, which is exactly what the picker is for.
+ *
+ * This plugin's own commands come first, and that ordering matters rather than
+ * being a courtesy: a suggester renders only its first screenful until a query
+ * narrows it. Obsidian prefixes every command name with the plugin it belongs
+ * to, so sorting the whole register by name buries this one's under M, behind
+ * several hundred of Obsidian's - present, findable by typing, and invisible to
+ * anyone who scrolls.
+ */
+function sortedCommands(commands) {
+    var all = Object.values(commands || {});
+    var byName = function (a, b) { return (a.name || '').localeCompare(b.name || ''); };
+    var isOwn = function (command) { return (command.id || '').startsWith("".concat(PLUGIN_ID, ":")); };
+    return __spreadArray(__spreadArray([], all.filter(isOwn).sort(byName), true), all.filter(function (command) { return !isOwn(command); }).sort(byName), true);
+}
+/**
+ * Rebuilds the stored list into something safe to render.
+ *
+ * Anything at all can be in a settings file - it is hand-editable, it is
+ * synced between machines, and it is written by older versions of this plugin.
+ * A duplicate id is the interesting case: two buttons would run the same
+ * command, and removing one of them would look like it removed both.
+ */
+function normaliseToolbarCommands(value) {
+    if (!Array.isArray(value))
+        return __spreadArray([], DEFAULT_TOOLBAR_COMMANDS, true);
+    var seen = new Set();
+    var commands = [];
+    for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
+        var entry = value_1[_i];
+        if (typeof entry !== 'string')
+            continue;
+        var id = entry.trim();
+        if (!id || seen.has(id))
+            continue;
+        seen.add(id);
+        commands.push(id);
+        if (commands.length === MAX_TOOLBAR_COMMANDS)
+            break;
+    }
+    return commands;
+}
+/**
+ * Moves one button to another position.
+ *
+ * Written as remove-then-insert rather than as a swap. The panel's own
+ * reordering used to swap the two entries, which is only the same thing for
+ * neighbours: dragging the first button to the end there sent the last one to
+ * the front rather than shifting the rest along.
+ */
+function moveCommand(commands, from, to) {
+    var next = __spreadArray([], commands, true);
+    if (!Number.isInteger(from) ||
+        !Number.isInteger(to) ||
+        from < 0 ||
+        from >= next.length ||
+        to < 0 ||
+        to >= next.length ||
+        from === to) {
+        return next;
+    }
+    var moved = next.splice(from, 1)[0];
+    next.splice(to, 0, moved);
+    return next;
+}
+
+var TOOLBAR_CLASS = 'mfa-toolbar';
+function getCommandRegistry(plugin) {
+    // @ts-ignore - see the note above.
+    return plugin.app.commands;
+}
+/** Everything registered, sorted - see sortedCommands for why not listCommands. */
+function allCommands(registry) {
+    return sortedCommands(registry.commands);
+}
+/**
+ * A row of buttons above the note.
+ *
+ * Obsidian publishes no place to put one, so the element is inserted into the
+ * markdown view's own content container. That is a dependency on the app's
+ * layout rather than on its API, which is the price of the feature: it is the
+ * first thing to check if a future Obsidian release moves the toolbar or
+ * loses it.
+ *
+ * Everything is torn down again in `detachAll`, called from the plugin's
+ * onunload, because an element left behind would outlive the plugin.
+ */
+var EditorToolbar = /** @class */ (function () {
+    function EditorToolbar(plugin, settings) {
+        this.plugin = plugin;
+        this.settings = settings;
+    }
+    /** Starts watching for panes to decorate. */
+    EditorToolbar.prototype.start = function () {
+        var _this = this;
+        var workspace = this.plugin.app.workspace;
+        // Both are needed: opening a tab is a layout change, moving between
+        // existing tabs is not.
+        this.plugin.registerEvent(workspace.on('layout-change', function () { return _this.refresh(); }));
+        this.plugin.registerEvent(workspace.on('active-leaf-change', function () { return _this.refresh(); }));
+        workspace.onLayoutReady(function () { return _this.refresh(); });
+    };
+    /** Brings every open markdown pane in line with the current settings. */
+    EditorToolbar.prototype.refresh = function () {
+        var _this = this;
+        var _a = this.settings(), enabled = _a.enabled, commands = _a.commands, alignment = _a.alignment;
+        this.plugin.app.workspace
+            .getLeavesOfType('markdown')
+            .forEach(function (leaf) {
+            var view = leaf.view;
+            if (!(view instanceof obsidian.MarkdownView))
+                return;
+            // Reading mode has no editor to write to, and every button here writes.
+            var wanted = enabled && commands.length > 0 && view.getMode() === 'source';
+            _this.apply(view, wanted ? commands : [], alignment);
+        });
+    };
+    /** Removes every toolbar this plugin put on the page. */
+    EditorToolbar.prototype.detachAll = function () {
+        document
+            .querySelectorAll(".".concat(TOOLBAR_CLASS))
+            .forEach(function (bar) { return bar.remove(); });
+    };
+    EditorToolbar.prototype.apply = function (view, commands, alignment) {
+        var host = view.contentEl;
+        var existing = host.querySelector(":scope > .".concat(TOOLBAR_CLASS));
+        if (commands.length === 0) {
+            existing === null || existing === void 0 ? void 0 : existing.remove();
+            return;
+        }
+        // Rebuilding on every pane switch would be wasteful and would drop the
+        // focus ring mid-click, so what was rendered is stamped on the element and
+        // compared first. The alignment is part of that: it is a class on the same
+        // element, and a change to it has to reach a pane that is already showing.
+        var signature = __spreadArray([alignment], commands, true).join('\n');
+        if (existing instanceof HTMLElement) {
+            if (existing.dataset.signature === signature)
+                return;
+            existing.remove();
+        }
+        var bar = createDiv({ cls: "".concat(TOOLBAR_CLASS, " is-align-").concat(alignment) });
+        bar.dataset.signature = signature;
+        this.fill(bar, commands);
+        // First child, so it sits above the note rather than over it.
+        host.insertBefore(bar, host.firstChild);
+    };
+    EditorToolbar.prototype.fill = function (bar, commands) {
+        var registry = getCommandRegistry(this.plugin);
+        commands.forEach(function (id) {
+            var command = registry.commands[id];
+            // A command disappears when its plugin is disabled or removed. The entry
+            // stays in the settings - it will work again when the plugin comes back -
+            // but there is nothing to draw and nothing a click could do.
+            if (!command)
+                return;
+            var button = bar.createEl('button', {
+                cls: 'mfa-toolbar-button clickable-icon',
+            });
+            button.setAttribute('aria-label', command.name);
+            button.type = 'button';
+            if (command.icon) {
+                obsidian.setIcon(button, command.icon);
+            }
+            else {
+                button.setText(shortLabel(command.name));
+            }
+            button.addEventListener('click', function (event) {
+                // Without this the editor loses the selection the command is about to
+                // act on.
+                event.preventDefault();
+                registry.executeCommandById(id);
+            });
+        });
+    };
+    return EditorToolbar;
+}());
 
 /** Preselected in the saved-colours picker, so it never opens on black. */
 var DEFAULT_PICKER_COLOR = '#448aff';
@@ -5941,6 +6419,7 @@ var DEFAULT_SETTINGS = {
     ],
     tableAlignment: 'default',
     calloutTitles: true,
+    toolbar: DEFAULT_TOOLBAR,
 };
 /** Order the section toggles appear in the settings tab. */
 var SECTION_ORDER = DEFAULT_SETTINGS.regionSettings.map(function (region) { return region.name; });
@@ -6022,6 +6501,8 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                             },
                         });
                         registerFormattingCommands(this, function () { return _this.settings.calloutTitles; });
+                        this.toolbar = new EditorToolbar(this, function () { return _this.settings.toolbar; });
+                        this.toolbar.start();
                         this.addSettingTab(new SettingsTab(this.app, this));
                         return [2 /*return*/];
                 }
@@ -6029,14 +6510,17 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
         });
     };
     MarkdownAutocompletePlugin.prototype.onunload = function () {
+        var _a;
         // Views, commands, the ribbon icon and the settings tab are torn down by
-        // Plugin itself. Icons are the exception: addIcon is a module-level
-        // function outside that lifecycle.
+        // Plugin itself. These two are the exception: addIcon is a module-level
+        // function outside that lifecycle, and the toolbar lives in the markdown
+        // view's own container rather than in anything the plugin owns.
         removeIcons();
+        (_a = this.toolbar) === null || _a === void 0 ? void 0 : _a.detachAll();
     };
     MarkdownAutocompletePlugin.prototype.loadSettings = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, _b, _c, _d, storedRegions, known;
+            var _a, _b, _c, _d, storedRegions, known, stored;
             var _this = this;
             return __generator(this, function (_e) {
                 switch (_e.label) {
@@ -6071,6 +6555,12 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                         this.settings.savedColors = (Array.isArray(this.settings.savedColors)
                             ? this.settings.savedColors
                             : DEFAULT_SETTINGS.savedColors).filter(function (color) { return typeof color === 'string'; });
+                        stored = this.settings.toolbar;
+                        this.settings.toolbar = {
+                            enabled: Boolean(stored && stored.enabled),
+                            commands: normaliseToolbarCommands(stored && stored.commands),
+                            alignment: normaliseToolbarAlignment(stored && stored.alignment),
+                        };
                         return [2 /*return*/];
                 }
             });
@@ -6205,6 +6695,138 @@ var SettingsTab = /** @class */ (function (_super) {
             });
         });
         this.addSavedColorSettings(containerEl);
+        this.addToolbarSettings(containerEl);
+    };
+    /**
+     * The toolbar above the note: whether to show it, and which buttons.
+     *
+     * A button is a command id and nothing more, so this list can hold anything
+     * the vault has registered - Obsidian's own commands and other plugins' as
+     * readily as this one's.
+     */
+    SettingsTab.prototype.addToolbarSettings = function (containerEl) {
+        var _this = this;
+        var toolbar = this.plugin.settings.toolbar;
+        new obsidian.Setting(containerEl)
+            .setName(t('settings.toolbar.name'))
+            .setDesc(t('settings.toolbar.desc'))
+            .addToggle(function (toggle) {
+            return toggle.setValue(toolbar.enabled).onChange(function (value) { return __awaiter(_this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            toolbar.enabled = value;
+                            return [4 /*yield*/, this.plugin.saveSettings()];
+                        case 1:
+                            _a.sent();
+                            this.plugin.toolbar.refresh();
+                            // Redraw so the button list appears or goes away with the toggle.
+                            this.display();
+                            return [2 /*return*/];
+                    }
+                });
+            }); });
+        });
+        if (!toolbar.enabled)
+            return;
+        new obsidian.Setting(containerEl)
+            .setName(t('settings.toolbar.align.name'))
+            .setDesc(t('settings.toolbar.align.desc'))
+            .addDropdown(function (dropdown) {
+            TOOLBAR_ALIGNMENTS.forEach(function (option) {
+                return dropdown.addOption(option, t("settings.toolbar.align.".concat(option)));
+            });
+            dropdown.setValue(toolbar.alignment).onChange(function (value) { return __awaiter(_this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            toolbar.alignment = normaliseToolbarAlignment(value);
+                            return [4 /*yield*/, this.plugin.saveSettings()];
+                        case 1:
+                            _a.sent();
+                            this.plugin.toolbar.refresh();
+                            return [2 /*return*/];
+                    }
+                });
+            }); });
+        });
+        var registry = getCommandRegistry(this.plugin);
+        var commit = function (commands) { return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        toolbar.commands = commands;
+                        return [4 /*yield*/, this.plugin.saveSettings()];
+                    case 1:
+                        _a.sent();
+                        this.plugin.toolbar.refresh();
+                        this.display();
+                        return [2 /*return*/];
+                }
+            });
+        }); };
+        var list = containerEl.createDiv({ cls: 'mfa-toolbar-editor' });
+        if (toolbar.commands.length === 0) {
+            list
+                .createDiv({ cls: 'mfa-toolbar-empty' })
+                .setText(t('settings.toolbar.empty'));
+        }
+        toolbar.commands.forEach(function (id, index) {
+            var command = registry.commands[id];
+            var row = list.createDiv({ cls: 'mfa-toolbar-item' });
+            row.draggable = true;
+            row.dataset.index = String(index);
+            var icon = row.createSpan({ cls: 'mfa-toolbar-item-icon' });
+            if (command && command.icon) {
+                obsidian.setIcon(icon, command.icon);
+            }
+            // A command vanishes when its plugin is disabled or uninstalled. The
+            // entry is kept - it works again when the plugin returns - but saying so
+            // beats showing a blank row.
+            row
+                .createSpan({ cls: 'mfa-toolbar-item-name' })
+                .setText(command ? command.name : t('settings.toolbar.unavailable', { id: id }));
+            if (!command)
+                row.addClass('is-unavailable');
+            var remove = row.createSpan({ cls: 'mfa-toolbar-item-remove' });
+            obsidian.setIcon(remove, 'x');
+            remove.setAttribute('aria-label', t('settings.toolbar.remove'));
+            remove.onClickEvent(function () {
+                void commit(toolbar.commands.filter(function (_, at) { return at !== index; }));
+            });
+            // Named like the panel's own drag payload rather than with the mfa-
+            // prefix, which throughout this project means a CSS class - and there is
+            // a test that holds it to that.
+            row.ondragstart = function (event) {
+                var _a;
+                (_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData('toolbarButtonIndex', String(index));
+            };
+            row.ondragover = function (event) {
+                event.preventDefault();
+            };
+            row.ondrop = function (event) {
+                var _a;
+                event.preventDefault();
+                var from = Number((_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData('toolbarButtonIndex'));
+                // A drop can land on any descendant of the row, and on the container
+                // between rows, so the index is read from the row rather than from the
+                // element the pointer happened to be over. moveCommand ignores an index
+                // that does not resolve.
+                void commit(moveCommand(toolbar.commands, from, index));
+            };
+        });
+        new obsidian.Setting(containerEl)
+            .setName(t('settings.toolbar.add'))
+            .setDesc(t('settings.toolbar.addDesc', { max: String(MAX_TOOLBAR_COMMANDS) }))
+            .addButton(function (button) {
+            return button
+                .setButtonText(t('settings.toolbar.add'))
+                .setCta()
+                .setDisabled(toolbar.commands.length >= MAX_TOOLBAR_COMMANDS)
+                .onClick(function () {
+                CommandPickerModal.open(_this.app, allCommands(registry), toolbar.commands, t('settings.toolbar.pick'), function (id) { return void commit(__spreadArray(__spreadArray([], toolbar.commands, true), [id], false)); });
+            });
+        });
     };
     /**
      * Saved colours as swatches rather than a text field.

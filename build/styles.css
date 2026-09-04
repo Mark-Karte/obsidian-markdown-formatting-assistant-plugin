@@ -331,3 +331,90 @@ body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
 .mfa-table-alignment {
   margin-top: 8px;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Toolbar above the note                                                    */
+/* ------------------------------------------------------------------------ */
+
+/* Lives inside the markdown view's own container, so it must not assume the
+   panel's scope. It wraps rather than scrolls: a narrow pane should cost a
+   row of height, not hide half the buttons off the edge. */
+.mfa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 8px;
+  background-color: var(--background-primary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* Where the buttons sit in the row. Spelled out for all three rather than
+   leaving one to the default, so the setting reads the same in the stylesheet
+   as it does in the dialog. */
+.mfa-toolbar.is-align-left {
+  justify-content: flex-start;
+}
+
+.mfa-toolbar.is-align-center {
+  justify-content: center;
+}
+
+.mfa-toolbar.is-align-right {
+  justify-content: flex-end;
+}
+
+/* Wide enough for the two-letter fallback a command without an icon gets. */
+.mfa-toolbar-button {
+  min-width: 28px;
+  font-size: 12px;
+}
+
+/* ---- and its editor in the settings ---- */
+
+.mfa-toolbar-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.mfa-toolbar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  cursor: move;
+}
+
+.mfa-toolbar-item-icon {
+  display: inline-flex;
+  width: 16px;
+}
+
+.mfa-toolbar-item-name {
+  flex: 1;
+  font-size: 13px;
+}
+
+/* The command is gone, usually because its plugin was disabled. The row stays
+   so the entry can be recognised and removed. */
+.mfa-toolbar-item.is-unavailable .mfa-toolbar-item-name {
+  color: var(--text-error);
+}
+
+.mfa-toolbar-item-remove {
+  display: inline-flex;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.mfa-toolbar-item-remove:hover {
+  color: var(--text-error);
+}
+
+.mfa-toolbar-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+}

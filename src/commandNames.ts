@@ -18,3 +18,18 @@ export function commandName(label: string): string {
   // button says and what people type when they search for it.
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
+
+/**
+ * What to write on a toolbar button for a command that has no icon.
+ *
+ * Obsidian prefixes a command's name with the plugin it came from, so the
+ * useful part is whatever follows the last colon - and even that is often a
+ * sentence. Two characters is what fits a square button; the full name is on
+ * the tooltip either way.
+ */
+export function shortLabel(name: string): string {
+  const parts = (name || '').split(':');
+  const tail = parts[parts.length - 1].trim();
+
+  return tail.slice(0, 2);
+}
