@@ -20,6 +20,7 @@ import {
 } from './SidePanelControlView';
 import { CodeSuggestionModal } from './CommandListView';
 import { CalloutsSuggestionModal } from './CalloutsListView';
+import { registerFormattingCommands } from './commands';
 import type { tableAlignment } from './tableFormatter';
 import {
   AUTO_LOCALE,
@@ -113,6 +114,18 @@ export default class MarkdownAutocompletePlugin extends Plugin {
         );
       },
     });
+
+    // The panel had only the ribbon icon, which is the one thing a keyboard
+    // cannot reach.
+    this.addCommand({
+      id: 'toggle-side-panel',
+      name: t('command.openPanel'),
+      callback: () => {
+        void this.toggleSidePanelControlView();
+      },
+    });
+
+    registerFormattingCommands(this, () => this.settings.calloutTitles);
 
     this.addSettingTab(new SettingsTab(this.app, this));
   }
@@ -335,7 +348,7 @@ class SettingsTab extends PluginSettingTab {
       const swatch = swatches.createDiv({
         cls: 'mfa-color-icon mfa-removable',
       });
-      swatch.style.backgroundColor = color;
+      swatch.style.setProperty('--mfa-swatch', color);
       swatch.setAttribute('aria-label', color);
       swatch.title = `${color} - ${t('settings.savedColors.removeHint')}`;
 

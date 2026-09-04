@@ -44,18 +44,22 @@ export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetti
     iconDiv.classList.add('mfa-suggestion-icon');
 
     const cell2 = row.createDiv();
-    cell2.classList.add('mfa-suggestion-text');
+    cell2.classList.add('mfa-suggestion-text', 'mfa-suggestion-text--muted');
     cell2.setText(calloutLabel(calloutsFormatterSetting.id));
-    cell2.style.color = 'var(--text-muted)';
 
-    const spanIcon = document.createElement('span');
-    spanIcon.style.verticalAlign = 'middle';
-    spanIcon.style.color = calloutsFormatterSetting.color;
-    //iconDiv.style.backgroundColor = calloutsFormatterSetting.bgColor;
+    const spanIcon = iconDiv.createSpan({ cls: 'mfa-callout-icon' });
 
     setIcon(spanIcon, calloutsFormatterSetting.icon);
-    iconDiv.appendChild(spanIcon);
-    row.style.backgroundColor = calloutsFormatterSetting.bgColor;
+
+    // The colours belong to the callout type, so they arrive as data rather
+    // than as anything the stylesheet could know in advance. Custom properties
+    // are how a stylesheet takes delivery of that.
+    row.addClass('mfa-callout-row');
+    row.style.setProperty('--mfa-callout-color', calloutsFormatterSetting.color);
+    row.style.setProperty(
+      '--mfa-callout-background',
+      calloutsFormatterSetting.bgColor,
+    );
   }
 
   // Perform action on the selected suggestion.

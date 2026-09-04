@@ -1,4 +1,4 @@
-import { svgToElement } from './icons';
+import { appendLabel, svgToElement } from './icons';
 import { setIcon } from "obsidian";
 import { iconFormatter, formatSettings, formatterSetting } from './formatter';
 import {
@@ -44,6 +44,9 @@ import { getTargetEditor } from './generalFunctions';
 import { calloutLabel, sectionLabel, t } from './i18n';
 
 export const SidePanelControlViewType = 'side-panel-control-view';
+
+const ISSUES_URL =
+  'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
 
 export class SidePanelControlView extends ItemView {
   private static lastColors: Array<string> = ['#ff0000'];
@@ -124,18 +127,7 @@ export class SidePanelControlView extends ItemView {
       const content = this.addSelectableHeader(mainDiv, 'html');
 
       this.addHtmlButtons(content);
-
-      const info = content.createEl('p');
-      info.style.textAlign = 'center';
-      info.style.marginTop = '10px';
-      info.style.marginBottom = '10px';
-      const link = info.createEl('a');
-      link.appendText(t('html.reportMissingTag'));
-      link.style.textAlign = 'center';
-
-      link.style.fontSize = '10px';
-      link.href =
-        'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
+      this.addNote(content, t('html.reportMissingTag'), ISSUES_URL);
     };
 
     // --------------
@@ -145,28 +137,12 @@ export class SidePanelControlView extends ItemView {
       const content = this.addSelectableHeader(mainDiv, 'latex');
 
       this.addLatexButtons(content);
-
-      let info = content.createEl('p');
-      info.style.textAlign = 'center';
-      info.style.marginTop = '10px';
-      info.style.marginBottom = '10px';
-      let link = info.createEl('a');
-      link.appendText(t('latex.introduction'));
-      link.style.textAlign = 'center';
-      link.style.fontSize = '10px';
-      link.href = 'https://en.wikibooks.org/wiki/LaTeX/Mathematics';
-
-      info = content.createEl('p');
-      info.style.textAlign = 'center';
-      info.style.marginTop = '10px';
-      info.style.marginBottom = '10px';
-      link = info.createEl('a');
-      link.appendText(t('latex.reportMissingFunction'));
-      link.style.textAlign = 'center';
-
-      link.style.fontSize = '10px';
-      link.href =
-        'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
+      this.addNote(
+        content,
+        t('latex.introduction'),
+        'https://en.wikibooks.org/wiki/LaTeX/Mathematics',
+      );
+      this.addNote(content, t('latex.reportMissingFunction'), ISSUES_URL);
     };
     // --------------
     // Greek Section
@@ -174,32 +150,23 @@ export class SidePanelControlView extends ItemView {
     const addGreekLettersSection = () => {
       const content = this.addSelectableHeader(mainDiv, 'greekLetters');
 
-      let header = content.createEl('h5');
-      header.appendText(t('greek.lowerCase'));
-      header.style.textAlign = 'center';
-      header.style.marginTop = '0px';
-      header.style.marginBottom = '5px';
+      content
+        .createEl('h5', { cls: 'mfa-subheading' })
+        .setText(t('greek.lowerCase'));
 
       this.addGreekLowerCaseLetters(content);
 
-      header = content.createEl('h5');
-      header.appendText(t('greek.upperCase'));
-      header.style.textAlign = 'center';
-      header.style.marginTop = '10px';
-      header.style.marginBottom = '5px';
+      content
+        .createEl('h5', { cls: 'mfa-subheading' })
+        .setText(t('greek.upperCase'));
 
       this.addGreekUpperCaseLetters(content);
 
-      const info = content.createEl('p');
-      info.style.textAlign = 'center';
-      info.style.marginTop = '10px';
-      info.style.marginBottom = '10px';
-      const link = info.createEl('a');
-      link.appendText(t('greek.overview'));
-      link.style.textAlign = 'center';
-
-      link.style.fontSize = '10px';
-      link.href = 'https://en.wikipedia.org/wiki/Greek_alphabet';
+      this.addNote(
+        content,
+        t('greek.overview'),
+        'https://en.wikipedia.org/wiki/Greek_alphabet',
+      );
     };
 
     // --------------
@@ -236,6 +203,14 @@ export class SidePanelControlView extends ItemView {
     });
   }
 
+  /** The small centred link that closes several of the sections. */
+  private addNote(parent: HTMLElement, text: string, href: string): void {
+    parent
+      .createEl('p', { cls: 'mfa-note' })
+      .createEl('a', { cls: 'mfa-note-link', href })
+      .appendText(text);
+  }
+
   /**
    * A size picker for markdown tables: hovering the grid previews the table
    * that a click would insert, which is a lot less fiddly in a narrow pane than
@@ -244,47 +219,33 @@ export class SidePanelControlView extends ItemView {
   private addTableBuilder(mainDiv: HTMLElement) {
     let alignment: tableAlignment = this.plugin.settings.tableAlignment;
 
-    const label = mainDiv.createEl('p');
-    label.style.textAlign = 'center';
-    label.style.margin = '4px 0';
-    label.style.fontSize = '12px';
+    const label = mainDiv.createEl('p', { cls: 'mfa-table-label' });
 
     const idleLabel = () => t('tables.pick');
     label.setText(idleLabel());
 
-    const grid = mainDiv.createDiv();
-    grid.style.display = 'flex';
-    grid.style.flexDirection = 'column';
-    grid.style.alignItems = 'center';
-    grid.style.gap = '2px';
+    const grid = mainDiv.createDiv({ cls: 'mfa-table-grid' });
 
     const cells: HTMLElement[][] = [];
 
     const paint = (rows: number, columns: number) => {
       cells.forEach((cellRow, rowIndex) =>
         cellRow.forEach((cell, columnIndex) => {
-          const covered = rowIndex < rows && columnIndex < columns;
-          cell.style.backgroundColor = covered
-            ? 'var(--interactive-accent)'
-            : 'transparent';
+          cell.toggleClass(
+            'is-covered',
+            rowIndex < rows && columnIndex < columns,
+          );
         }),
       );
     };
 
     for (let rowIndex = 0; rowIndex < MAX_TABLE_ROWS; rowIndex++) {
-      const rowEl = grid.createDiv();
-      rowEl.style.display = 'flex';
-      rowEl.style.gap = '2px';
+      const rowEl = grid.createDiv({ cls: 'mfa-table-grid-row' });
 
       const rowCells: HTMLElement[] = [];
 
       for (let columnIndex = 0; columnIndex < MAX_TABLE_COLUMNS; columnIndex++) {
-        const cell = rowEl.createDiv();
-        cell.style.width = '16px';
-        cell.style.height = '16px';
-        cell.style.border = '1px solid var(--background-modifier-border)';
-        cell.style.borderRadius = '2px';
-        cell.style.cursor = 'pointer';
+        const cell = rowEl.createDiv({ cls: 'mfa-table-cell' });
 
         const rows = rowIndex + 1;
         const columns = columnIndex + 1;
@@ -310,8 +271,9 @@ export class SidePanelControlView extends ItemView {
       label.setText(idleLabel());
     });
 
-    const alignmentRow = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-    alignmentRow.style.marginTop = '8px';
+    const alignmentRow = mainDiv.createDiv({
+      cls: 'nav-buttons-container mfa-table-alignment',
+    });
 
     const alignmentButtons: HTMLElement[] = [];
 
@@ -399,22 +361,21 @@ export class SidePanelControlView extends ItemView {
         row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
       }
 
-      let button = row.createDiv({ cls: 'nav-action-text-button' });
-      // @ts-ignore
-      button.style.textJustify = 'center';
-      button.style.textAlign = 'center';
-      button.style.backgroundColor = item.bgColor;
+      const button = row.createDiv({
+        cls: 'nav-action-text-button mfa-centered-button mfa-callout-button',
+      });
+
+      // Each callout carries its own colours as data, so the stylesheet takes
+      // delivery of them through custom properties.
+      button.style.setProperty('--mfa-callout-color', item.color);
+      button.style.setProperty('--mfa-callout-background', item.bgColor);
+
       addClickEvent(button, key);
-      
-      const spanText = document.createElement('span');
-      spanText.textContent = ' ' + calloutLabel(item.id);
-      const spanIcon = document.createElement('span');
+
+      const spanIcon = button.createSpan({ cls: 'mfa-callout-icon' });
       setIcon(spanIcon, item.icon);
-      spanIcon.style.verticalAlign = 'middle';
-      spanIcon.style.color = item.color;
-      button.appendChild(spanIcon);
-      button.appendChild(spanText);
-      
+
+      button.createSpan().setText(' ' + calloutLabel(item.id));
     });
   }
 
@@ -439,22 +400,18 @@ export class SidePanelControlView extends ItemView {
         row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
       }
 
-      let button = row.createDiv({ cls: 'nav-action-text-button' });
-      // @ts-ignore
-      button.style.textJustify = 'center';
-      button.style.textAlign = 'center';
+      const button = row.createDiv({
+        cls: 'nav-action-text-button mfa-centered-button',
+      });
 
       addClickEvent(button, key);
 
       if (item.type === 'icon') {
-        let svg = svgToElement(item.text);
-        svg.style.display = 'inline-block';
-        svg.style.verticalAlign = 'middle';
+        const svg = svgToElement(item.text);
+        svg.addClass('mfa-inline-svg');
         button.appendChild(svg);
       } else if (item.type === 'text') {
-        let div = document.createElement('div');
-        div.innerHTML = item.text;
-        button.appendChild(div);
+        appendLabel(button.createDiv(), item.text);
       }
     });
   }
@@ -634,21 +591,23 @@ export class SidePanelControlView extends ItemView {
       container.textContent = '';
 
       R.reverse(SidePanelControlView.lastColors).forEach((color) => {
-        const colorBox = container.createDiv();
-        colorBox.classList.add('mfa-color-icon');
-        colorBox.style.backgroundColor = color;
+        const colorBox = container.createDiv({ cls: 'mfa-color-icon' });
+        colorBox.style.setProperty('--mfa-swatch', color);
+        colorBox.setAttribute('aria-label', color);
 
-        colorBox.onClickEvent((ev) => {
-          if (ev.type === 'click') {
-            insertColor(color);
-          } else {
-            SidePanelControlView.lastColors = R.without(
-              [color],
-              SidePanelControlView.lastColors,
-            );
-            drawLastSelectedColorIcons();
-          }
-        });
+        colorBox.onClickEvent(() => insertColor(color));
+
+        // onClickEvent binds 'click' and nothing else, so the removal branch
+        // this used to share with it could never run: right-clicking a colour
+        // simply inserted it. The README promised otherwise.
+        colorBox.oncontextmenu = (event) => {
+          event.preventDefault();
+          SidePanelControlView.lastColors = R.without(
+            [color],
+            SidePanelControlView.lastColors,
+          );
+          drawLastSelectedColorIcons();
+        };
       });
     };
 
@@ -658,24 +617,25 @@ export class SidePanelControlView extends ItemView {
       container.textContent = '';
 
       R.reverse(this.plugin.settings.savedColors).forEach((color) => {
-        const colorBox = container.createDiv();
+        const colorBox = container.createDiv({ cls: 'mfa-color-icon' });
         colorBox.id = 'lastSavedColorsDiv' + color;
-        colorBox.classList.add('mfa-color-icon');
-        colorBox.style.backgroundColor = color;
+        colorBox.style.setProperty('--mfa-swatch', color);
+        colorBox.setAttribute('aria-label', color);
         colorBox.draggable = true;
 
-        colorBox.onClickEvent(async (ev) => {
-          if (ev.type === 'click') {
-            insertColor(color);
-          } else {
-            this.plugin.settings.savedColors = R.without(
-              [color],
-              this.plugin.settings.savedColors,
-            );
-            await this.plugin.saveSettings();
-            drawLastSavedColorIcons();
-          }
-        });
+        colorBox.onClickEvent(() => insertColor(color));
+
+        // Same dead branch as the last-used swatches above: 'click' was the
+        // only event ever bound, so a saved colour could not be removed here.
+        colorBox.oncontextmenu = async (event) => {
+          event.preventDefault();
+          this.plugin.settings.savedColors = R.without(
+            [color],
+            this.plugin.settings.savedColors,
+          );
+          await this.plugin.saveSettings();
+          drawLastSavedColorIcons();
+        };
         colorBox.ondragstart = (event) => {
           // @ts-ignore
           this.dragStartColor = event.target.id.replace(
@@ -711,28 +671,22 @@ export class SidePanelControlView extends ItemView {
     };
 
     const colorSection = mainDiv.createDiv();
-    const colorSelector = colorSection.createDiv();
-    colorSelector.style.backgroundColor = R.last(
-      SidePanelControlView.lastColors,
+    const colorSelector = colorSection.createDiv({ cls: 'mfa-color-preview' });
+    colorSelector.style.setProperty(
+      '--mfa-swatch',
+      R.last(SidePanelControlView.lastColors),
     );
-    colorSelector.style.height = '16px';
-    colorSelector.style.borderRadius = '8px';
-    colorSelector.style.padding = '5px';
-    colorSelector.style.margin = '4px';
-    colorSelector.style.marginBottom = '10px';
-    const colorInput = colorSelector.createEl('input');
+
+    const colorInput = colorSelector.createEl('input', {
+      cls: 'mfa-color-input',
+    });
     colorInput.id = 'colorInput';
     colorInput.type = 'color';
     colorInput.value = R.last(SidePanelControlView.lastColors);
-    colorInput.style.visibility = 'hidden';
-    colorInput.style.padding = '0';
-    colorInput.style.margin = '0';
-    // colorInput.style.display = 'block';
-    // colorInput.style.opacity = '0';
     colorInput.addEventListener('input', (ev) => {
       // @ts-ignore
       const color = ev.target.value;
-      colorSelector.style.backgroundColor = color;
+      colorSelector.style.setProperty('--mfa-swatch', color);
     });
     colorInput.addEventListener(
       'change',
@@ -747,7 +701,7 @@ export class SidePanelControlView extends ItemView {
         )(SidePanelControlView.lastColors);
         drawLastSelectedColorIcons();
         insertColor(color);
-        colorSelector.style.backgroundColor = color;
+        colorSelector.style.setProperty('--mfa-swatch', color);
 
         // Mobile webviews are not a secure context, so navigator.clipboard is
         // undefined there - reading .writeText would throw synchronously,
@@ -762,16 +716,16 @@ export class SidePanelControlView extends ItemView {
       false,
     );
 
-    const colorButton = colorSection.createEl('label');
-    colorButton.classList.add('nav-action-text-button');
+    const colorButton = colorSection.createEl('label', {
+      cls: 'nav-action-text-button mfa-block-button',
+    });
     colorButton.appendText(t('colors.select'));
-    colorButton.style.display = 'block';
     colorButton.htmlFor = 'colorInput';
 
-    const colorSaveButton = colorSection.createEl('div');
-    colorSaveButton.classList.add('nav-action-text-button');
+    const colorSaveButton = colorSection.createEl('div', {
+      cls: 'nav-action-text-button mfa-block-button mfa-color-save',
+    });
     colorSaveButton.appendText(t('colors.save'));
-    colorSaveButton.style.display = 'block';
     colorSaveButton.onClickEvent(async (ev) => {
       const color = R.last(SidePanelControlView.lastColors);
       this.plugin.settings.savedColors = R.pipe(
@@ -781,17 +735,14 @@ export class SidePanelControlView extends ItemView {
       drawLastSavedColorIcons();
       await this.plugin.saveSettings();
     });
-    colorSaveButton.style.marginBottom = '20px';
 
     const addCheckbox = (id: string, text: string) => {
       const div = colorSection.createEl('div');
-      let input = div.createEl('input');
+      const input = div.createEl('input');
       input.id = id;
       input.type = 'checkbox';
       input.name = id;
-      let label = div.createEl('label');
-      label.appendText(text);
-      label.style.fontSize = '12px';
+      div.createEl('label', { cls: 'mfa-checkbox-label' }).appendText(text);
     };
 
     addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
@@ -802,44 +753,37 @@ export class SidePanelControlView extends ItemView {
     addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
     addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
 
-    const lastSelectedColorsTitle = colorSection.createEl('p');
-    lastSelectedColorsTitle.appendText(t('colors.lastUsed'));
-    lastSelectedColorsTitle.style.marginBottom = '0px';
+    colorSection
+      .createEl('p', { cls: 'mfa-swatches-title' })
+      .appendText(t('colors.lastUsed'));
 
-    const lastSelectedColors = colorSection.createEl('div');
+    const lastSelectedColors = colorSection.createEl('div', {
+      cls: 'mfa-color-swatches',
+    });
     lastSelectedColors.id = 'lastSelectedColorsDiv';
-    lastSelectedColors.classList.add('mfa-color-swatches');
 
     drawLastSelectedColorIcons(lastSelectedColors);
 
-    const lastSavedColorsTitle = colorSection.createEl('p');
-    lastSavedColorsTitle.appendText(t('colors.saved'));
-    lastSavedColorsTitle.style.marginBottom = '0px';
+    colorSection
+      .createEl('p', { cls: 'mfa-swatches-title' })
+      .appendText(t('colors.saved'));
 
-    const settingsInfo = colorSection.createEl('p');
-    settingsInfo.appendText(t('colors.editInSettings'));
-    settingsInfo.style.textAlign = 'left';
-    settingsInfo.style.fontSize = '10px';
-    settingsInfo.style.marginTop = '0px';
+    colorSection
+      .createEl('p', { cls: 'mfa-swatches-hint' })
+      .appendText(t('colors.editInSettings'));
 
-    const lastSavedColors = colorSection.createEl('div');
+    const lastSavedColors = colorSection.createEl('div', {
+      cls: 'mfa-color-swatches',
+    });
     lastSavedColors.id = 'lastSavedColorsDiv';
-    lastSavedColors.classList.add('mfa-color-swatches');
 
     drawLastSavedColorIcons(lastSavedColors);
 
-    const info = colorSection.createEl('p');
-    info.style.textAlign = 'center';
-    info.style.marginTop = '10px';
-    info.style.marginBottom = '10px';
-
-    const link = info.createEl('a');
-    link.appendText(t('colors.help'));
-    link.style.textAlign = 'center';
-
-    link.style.fontSize = '10px';
-    link.href =
-      'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker';
+    this.addNote(
+      colorSection,
+      t('colors.help'),
+      'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker',
+    );
   }
 
   private addSelectableHeader(mainDiv: HTMLElement, regionName: string) {
@@ -851,20 +795,15 @@ export class SidePanelControlView extends ItemView {
       );
     };
 
-    let header = mainDiv.createEl('div');
+    const header = mainDiv.createEl('div', { cls: 'mfa-section-header' });
     header.id = 'lastSavedHeaderDiv' + regionName;
-    let hr = mainDiv.createEl('hr');
-    let title = header.createEl('h4');
-    let arrowButton = header.createDiv({ cls: 'nav-action-button' });
-    let content = mainDiv.createEl('div');
+    const hr = mainDiv.createEl('hr', { cls: 'mfa-section-rule' });
+    const title = header.createEl('h4', { cls: 'mfa-section-title' });
+    const arrowButton = header.createDiv({
+      cls: 'nav-action-button mfa-section-arrow',
+    });
+    const content = mainDiv.createEl('div', { cls: 'mfa-section-content' });
 
-    header.style.width = '100%';
-    // header.style.border = '2px solid white';
-    header.style.display = 'flex';
-    header.style.flexWrap = 'nowrap';
-    header.style.alignContent = 'center';
-    header.style.position = 'relative';
-    header.style.cursor = 'move';
     header.draggable = true;
 
     header.ondragstart = (event) => {
@@ -921,51 +860,38 @@ export class SidePanelControlView extends ItemView {
     header.ondrop = onDrop;
 
     title.appendText(sectionTitle);
-    title.style.flexDirection = 'column';
-    title.style.textAlign = 'left';
-    title.style.margin = '0px';
-    title.style.display = 'flex';
-    title.style.flexWrap = 'nowrap';
-    title.style.justifyContent = 'center';
 
-    arrowButton.appendChild(svgToElement('expandArrowDown'));
-    arrowButton.style.position = 'absolute';
-    arrowButton.style.right = '0px';
-    arrowButton.style.top = '0px';
-    arrowButton.style.bottom = '0px';
-    arrowButton.style.marginTop = 'auto';
-    arrowButton.style.marginBottom = 'auto';
-    arrowButton.style.width = '24px';
-    arrowButton.style.height = '24px';
     const region = getRegion(regionName);
-    if (region && region.active && region.visible) {
-      content.style.display = 'block';
-    } else {
-      content.style.display = 'none';
-    }
 
-    arrowButton.onClickEvent(async (e) => {
+    /**
+     * The arrow points the way the click will move the section: down to open
+     * it, up to close it again. It used to be drawn as "down" unconditionally,
+     * so a section that started open contradicted itself until it was clicked
+     * twice.
+     */
+    const drawArrow = (expanded: boolean) => {
+      arrowButton.empty();
+      arrowButton.appendChild(
+        svgToElement(expanded ? 'expandArrowUp' : 'expandArrowDown'),
+      );
+    };
+
+    const expanded = Boolean(region && region.active && region.visible);
+
+    content.toggleClass('is-collapsed', !expanded);
+    drawArrow(expanded);
+
+    arrowButton.onClickEvent(async () => {
       const region = getRegion(regionName);
 
-      if (region && region.active) {
-        if (!region.visible) {
-          content.style.display = 'block';
-          arrowButton.innerHTML = null;
-          arrowButton.appendChild(svgToElement('expandArrowUp'));
-          region.visible = true;
-        } else {
-          content.style.display = 'none';
-          arrowButton.innerHTML = null;
-          arrowButton.appendChild(svgToElement('expandArrowDown'));
-          region.visible = false;
-        }
+      if (!region || !region.active) return;
 
-        return await this.plugin.saveSettings();
-      }
+      region.visible = !region.visible;
+      content.toggleClass('is-collapsed', !region.visible);
+      drawArrow(region.visible);
+
+      await this.plugin.saveSettings();
     });
-
-    hr.style.marginTop = '0px';
-    hr.style.marginBottom = '10px';
 
     return content;
   }

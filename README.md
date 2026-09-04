@@ -1,7 +1,7 @@
 # Obsidian Markdown Formatting Assistant
 
 > This Plugin provides easy to use snippets for Markdown, HTML and Latex and a color picker which shows the history of last used colors. Furthermore, it is possible to save any color you want.
-> Version 0.6.0
+> Version 0.7.0
 
 > If you find a Bug or have a feature request: https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues
 
@@ -87,6 +87,16 @@ Just press the shortcut/hotkey `ALT+Q` on any place. It doesn't matter if you ar
 The shortcut/hotkey `ALT+Q` was selected becaus it can be  comfortable reached with just one hand, but you can change it to what ever you want.
 
 ![](assets/Suggestion_Window_change_hot_key.gif)
+
+## Hotkeys for individual commands
+
+Every Text Edit action and every callout is registered as an Obsidian command, so you can bind a key to any of them under `Settings → Hotkeys`. Search for the plugin's name to see the whole list. Nothing is bound out of the box apart from `ALT+Q` and `ALT+C`, so no existing shortcut of yours is taken over.
+
+That covers headings, bold, italic, underline, strikethrough, highlight, inline code, code and mermaid blocks, links, images, quotes, the three list kinds, and the 26 callouts. `Cmd+1` for `H1` and `Cmd+2` for `H2` is a common arrangement.
+
+The side panel itself has a command too, so it can be opened without reaching for the ribbon icon.
+
+The HTML, LaTeX and Greek sections are deliberately left out. Between them they hold another 93 entries, and a hotkey list is not a useful place to look for `\alpha` — the `ALT+Q` window is, and it searches all of them.
 ## Color Picker
 
 ### Select a color
@@ -107,7 +117,7 @@ All saved colors can be sorted via drop a catch.
 
 ### Delete a Color
 
-To delete a saved color just click it with the right mouse button. Saved colors can also be removed in the settings by clicking a swatch there.
+Right-click a swatch to remove it, in either the recent or the saved row. Saved colors can also be removed in the settings by clicking a swatch there.
 
 ### Additional Formats
 
@@ -179,6 +189,20 @@ Run `npm run typecheck` as well as the build. Rollup reports a clean build for c
 Originally written by [Reocin](https://github.com/Reocin). Maintained since version 0.5.0 by Mark Karte and Claude.
 
 ## Changelog
+
+- Version: 0.7.0
+
+  - **Added**
+    - Every Text Edit action and every callout is now an Obsidian command, so you can bind a hotkey to any of them under `Settings → Hotkeys`. Nothing is bound out of the box beyond the existing `ALT+Q` and `ALT+C`.
+    - The side panel has a command of its own, so it no longer needs the ribbon icon to open.
+  - **Fixed**
+    - Right-clicking a color removes it again, in both the recent and the saved row. The branch that did the removing could never run: only a left click was ever bound, while the README described right-click as the way to delete.
+    - A section that opens expanded now shows an arrow pointing the right way. It used to be drawn pointing down regardless, and only agreed with the section after two clicks.
+    - The four label colors in the `ALT+Q` window follow the theme. They were fixed values picked against a dark background, and the green was close to unreadable on a light one.
+  - **Changed**
+    - No styling is assigned from JavaScript any more and no markup is built from strings - 121 inline styles and every `innerHTML` are gone. Obsidian's plugin guidelines name both, and a submission to the community catalogue is reviewed against them.
+  - **Development**
+    - 120 tests. The new ones fail the build on a mistyped class name, a stylesheet rule nothing uses, and any new inline style or `innerHTML`.
 
 - Version: 0.6.0
 

@@ -92,6 +92,9 @@ body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
   outline-offset: 1px;
 }
 
+/* The colour a swatch shows is data, not design - it arrives from the settings
+   or the picker, so the element hands it over as a custom property and the
+   rule below is what actually paints it. */
 .mfa-color-icon {
   color: var(--text-muted);
   cursor: pointer;
@@ -104,6 +107,7 @@ body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
   margin: 3px;
   display: inline-block;
   border-radius: 4px;
+  background-color: var(--mfa-swatch, transparent);
   /* Inset rather than a border, so a pale swatch gains an edge on a light
      theme without changing the box it occupies. */
   box-shadow: inset 0 0 0 1px var(--background-modifier-border);
@@ -128,4 +132,202 @@ body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
 
 .mfa-suggestion-text {
   padding-left: 12px;
+}
+
+/* Which table an entry came from, so the four groups stay apart at a glance.
+   These were fixed hex values chosen against a dark background; the green in
+   particular was all but invisible on a light theme. */
+.mfa-suggestion-text--markdown {
+  color: var(--color-red);
+}
+
+.mfa-suggestion-text--html {
+  color: var(--color-blue);
+}
+
+.mfa-suggestion-text--greek,
+.mfa-suggestion-text--latex {
+  color: var(--color-green);
+}
+
+.mfa-suggestion-text--muted {
+  color: var(--text-muted);
+}
+
+/* A callout row and a callout button are tinted by the callout type, which is
+   data the stylesheet cannot know in advance. */
+.mfa-callout-row {
+  background-color: var(--mfa-callout-background, transparent);
+}
+
+.mfa-callout-button {
+  background-color: var(--mfa-callout-background, transparent);
+}
+
+.mfa-callout-icon {
+  vertical-align: middle;
+  color: var(--mfa-callout-color, currentColor);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Side panel                                                                */
+/* ------------------------------------------------------------------------ */
+
+.mfa-section-header {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-content: center;
+  position: relative;
+  cursor: move;
+}
+
+.mfa-section-title {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  text-align: left;
+  margin: 0;
+}
+
+.mfa-section-arrow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  width: 24px;
+  height: 24px;
+}
+
+.mfa-section-rule {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.mfa-section-content.is-collapsed {
+  display: none;
+}
+
+/* The small centred link that closes several sections. */
+.mfa-note {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.mfa-note-link {
+  font-size: 10px;
+  text-align: center;
+}
+
+.mfa-subheading {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.mfa-subheading:first-child {
+  margin-top: 0;
+}
+
+/* Buttons whose label is centred rather than left-aligned: the callouts and
+   the wider LaTeX entries. */
+.mfa-centered-button {
+  text-align: center;
+}
+
+/* Full-width buttons in the colour section. */
+.mfa-block-button {
+  display: block;
+}
+
+.mfa-color-save {
+  margin-bottom: 20px;
+}
+
+/* An svg sitting on the same line as text. */
+.mfa-inline-svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.mfa-icon-image {
+  width: 24px;
+  height: 24px;
+}
+
+.mfa-checkbox-label {
+  font-size: 12px;
+}
+
+.mfa-swatches-title {
+  margin-bottom: 0;
+}
+
+.mfa-swatches-hint {
+  text-align: left;
+  font-size: 10px;
+  margin-top: 0;
+}
+
+/* The colour picker's own preview strip. The native input sits inside it and
+   is hidden: the strip is the visible control, and clicking it opens the
+   picker through the label. */
+.mfa-color-preview {
+  height: 16px;
+  border-radius: 8px;
+  padding: 5px;
+  margin: 4px;
+  margin-bottom: 10px;
+  background-color: var(--mfa-swatch, transparent);
+}
+
+.mfa-color-input {
+  visibility: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Table size picker                                                         */
+/* ------------------------------------------------------------------------ */
+
+.mfa-table-label {
+  text-align: center;
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.mfa-table-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.mfa-table-grid-row {
+  display: flex;
+  gap: 2px;
+}
+
+.mfa-table-cell {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 2px;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+/* The part of the grid the pointer is covering, which is the table a click
+   would insert. */
+.mfa-table-cell.is-covered {
+  background-color: var(--interactive-accent);
+}
+
+.mfa-table-alignment {
+  margin-top: 8px;
 }

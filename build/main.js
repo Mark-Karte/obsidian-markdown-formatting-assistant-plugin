@@ -2081,6 +2081,42 @@ var iconPaths = /*#__PURE__*/Object.freeze({
     latex: latex
 });
 
+/**
+ * The scrap of markup that button labels carry, split into pieces a caller can
+ * build with the DOM API. A leaf module with no imports, so the tests can reach
+ * it - see the note in textPlacement.ts.
+ *
+ * Labels such as 'x<sup>y</sup>' used to reach the page through innerHTML.
+ * Obsidian's guidelines rule that out - "Avoid innerHTML, outerHTML and
+ * insertAdjacentHTML" - and while today's labels are all plugin constants, a
+ * table is only ever one contribution away from holding something else.
+ */
+/**
+ * Splits a label into plain text and its superscript and subscript runs.
+ *
+ * Only `<sup>` and `<sub>` are recognised, because those are the only tags the
+ * tables use. Anything else stays literal text, which is the safe direction to
+ * fail in: a caller writing it as a text node shows the user a stray tag rather
+ * than executing it.
+ */
+function splitMarkup(label) {
+    var source = label || '';
+    var parts = [];
+    var tags = /<(sup|sub)>([\s\S]*?)<\/\1>/g;
+    var copied = 0;
+    for (var match = tags.exec(source); match; match = tags.exec(source)) {
+        if (match.index > copied) {
+            parts.push({ tag: 'text', value: source.slice(copied, match.index) });
+        }
+        parts.push({ tag: match[1], value: match[2] });
+        copied = match.index + match[0].length;
+    }
+    if (copied < source.length) {
+        parts.push({ tag: 'text', value: source.slice(copied) });
+    }
+    return parts;
+}
+
 function pathToSvg(icon) {
     return "\n    <svg style=\"width:24px;height:24px\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n        <path fill=\"currentColor\" d=\"".concat(icon, "\" />\n    </svg>");
 }
@@ -2117,14 +2153,29 @@ var svgToElement = function (key) {
     if (key.toString().includes('.svg')) {
         var img = document.createElement('img');
         img.src = key.toString();
-        img.style.width = '24px';
-        img.style.height = '24px';
+        img.addClass('mfa-icon-image');
         return img;
     }
     else {
         var parser = new DOMParser();
         return parser.parseFromString(icons[key], 'text/xml').documentElement;
     }
+};
+/**
+ * Writes a button label, honouring the `<sup>` and `<sub>` some of them carry.
+ *
+ * Built node by node rather than handed to innerHTML: see the note in
+ * markup.ts for why that matters even for the plugin's own constants.
+ */
+var appendLabel = function (parent, label) {
+    splitMarkup(label).forEach(function (part) {
+        if (part.tag === 'text') {
+            parent.appendText(part.value);
+        }
+        else {
+            parent.createEl(part.tag).setText(part.value);
+        }
+    });
 };
 
 /**
@@ -4929,6 +4980,7 @@ function calloutLabel(calloutId) {
 }
 
 var SidePanelControlViewType = 'side-panel-control-view';
+var ISSUES_URL = 'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
 var SidePanelControlView = /** @class */ (function (_super) {
     __extends(SidePanelControlView, _super);
     function SidePanelControlView(leaf, plugin) {
@@ -4991,16 +5043,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var addHtmlSection = function () {
             var content = _this.addSelectableHeader(mainDiv, 'html');
             _this.addHtmlButtons(content);
-            var info = content.createEl('p');
-            info.style.textAlign = 'center';
-            info.style.marginTop = '10px';
-            info.style.marginBottom = '10px';
-            var link = info.createEl('a');
-            link.appendText(t('html.reportMissingTag'));
-            link.style.textAlign = 'center';
-            link.style.fontSize = '10px';
-            link.href =
-                'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
+            _this.addNote(content, t('html.reportMissingTag'), ISSUES_URL);
         };
         // --------------
         // Latex Section
@@ -5008,52 +5051,23 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var addLatexSection = function () {
             var content = _this.addSelectableHeader(mainDiv, 'latex');
             _this.addLatexButtons(content);
-            var info = content.createEl('p');
-            info.style.textAlign = 'center';
-            info.style.marginTop = '10px';
-            info.style.marginBottom = '10px';
-            var link = info.createEl('a');
-            link.appendText(t('latex.introduction'));
-            link.style.textAlign = 'center';
-            link.style.fontSize = '10px';
-            link.href = 'https://en.wikibooks.org/wiki/LaTeX/Mathematics';
-            info = content.createEl('p');
-            info.style.textAlign = 'center';
-            info.style.marginTop = '10px';
-            info.style.marginBottom = '10px';
-            link = info.createEl('a');
-            link.appendText(t('latex.reportMissingFunction'));
-            link.style.textAlign = 'center';
-            link.style.fontSize = '10px';
-            link.href =
-                'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
+            _this.addNote(content, t('latex.introduction'), 'https://en.wikibooks.org/wiki/LaTeX/Mathematics');
+            _this.addNote(content, t('latex.reportMissingFunction'), ISSUES_URL);
         };
         // --------------
         // Greek Section
         // --------------
         var addGreekLettersSection = function () {
             var content = _this.addSelectableHeader(mainDiv, 'greekLetters');
-            var header = content.createEl('h5');
-            header.appendText(t('greek.lowerCase'));
-            header.style.textAlign = 'center';
-            header.style.marginTop = '0px';
-            header.style.marginBottom = '5px';
+            content
+                .createEl('h5', { cls: 'mfa-subheading' })
+                .setText(t('greek.lowerCase'));
             _this.addGreekLowerCaseLetters(content);
-            header = content.createEl('h5');
-            header.appendText(t('greek.upperCase'));
-            header.style.textAlign = 'center';
-            header.style.marginTop = '10px';
-            header.style.marginBottom = '5px';
+            content
+                .createEl('h5', { cls: 'mfa-subheading' })
+                .setText(t('greek.upperCase'));
             _this.addGreekUpperCaseLetters(content);
-            var info = content.createEl('p');
-            info.style.textAlign = 'center';
-            info.style.marginTop = '10px';
-            info.style.marginBottom = '10px';
-            var link = info.createEl('a');
-            link.appendText(t('greek.overview'));
-            link.style.textAlign = 'center';
-            link.style.fontSize = '10px';
-            link.href = 'https://en.wikipedia.org/wiki/Greek_alphabet';
+            _this.addNote(content, t('greek.overview'), 'https://en.wikipedia.org/wiki/Greek_alphabet');
         };
         // --------------
         // Colors
@@ -5085,6 +5099,13 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 regionFunction();
         });
     };
+    /** The small centred link that closes several of the sections. */
+    SidePanelControlView.prototype.addNote = function (parent, text, href) {
+        parent
+            .createEl('p', { cls: 'mfa-note' })
+            .createEl('a', { cls: 'mfa-note-link', href: href })
+            .appendText(text);
+    };
     /**
      * A size picker for markdown tables: hovering the grid previews the table
      * that a click would insert, which is a lot less fiddly in a narrow pane than
@@ -5093,40 +5114,23 @@ var SidePanelControlView = /** @class */ (function (_super) {
     SidePanelControlView.prototype.addTableBuilder = function (mainDiv) {
         var _this = this;
         var alignment = this.plugin.settings.tableAlignment;
-        var label = mainDiv.createEl('p');
-        label.style.textAlign = 'center';
-        label.style.margin = '4px 0';
-        label.style.fontSize = '12px';
+        var label = mainDiv.createEl('p', { cls: 'mfa-table-label' });
         var idleLabel = function () { return t('tables.pick'); };
         label.setText(idleLabel());
-        var grid = mainDiv.createDiv();
-        grid.style.display = 'flex';
-        grid.style.flexDirection = 'column';
-        grid.style.alignItems = 'center';
-        grid.style.gap = '2px';
+        var grid = mainDiv.createDiv({ cls: 'mfa-table-grid' });
         var cells = [];
         var paint = function (rows, columns) {
             cells.forEach(function (cellRow, rowIndex) {
                 return cellRow.forEach(function (cell, columnIndex) {
-                    var covered = rowIndex < rows && columnIndex < columns;
-                    cell.style.backgroundColor = covered
-                        ? 'var(--interactive-accent)'
-                        : 'transparent';
+                    cell.toggleClass('is-covered', rowIndex < rows && columnIndex < columns);
                 });
             });
         };
         for (var rowIndex = 0; rowIndex < MAX_TABLE_ROWS; rowIndex++) {
-            var rowEl = grid.createDiv();
-            rowEl.style.display = 'flex';
-            rowEl.style.gap = '2px';
+            var rowEl = grid.createDiv({ cls: 'mfa-table-grid-row' });
             var rowCells = [];
             var _loop_1 = function (columnIndex) {
-                var cell = rowEl.createDiv();
-                cell.style.width = '16px';
-                cell.style.height = '16px';
-                cell.style.border = '1px solid var(--background-modifier-border)';
-                cell.style.borderRadius = '2px';
-                cell.style.cursor = 'pointer';
+                var cell = rowEl.createDiv({ cls: 'mfa-table-cell' });
                 var rows = rowIndex + 1;
                 var columns = columnIndex + 1;
                 cell.addEventListener('mouseenter', function () {
@@ -5149,8 +5153,9 @@ var SidePanelControlView = /** @class */ (function (_super) {
             paint(0, 0);
             label.setText(idleLabel());
         });
-        var alignmentRow = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        alignmentRow.style.marginTop = '8px';
+        var alignmentRow = mainDiv.createDiv({
+            cls: 'nav-buttons-container mfa-table-alignment',
+        });
         var alignmentButtons = [];
         var highlightAlignment = function () {
             alignmentButtons.forEach(function (button, index) {
@@ -5226,20 +5231,17 @@ var SidePanelControlView = /** @class */ (function (_super) {
             if (index === 0 || item.newLine) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
-            var button = row.createDiv({ cls: 'nav-action-text-button' });
-            // @ts-ignore
-            button.style.textJustify = 'center';
-            button.style.textAlign = 'center';
-            button.style.backgroundColor = item.bgColor;
+            var button = row.createDiv({
+                cls: 'nav-action-text-button mfa-centered-button mfa-callout-button',
+            });
+            // Each callout carries its own colours as data, so the stylesheet takes
+            // delivery of them through custom properties.
+            button.style.setProperty('--mfa-callout-color', item.color);
+            button.style.setProperty('--mfa-callout-background', item.bgColor);
             addClickEvent(button, key);
-            var spanText = document.createElement('span');
-            spanText.textContent = ' ' + calloutLabel(item.id);
-            var spanIcon = document.createElement('span');
+            var spanIcon = button.createSpan({ cls: 'mfa-callout-icon' });
             obsidian.setIcon(spanIcon, item.icon);
-            spanIcon.style.verticalAlign = 'middle';
-            spanIcon.style.color = item.color;
-            button.appendChild(spanIcon);
-            button.appendChild(spanText);
+            button.createSpan().setText(' ' + calloutLabel(item.id));
         });
     };
     SidePanelControlView.prototype.addLatexButtons = function (mainDiv) {
@@ -5260,21 +5262,17 @@ var SidePanelControlView = /** @class */ (function (_super) {
             if (index === 0 || item.newLine) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
-            var button = row.createDiv({ cls: 'nav-action-text-button' });
-            // @ts-ignore
-            button.style.textJustify = 'center';
-            button.style.textAlign = 'center';
+            var button = row.createDiv({
+                cls: 'nav-action-text-button mfa-centered-button',
+            });
             addClickEvent(button, key);
             if (item.type === 'icon') {
                 var svg = svgToElement(item.text);
-                svg.style.display = 'inline-block';
-                svg.style.verticalAlign = 'middle';
+                svg.addClass('mfa-inline-svg');
                 button.appendChild(svg);
             }
             else if (item.type === 'text') {
-                var div = document.createElement('div');
-                div.innerHTML = item.text;
-                button.appendChild(div);
+                appendLabel(button.createDiv(), item.text);
             }
         });
     };
@@ -5432,18 +5430,18 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 container = document.getElementById('lastSelectedColorsDiv');
             container.textContent = '';
             reverse(SidePanelControlView.lastColors).forEach(function (color) {
-                var colorBox = container.createDiv();
-                colorBox.classList.add('mfa-color-icon');
-                colorBox.style.backgroundColor = color;
-                colorBox.onClickEvent(function (ev) {
-                    if (ev.type === 'click') {
-                        insertColor(color);
-                    }
-                    else {
-                        SidePanelControlView.lastColors = without([color], SidePanelControlView.lastColors);
-                        drawLastSelectedColorIcons();
-                    }
-                });
+                var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
+                colorBox.style.setProperty('--mfa-swatch', color);
+                colorBox.setAttribute('aria-label', color);
+                colorBox.onClickEvent(function () { return insertColor(color); });
+                // onClickEvent binds 'click' and nothing else, so the removal branch
+                // this used to share with it could never run: right-clicking a colour
+                // simply inserted it. The README promised otherwise.
+                colorBox.oncontextmenu = function (event) {
+                    event.preventDefault();
+                    SidePanelControlView.lastColors = without([color], SidePanelControlView.lastColors);
+                    drawLastSelectedColorIcons();
+                };
             });
         };
         var drawLastSavedColorIcons = function (container) {
@@ -5452,29 +5450,28 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 container = document.getElementById('lastSavedColorsDiv');
             container.textContent = '';
             reverse(_this.plugin.settings.savedColors).forEach(function (color) {
-                var colorBox = container.createDiv();
+                var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
                 colorBox.id = 'lastSavedColorsDiv' + color;
-                colorBox.classList.add('mfa-color-icon');
-                colorBox.style.backgroundColor = color;
+                colorBox.style.setProperty('--mfa-swatch', color);
+                colorBox.setAttribute('aria-label', color);
                 colorBox.draggable = true;
-                colorBox.onClickEvent(function (ev) { return __awaiter(_this, void 0, void 0, function () {
+                colorBox.onClickEvent(function () { return insertColor(color); });
+                // Same dead branch as the last-used swatches above: 'click' was the
+                // only event ever bound, so a saved colour could not be removed here.
+                colorBox.oncontextmenu = function (event) { return __awaiter(_this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                if (!(ev.type === 'click')) return [3 /*break*/, 1];
-                                insertColor(color);
-                                return [3 /*break*/, 3];
-                            case 1:
+                                event.preventDefault();
                                 this.plugin.settings.savedColors = without([color], this.plugin.settings.savedColors);
                                 return [4 /*yield*/, this.plugin.saveSettings()];
-                            case 2:
+                            case 1:
                                 _a.sent();
                                 drawLastSavedColorIcons();
-                                _a.label = 3;
-                            case 3: return [2 /*return*/];
+                                return [2 /*return*/];
                         }
                     });
-                }); });
+                }); };
                 colorBox.ondragstart = function (event) {
                     // @ts-ignore
                     _this.dragStartColor = event.target.id.replace('lastSavedColorsDiv', '');
@@ -5513,26 +5510,18 @@ var SidePanelControlView = /** @class */ (function (_super) {
             });
         };
         var colorSection = mainDiv.createDiv();
-        var colorSelector = colorSection.createDiv();
-        colorSelector.style.backgroundColor = last(SidePanelControlView.lastColors);
-        colorSelector.style.height = '16px';
-        colorSelector.style.borderRadius = '8px';
-        colorSelector.style.padding = '5px';
-        colorSelector.style.margin = '4px';
-        colorSelector.style.marginBottom = '10px';
-        var colorInput = colorSelector.createEl('input');
+        var colorSelector = colorSection.createDiv({ cls: 'mfa-color-preview' });
+        colorSelector.style.setProperty('--mfa-swatch', last(SidePanelControlView.lastColors));
+        var colorInput = colorSelector.createEl('input', {
+            cls: 'mfa-color-input',
+        });
         colorInput.id = 'colorInput';
         colorInput.type = 'color';
         colorInput.value = last(SidePanelControlView.lastColors);
-        colorInput.style.visibility = 'hidden';
-        colorInput.style.padding = '0';
-        colorInput.style.margin = '0';
-        // colorInput.style.display = 'block';
-        // colorInput.style.opacity = '0';
         colorInput.addEventListener('input', function (ev) {
             // @ts-ignore
             var color = ev.target.value;
-            colorSelector.style.backgroundColor = color;
+            colorSelector.style.setProperty('--mfa-swatch', color);
         });
         colorInput.addEventListener('change', function (ev) {
             // @ts-ignore
@@ -5541,7 +5530,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             SidePanelControlView.lastColors = pipe(without([color]), append(color), takeLast(10))(SidePanelControlView.lastColors);
             drawLastSelectedColorIcons();
             insertColor(color);
-            colorSelector.style.backgroundColor = color;
+            colorSelector.style.setProperty('--mfa-swatch', color);
             // Mobile webviews are not a secure context, so navigator.clipboard is
             // undefined there - reading .writeText would throw synchronously,
             // which a rejection handler does not catch.
@@ -5549,15 +5538,15 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 navigator.clipboard.writeText(color).then(function () { return new obsidian.Notice(t('colors.copied', { color: color })); }, function () { return new obsidian.Notice(t('colors.copyFailed')); });
             }
         }, false);
-        var colorButton = colorSection.createEl('label');
-        colorButton.classList.add('nav-action-text-button');
+        var colorButton = colorSection.createEl('label', {
+            cls: 'nav-action-text-button mfa-block-button',
+        });
         colorButton.appendText(t('colors.select'));
-        colorButton.style.display = 'block';
         colorButton.htmlFor = 'colorInput';
-        var colorSaveButton = colorSection.createEl('div');
-        colorSaveButton.classList.add('nav-action-text-button');
+        var colorSaveButton = colorSection.createEl('div', {
+            cls: 'nav-action-text-button mfa-block-button mfa-color-save',
+        });
         colorSaveButton.appendText(t('colors.save'));
-        colorSaveButton.style.display = 'block';
         colorSaveButton.onClickEvent(function (ev) { return __awaiter(_this, void 0, void 0, function () {
             var color;
             return __generator(this, function (_a) {
@@ -5573,50 +5562,38 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 }
             });
         }); });
-        colorSaveButton.style.marginBottom = '20px';
         var addCheckbox = function (id, text) {
             var div = colorSection.createEl('div');
             var input = div.createEl('input');
             input.id = id;
             input.type = 'checkbox';
             input.name = id;
-            var label = div.createEl('label');
-            label.appendText(text);
-            label.style.fontSize = '12px';
+            div.createEl('label', { cls: 'mfa-checkbox-label' }).appendText(text);
         };
         addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
         addCheckbox('inputBackgroundColorTagCheckBox', t('colors.optionBackgroundColor'));
         addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
         addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
-        var lastSelectedColorsTitle = colorSection.createEl('p');
-        lastSelectedColorsTitle.appendText(t('colors.lastUsed'));
-        lastSelectedColorsTitle.style.marginBottom = '0px';
-        var lastSelectedColors = colorSection.createEl('div');
+        colorSection
+            .createEl('p', { cls: 'mfa-swatches-title' })
+            .appendText(t('colors.lastUsed'));
+        var lastSelectedColors = colorSection.createEl('div', {
+            cls: 'mfa-color-swatches',
+        });
         lastSelectedColors.id = 'lastSelectedColorsDiv';
-        lastSelectedColors.classList.add('mfa-color-swatches');
         drawLastSelectedColorIcons(lastSelectedColors);
-        var lastSavedColorsTitle = colorSection.createEl('p');
-        lastSavedColorsTitle.appendText(t('colors.saved'));
-        lastSavedColorsTitle.style.marginBottom = '0px';
-        var settingsInfo = colorSection.createEl('p');
-        settingsInfo.appendText(t('colors.editInSettings'));
-        settingsInfo.style.textAlign = 'left';
-        settingsInfo.style.fontSize = '10px';
-        settingsInfo.style.marginTop = '0px';
-        var lastSavedColors = colorSection.createEl('div');
+        colorSection
+            .createEl('p', { cls: 'mfa-swatches-title' })
+            .appendText(t('colors.saved'));
+        colorSection
+            .createEl('p', { cls: 'mfa-swatches-hint' })
+            .appendText(t('colors.editInSettings'));
+        var lastSavedColors = colorSection.createEl('div', {
+            cls: 'mfa-color-swatches',
+        });
         lastSavedColors.id = 'lastSavedColorsDiv';
-        lastSavedColors.classList.add('mfa-color-swatches');
         drawLastSavedColorIcons(lastSavedColors);
-        var info = colorSection.createEl('p');
-        info.style.textAlign = 'center';
-        info.style.marginTop = '10px';
-        info.style.marginBottom = '10px';
-        var link = info.createEl('a');
-        link.appendText(t('colors.help'));
-        link.style.textAlign = 'center';
-        link.style.fontSize = '10px';
-        link.href =
-            'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker';
+        this.addNote(colorSection, t('colors.help'), 'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker');
     };
     SidePanelControlView.prototype.addSelectableHeader = function (mainDiv, regionName) {
         var _this = this;
@@ -5624,19 +5601,14 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var getRegion = function (name) {
             return _this.plugin.settings.regionSettings.find(function (item) { return item.name === name; });
         };
-        var header = mainDiv.createEl('div');
+        var header = mainDiv.createEl('div', { cls: 'mfa-section-header' });
         header.id = 'lastSavedHeaderDiv' + regionName;
-        var hr = mainDiv.createEl('hr');
-        var title = header.createEl('h4');
-        var arrowButton = header.createDiv({ cls: 'nav-action-button' });
-        var content = mainDiv.createEl('div');
-        header.style.width = '100%';
-        // header.style.border = '2px solid white';
-        header.style.display = 'flex';
-        header.style.flexWrap = 'nowrap';
-        header.style.alignContent = 'center';
-        header.style.position = 'relative';
-        header.style.cursor = 'move';
+        mainDiv.createEl('hr', { cls: 'mfa-section-rule' });
+        var title = header.createEl('h4', { cls: 'mfa-section-title' });
+        var arrowButton = header.createDiv({
+            cls: 'nav-action-button mfa-section-arrow',
+        });
+        var content = mainDiv.createEl('div', { cls: 'mfa-section-content' });
         header.draggable = true;
         header.ondragstart = function (event) {
             // @ts-ignore
@@ -5690,55 +5662,38 @@ var SidePanelControlView = /** @class */ (function (_super) {
         }); };
         header.ondrop = onDrop;
         title.appendText(sectionTitle);
-        title.style.flexDirection = 'column';
-        title.style.textAlign = 'left';
-        title.style.margin = '0px';
-        title.style.display = 'flex';
-        title.style.flexWrap = 'nowrap';
-        title.style.justifyContent = 'center';
-        arrowButton.appendChild(svgToElement('expandArrowDown'));
-        arrowButton.style.position = 'absolute';
-        arrowButton.style.right = '0px';
-        arrowButton.style.top = '0px';
-        arrowButton.style.bottom = '0px';
-        arrowButton.style.marginTop = 'auto';
-        arrowButton.style.marginBottom = 'auto';
-        arrowButton.style.width = '24px';
-        arrowButton.style.height = '24px';
         var region = getRegion(regionName);
-        if (region && region.active && region.visible) {
-            content.style.display = 'block';
-        }
-        else {
-            content.style.display = 'none';
-        }
-        arrowButton.onClickEvent(function (e) { return __awaiter(_this, void 0, void 0, function () {
+        /**
+         * The arrow points the way the click will move the section: down to open
+         * it, up to close it again. It used to be drawn as "down" unconditionally,
+         * so a section that started open contradicted itself until it was clicked
+         * twice.
+         */
+        var drawArrow = function (expanded) {
+            arrowButton.empty();
+            arrowButton.appendChild(svgToElement(expanded ? 'expandArrowUp' : 'expandArrowDown'));
+        };
+        var expanded = Boolean(region && region.active && region.visible);
+        content.toggleClass('is-collapsed', !expanded);
+        drawArrow(expanded);
+        arrowButton.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
             var region;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         region = getRegion(regionName);
-                        if (!(region && region.active)) return [3 /*break*/, 2];
-                        if (!region.visible) {
-                            content.style.display = 'block';
-                            arrowButton.innerHTML = null;
-                            arrowButton.appendChild(svgToElement('expandArrowUp'));
-                            region.visible = true;
-                        }
-                        else {
-                            content.style.display = 'none';
-                            arrowButton.innerHTML = null;
-                            arrowButton.appendChild(svgToElement('expandArrowDown'));
-                            region.visible = false;
-                        }
+                        if (!region || !region.active)
+                            return [2 /*return*/];
+                        region.visible = !region.visible;
+                        content.toggleClass('is-collapsed', !region.visible);
+                        drawArrow(region.visible);
                         return [4 /*yield*/, this.plugin.saveSettings()];
-                    case 1: return [2 /*return*/, _a.sent()];
-                    case 2: return [2 /*return*/];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
                 }
             });
         }); });
-        hr.style.marginTop = '0px';
-        hr.style.marginBottom = '10px';
         return content;
     };
     SidePanelControlView.lastColors = ['#ff0000'];
@@ -5783,32 +5738,33 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
         var cell2 = row.createDiv();
         cell2.classList.add('mfa-suggestion-text');
         cell2.setText(baseFormatterSetting.des);
+        // The label is tinted by which table the entry came from, so the four
+        // groups stay apart at a glance. The tints are theme variables now: the
+        // fixed hexes they replace were picked against a dark background, and the
+        // green in particular was close to unreadable on a light one.
         if (baseFormatterSetting.objectType === 'formatterSetting') {
             iconDiv.appendChild(svgToElement(baseFormatterSetting.icon));
-            cell2.style.color = '#c7254e';
+            cell2.addClass('mfa-suggestion-text--markdown');
         }
         else if (baseFormatterSetting.objectType === 'htmlFormatterSetting') {
             iconDiv.appendText('HTML');
-            cell2.style.color = '#0055F2';
+            cell2.addClass('mfa-suggestion-text--html');
         }
         else if (baseFormatterSetting.objectType === 'greekFormatterSetting') {
             iconDiv.appendChild(svgToElement(baseFormatterSetting.icon));
-            cell2.style.color = '#25e712';
+            cell2.addClass('mfa-suggestion-text--greek');
         }
         else if (baseFormatterSetting.objectType === 'latexFormatterSetting') {
             var item = baseFormatterSetting;
             if (item.type === 'icon') {
                 var svg = svgToElement(item.text);
-                svg.style.display = 'inline-block';
-                svg.style.verticalAlign = 'middle';
+                svg.addClass('mfa-inline-svg');
                 iconDiv.appendChild(svg);
             }
             else if (item.type === 'text') {
-                var div = document.createElement('div');
-                div.innerHTML = item.text;
-                iconDiv.appendChild(div);
+                appendLabel(iconDiv.createDiv(), item.text);
             }
-            cell2.style.color = '#25e712';
+            cell2.addClass('mfa-suggestion-text--latex');
         }
         else {
             iconDiv.appendText('HTML');
@@ -5877,16 +5833,16 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
         var iconDiv = iconContainer.createDiv();
         iconDiv.classList.add('mfa-suggestion-icon');
         var cell2 = row.createDiv();
-        cell2.classList.add('mfa-suggestion-text');
+        cell2.classList.add('mfa-suggestion-text', 'mfa-suggestion-text--muted');
         cell2.setText(calloutLabel(calloutsFormatterSetting.id));
-        cell2.style.color = 'var(--text-muted)';
-        var spanIcon = document.createElement('span');
-        spanIcon.style.verticalAlign = 'middle';
-        spanIcon.style.color = calloutsFormatterSetting.color;
-        //iconDiv.style.backgroundColor = calloutsFormatterSetting.bgColor;
+        var spanIcon = iconDiv.createSpan({ cls: 'mfa-callout-icon' });
         obsidian.setIcon(spanIcon, calloutsFormatterSetting.icon);
-        iconDiv.appendChild(spanIcon);
-        row.style.backgroundColor = calloutsFormatterSetting.bgColor;
+        // The colours belong to the callout type, so they arrive as data rather
+        // than as anything the stylesheet could know in advance. Custom properties
+        // are how a stylesheet takes delivery of that.
+        row.addClass('mfa-callout-row');
+        row.style.setProperty('--mfa-callout-color', calloutsFormatterSetting.color);
+        row.style.setProperty('--mfa-callout-background', calloutsFormatterSetting.bgColor);
     };
     // Perform action on the selected suggestion.
     CalloutsSuggestionModal.prototype.onChooseSuggestion = function (calloutsFormatterSetting, evt) {
@@ -5904,6 +5860,69 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
     };
     return CalloutsSuggestionModal;
 }(obsidian.SuggestModal));
+
+/**
+ * Names for Obsidian's own command palette and hotkey list. A leaf module with
+ * no imports, so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The panel's labels are terse keys like 'code_block'. They work as search
+ * terms in this plugin's own window, but the hotkey list sits next to entries
+ * such as "Toggle bold", so they are widened just enough to be readable -
+ * without inventing and translating a second name for every button.
+ */
+/** Turns a panel label into the name shown in Obsidian's command list. */
+function commandName(label) {
+    var words = (label || '').trim().replace(/_/g, ' ');
+    if (!words)
+        return '';
+    // 'h1' through 'h6' keep their shape on purpose: that is what the panel
+    // button says and what people type when they search for it.
+    return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * One Obsidian command per formatting action, so people can bind their own
+ * hotkeys. Obsidian owns that interface entirely - this only supplies the list,
+ * which is why there is no key binding anywhere in the plugin's own settings.
+ *
+ * Only Text Edit and the callouts are registered. The HTML, LaTeX and Greek
+ * tables hold another 93 entries between them: nobody binds a key to \alpha,
+ * and adding them would bury the user's own commands in the palette. They stay
+ * reachable through the ALT+Q window, which is what it is for.
+ */
+function registerFormattingCommands(plugin, writeCalloutTitle) {
+    // The table is heterogeneous for the suggestion window's benefit, so it does
+    // not structurally satisfy the interface. Every entry in this one does carry
+    // the fields iconFormatter reads.
+    var textEdit = values(formatSettings);
+    textEdit.forEach(function (item) {
+        plugin.addCommand({
+            // The table key rather than the label, so a binding survives a rename.
+            id: item.id,
+            name: commandName(item.des),
+            // editorCallback rather than callback: these all write to a note, and
+            // Obsidian then hides them when no editor has focus.
+            editorCallback: function (editor) { return iconFormatter(editor, item); },
+        });
+    });
+    var callouts = values(calloutsFormatterSettings);
+    callouts.forEach(function (item) {
+        plugin.addCommand({
+            // Namespaced. The two tables happen not to share a key today, but they
+            // are edited independently and both are plain English words - 'quote'
+            // and 'image' would each be at home in either. Obsidian keeps one
+            // command per id and drops the rest silently, so the day they do collide
+            // nothing would say so.
+            id: "callout-".concat(item.id),
+            name: "".concat(t('section.callouts'), ": ").concat(calloutLabel(item.id)),
+            editorCallback: function (editor) {
+                // Read when the command runs rather than when it is registered, so the
+                // setting takes effect without a restart.
+                return calloutsFormatter(editor, item, writeCalloutTitle() ? calloutLabel(item.id) : '');
+            },
+        });
+    });
+}
 
 /** Preselected in the saved-colours picker, so it never opens on black. */
 var DEFAULT_PICKER_COLOR = '#448aff';
@@ -5993,6 +6012,16 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                                 CalloutsSuggestionModal.display(_this.app, editor, _this.settings.calloutTitles);
                             },
                         });
+                        // The panel had only the ribbon icon, which is the one thing a keyboard
+                        // cannot reach.
+                        this.addCommand({
+                            id: 'toggle-side-panel',
+                            name: t('command.openPanel'),
+                            callback: function () {
+                                void _this.toggleSidePanelControlView();
+                            },
+                        });
+                        registerFormattingCommands(this, function () { return _this.settings.calloutTitles; });
                         this.addSettingTab(new SettingsTab(this.app, this));
                         return [2 /*return*/];
                 }
@@ -6202,7 +6231,7 @@ var SettingsTab = /** @class */ (function (_super) {
             var swatch = swatches.createDiv({
                 cls: 'mfa-color-icon mfa-removable',
             });
-            swatch.style.backgroundColor = color;
+            swatch.style.setProperty('--mfa-swatch', color);
             swatch.setAttribute('aria-label', color);
             swatch.title = "".concat(color, " - ").concat(t('settings.savedColors.removeHint'));
             // Redraw before awaiting the write: the old DOM stays live during the
