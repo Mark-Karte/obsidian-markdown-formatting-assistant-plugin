@@ -348,6 +348,21 @@ body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
+/* Where the buttons sit in the row. Spelled out for all three rather than
+   leaving one to the default, so the setting reads the same in the stylesheet
+   as it does in the dialog. */
+.mfa-toolbar.is-align-left {
+  justify-content: flex-start;
+}
+
+.mfa-toolbar.is-align-center {
+  justify-content: center;
+}
+
+.mfa-toolbar.is-align-right {
+  justify-content: flex-end;
+}
+
 /* Wide enough for the two-letter fallback a command without an icon gets. */
 .mfa-toolbar-button {
   min-width: 28px;

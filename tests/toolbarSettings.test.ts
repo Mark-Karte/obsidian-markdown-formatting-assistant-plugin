@@ -8,7 +8,9 @@ import {
   DEFAULT_TOOLBAR_COMMANDS,
   MAX_TOOLBAR_COMMANDS,
   PLUGIN_ID,
+  TOOLBAR_ALIGNMENTS,
   moveCommand,
+  normaliseToolbarAlignment,
   normaliseToolbarCommands,
   sortedCommands,
 } from '../src/toolbarSettings.ts';
@@ -166,6 +168,46 @@ test('the list is capped', () => {
     normaliseToolbarCommands(many).length,
     MAX_TOOLBAR_COMMANDS,
   );
+});
+
+// ---------------------------------------------------------------------------
+// Alignment
+// ---------------------------------------------------------------------------
+
+test('each of the three alignments is kept', () => {
+  for (const alignment of TOOLBAR_ALIGNMENTS) {
+    assert.equal(normaliseToolbarAlignment(alignment), alignment);
+  }
+});
+
+test('anything else falls back to the default rather than to no layout', () => {
+  // A settings file is hand-editable and synced between versions, so 'justify'
+  // or a stale value has to land somewhere sensible.
+  assert.equal(normaliseToolbarAlignment('justify'), 'left');
+  assert.equal(normaliseToolbarAlignment(''), 'left');
+  assert.equal(normaliseToolbarAlignment(undefined), 'left');
+  assert.equal(normaliseToolbarAlignment(null), 'left');
+  assert.equal(normaliseToolbarAlignment(2), 'left');
+  assert.equal(normaliseToolbarAlignment('LEFT'), 'left');
+});
+
+test('every alignment has a translation and a rule', () => {
+  const en = fs.readFileSync(
+    path.join(HERE, '..', 'src', 'locales', 'en.ts'),
+    'utf8',
+  );
+  const css = fs.readFileSync(path.join(HERE, '..', 'styles.css'), 'utf8');
+
+  for (const alignment of TOOLBAR_ALIGNMENTS) {
+    assert.ok(
+      en.includes(`'settings.toolbar.align.${alignment}'`),
+      `${alignment} has no label`,
+    );
+    assert.ok(
+      css.includes(`.is-align-${alignment}`),
+      `${alignment} has no stylesheet rule, so it would render as left`,
+    );
+  }
 });
 
 // ---------------------------------------------------------------------------

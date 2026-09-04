@@ -91,6 +91,11 @@ export const ko: LocaleDictionary = {
   'settings.toolbar.add': '버튼 추가',
   'settings.toolbar.addDesc': 'Obsidian 자체 명령과 다른 플러그인의 명령을 포함해 보관소의 어떤 명령이든 도구 모음에 올릴 수 있습니다. 행을 끌어 순서를 바꾸세요. 최대 {max}개.',
   'settings.toolbar.pick': '모든 명령 검색',
+  'settings.toolbar.align.name': '버튼 정렬',
+  'settings.toolbar.align.desc': '버튼이 줄에서 놓이는 위치입니다.',
+  'settings.toolbar.align.left': '왼쪽',
+  'settings.toolbar.align.center': '가운데',
+  'settings.toolbar.align.right': '오른쪽',
   'settings.calloutTitles.name': '콜아웃 제목 삽입',
   'settings.calloutTitles.desc': '콜아웃 이름을 제목으로 넣어 노트에 선택한 언어로 표시되게 합니다. [!note] 안의 키워드는 항상 영어로 유지되며, Obsidian 은 그것으로 종류를 판별합니다.',
 };

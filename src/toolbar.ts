@@ -1,6 +1,10 @@
 import { Command, MarkdownView, Plugin, setIcon } from 'obsidian';
 import { shortLabel } from './commandNames';
-import { sortedCommands, toolbarSetting } from './toolbarSettings';
+import {
+  sortedCommands,
+  toolbarAlignment,
+  toolbarSetting,
+} from './toolbarSettings';
 
 const TOOLBAR_CLASS = 'mfa-toolbar';
 
@@ -61,7 +65,7 @@ export class EditorToolbar {
 
   /** Brings every open markdown pane in line with the current settings. */
   public refresh(): void {
-    const { enabled, commands } = this.settings();
+    const { enabled, commands, alignment } = this.settings();
 
     this.plugin.app.workspace
       .getLeavesOfType('markdown')
@@ -73,7 +77,7 @@ export class EditorToolbar {
         // Reading mode has no editor to write to, and every button here writes.
         const wanted = enabled && commands.length > 0 && view.getMode() === 'source';
 
-        this.apply(view, wanted ? commands : []);
+        this.apply(view, wanted ? commands : [], alignment);
       });
   }
 
@@ -84,7 +88,11 @@ export class EditorToolbar {
       .forEach((bar) => bar.remove());
   }
 
-  private apply(view: MarkdownView, commands: string[]): void {
+  private apply(
+    view: MarkdownView,
+    commands: string[],
+    alignment: toolbarAlignment,
+  ): void {
     const host = view.contentEl;
     const existing = host.querySelector(`:scope > .${TOOLBAR_CLASS}`);
 
@@ -94,16 +102,17 @@ export class EditorToolbar {
     }
 
     // Rebuilding on every pane switch would be wasteful and would drop the
-    // focus ring mid-click, so the rendered list is stamped on the element and
-    // compared first.
-    const signature = commands.join('\n');
+    // focus ring mid-click, so what was rendered is stamped on the element and
+    // compared first. The alignment is part of that: it is a class on the same
+    // element, and a change to it has to reach a pane that is already showing.
+    const signature = [alignment, ...commands].join('\n');
 
     if (existing instanceof HTMLElement) {
       if (existing.dataset.signature === signature) return;
       existing.remove();
     }
 
-    const bar = createDiv({ cls: TOOLBAR_CLASS });
+    const bar = createDiv({ cls: `${TOOLBAR_CLASS} is-align-${alignment}` });
     bar.dataset.signature = signature;
 
     this.fill(bar, commands);

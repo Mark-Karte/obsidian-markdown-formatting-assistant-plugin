@@ -27,7 +27,9 @@ import { EditorToolbar, allCommands, getCommandRegistry } from './toolbar';
 import {
   DEFAULT_TOOLBAR,
   MAX_TOOLBAR_COMMANDS,
+  TOOLBAR_ALIGNMENTS,
   moveCommand,
+  normaliseToolbarAlignment,
   normaliseToolbarCommands,
   toolbarSetting,
 } from './toolbarSettings';
@@ -198,6 +200,7 @@ export default class MarkdownAutocompletePlugin extends Plugin {
     this.settings.toolbar = {
       enabled: Boolean(stored && stored.enabled),
       commands: normaliseToolbarCommands(stored && stored.commands),
+      alignment: normaliseToolbarAlignment(stored && stored.alignment),
     };
   }
 
@@ -368,6 +371,21 @@ class SettingsTab extends PluginSettingTab {
       );
 
     if (!toolbar.enabled) return;
+
+    new Setting(containerEl)
+      .setName(t('settings.toolbar.align.name'))
+      .setDesc(t('settings.toolbar.align.desc'))
+      .addDropdown((dropdown) => {
+        TOOLBAR_ALIGNMENTS.forEach((option) =>
+          dropdown.addOption(option, t(`settings.toolbar.align.${option}`)),
+        );
+
+        dropdown.setValue(toolbar.alignment).onChange(async (value) => {
+          toolbar.alignment = normaliseToolbarAlignment(value);
+          await this.plugin.saveSettings();
+          this.plugin.toolbar.refresh();
+        });
+      });
 
     const registry = getCommandRegistry(this.plugin);
 

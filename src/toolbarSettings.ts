@@ -38,17 +38,36 @@ export const DEFAULT_TOOLBAR_COMMANDS = [
   'link',
 ].map((id) => `${PLUGIN_ID}:${id}`);
 
+export type toolbarAlignment = 'left' | 'center' | 'right';
+
+export const TOOLBAR_ALIGNMENTS: toolbarAlignment[] = [
+  'left',
+  'center',
+  'right',
+];
+
 export interface toolbarSetting {
   /** Off until asked for: the bar takes room from the note. */
   enabled: boolean;
   /** Command ids, in the order the buttons appear. */
   commands: string[];
+  /** Where the buttons sit in the row. */
+  alignment: toolbarAlignment;
 }
 
 export const DEFAULT_TOOLBAR: toolbarSetting = {
   enabled: false,
   commands: DEFAULT_TOOLBAR_COMMANDS,
+  // Left, because that is where the text starts.
+  alignment: 'left',
 };
+
+/** Anything unrecognised falls back to the default rather than to no layout. */
+export function normaliseToolbarAlignment(value: unknown): toolbarAlignment {
+  return TOOLBAR_ALIGNMENTS.includes(value as toolbarAlignment)
+    ? (value as toolbarAlignment)
+    : DEFAULT_TOOLBAR.alignment;
+}
 
 /** As much of a command as the picker needs to know about. */
 export interface namedCommand {

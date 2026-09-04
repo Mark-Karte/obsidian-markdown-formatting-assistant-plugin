@@ -3977,6 +3977,11 @@ var en = {
     'settings.toolbar.add': 'Add a button',
     'settings.toolbar.addDesc': 'Any command in the vault can go on the toolbar, including Obsidian’s own and other plugins’. Drag the rows to reorder them. Up to {max} buttons.',
     'settings.toolbar.pick': 'Search every command',
+    'settings.toolbar.align.name': 'Button alignment',
+    'settings.toolbar.align.desc': 'Where the buttons sit in the row.',
+    'settings.toolbar.align.left': 'Left',
+    'settings.toolbar.align.center': 'Center',
+    'settings.toolbar.align.right': 'Right',
     // Callout button labels. Only the label is translated - the callout type
     // inside '> [!note]' is a keyword Obsidian matches in English.
     'callout.note': 'Note',
@@ -4090,6 +4095,11 @@ var be = {
     'settings.toolbar.add': 'Дадаць кнопку',
     'settings.toolbar.addDesc': 'На панэль можна пакласці любую каманду сховішча, у тым ліку каманды самога Obsidian і іншых плагінаў. Парадак мяняецца перацягваннем. Да {max} кнопак.',
     'settings.toolbar.pick': 'Пошук па ўсіх камандах',
+    'settings.toolbar.align.name': 'Выраўноўванне кнопак',
+    'settings.toolbar.align.desc': 'Дзе кнопкі стаяць у радзе.',
+    'settings.toolbar.align.left': 'Па левым краі',
+    'settings.toolbar.align.center': 'Па цэнтры',
+    'settings.toolbar.align.right': 'Па правым краі',
     'settings.calloutTitles.name': 'Пісаць загаловак выноскі',
     'settings.calloutTitles.desc': 'Устаўляць назву выноскі як загаловак, каб у нататцы яна адлюстроўвалася на вашай мове. Ключавое слова ўнутры [!note] заўсёды застаецца англійскім — менавіта па ім Obsidian вызначае тып.',
 };
@@ -4177,6 +4187,11 @@ var de = {
     'settings.toolbar.add': 'Schaltfläche hinzufügen',
     'settings.toolbar.addDesc': 'Jeder Befehl im Vault kann auf die Leiste, auch Obsidians eigene und die anderer Plugins. Die Reihenfolge änderst du per Ziehen. Bis zu {max} Schaltflächen.',
     'settings.toolbar.pick': 'Alle Befehle durchsuchen',
+    'settings.toolbar.align.name': 'Ausrichtung der Schaltflächen',
+    'settings.toolbar.align.desc': 'Wo die Schaltflächen in der Reihe sitzen.',
+    'settings.toolbar.align.left': 'Links',
+    'settings.toolbar.align.center': 'Mittig',
+    'settings.toolbar.align.right': 'Rechts',
     'settings.calloutTitles.name': 'Callout-Überschrift schreiben',
     'settings.calloutTitles.desc': 'Den Namen des Callouts als Überschrift einfügen, damit die Notiz ihn in deiner Sprache zeigt. Das Schlüsselwort in [!note] bleibt immer englisch - daran erkennt Obsidian den Typ.',
 };
@@ -4264,6 +4279,11 @@ var es = {
     'settings.toolbar.add': 'Añadir un botón',
     'settings.toolbar.addDesc': 'Cualquier comando del almacén puede ir en la barra, incluidos los de Obsidian y los de otros plugins. Arrastra las filas para reordenarlas. Hasta {max} botones.',
     'settings.toolbar.pick': 'Buscar en todos los comandos',
+    'settings.toolbar.align.name': 'Alineación de los botones',
+    'settings.toolbar.align.desc': 'Dónde se colocan los botones en la fila.',
+    'settings.toolbar.align.left': 'Izquierda',
+    'settings.toolbar.align.center': 'Centro',
+    'settings.toolbar.align.right': 'Derecha',
     'settings.calloutTitles.name': 'Escribir el título de la llamada',
     'settings.calloutTitles.desc': 'Insertar el nombre de la llamada como título, para que la nota lo muestre en tu idioma. La palabra clave dentro de [!note] siempre queda en inglés: es la que reconoce Obsidian.',
 };
@@ -4351,6 +4371,11 @@ var fr = {
     'settings.toolbar.add': 'Ajouter un bouton',
     'settings.toolbar.addDesc': 'N’importe quelle commande du coffre peut aller sur la barre, y compris celles d’Obsidian et des autres extensions. Glissez les lignes pour les réordonner. Jusqu’à {max} boutons.',
     'settings.toolbar.pick': 'Rechercher parmi toutes les commandes',
+    'settings.toolbar.align.name': 'Alignement des boutons',
+    'settings.toolbar.align.desc': 'Où les boutons se placent dans la rangée.',
+    'settings.toolbar.align.left': 'Gauche',
+    'settings.toolbar.align.center': 'Centre',
+    'settings.toolbar.align.right': 'Droite',
     'settings.calloutTitles.name': 'Écrire le titre de l’encadré',
     'settings.calloutTitles.desc': 'Insérer le nom de l’encadré comme titre, afin que la note l’affiche dans votre langue. Le mot-clé dans [!note] reste toujours en anglais : c’est lui qu’Obsidian reconnaît.',
 };
@@ -4438,6 +4463,11 @@ var it = {
     'settings.toolbar.add': 'Aggiungi un pulsante',
     'settings.toolbar.addDesc': 'Sulla barra può finire qualsiasi comando del vault, compresi quelli di Obsidian e di altri plugin. Trascina le righe per riordinarle. Fino a {max} pulsanti.',
     'settings.toolbar.pick': 'Cerca fra tutti i comandi',
+    'settings.toolbar.align.name': 'Allineamento dei pulsanti',
+    'settings.toolbar.align.desc': 'Dove stanno i pulsanti nella riga.',
+    'settings.toolbar.align.left': 'Sinistra',
+    'settings.toolbar.align.center': 'Centro',
+    'settings.toolbar.align.right': 'Destra',
     'settings.calloutTitles.name': 'Scrivere il titolo del riquadro',
     'settings.calloutTitles.desc': 'Inserire il nome del riquadro come titolo, così la nota lo mostra nella tua lingua. La parola chiave dentro [!note] resta sempre in inglese: è quella che Obsidian riconosce.',
 };
@@ -4525,6 +4555,11 @@ var ja = {
     'settings.toolbar.add': 'ボタンを追加',
     'settings.toolbar.addDesc': 'Obsidian 自身や他プラグインのものも含め、保管庫のどのコマンドでもツールバーに置けます。行をドラッグすると並べ替えられます。最大 {max} 個。',
     'settings.toolbar.pick': 'すべてのコマンドを検索',
+    'settings.toolbar.align.name': 'ボタンの配置',
+    'settings.toolbar.align.desc': '行の中でボタンを寄せる位置です。',
+    'settings.toolbar.align.left': '左寄せ',
+    'settings.toolbar.align.center': '中央',
+    'settings.toolbar.align.right': '右寄せ',
     'settings.calloutTitles.name': 'コールアウトの見出しを書き込む',
     'settings.calloutTitles.desc': 'コールアウト名を見出しとして挿入し、ノートで選択した言語のまま表示されるようにします。[!note] の中のキーワードは常に英語のままです。Obsidian はそれで種類を判別します。',
 };
@@ -4612,6 +4647,11 @@ var ko = {
     'settings.toolbar.add': '버튼 추가',
     'settings.toolbar.addDesc': 'Obsidian 자체 명령과 다른 플러그인의 명령을 포함해 보관소의 어떤 명령이든 도구 모음에 올릴 수 있습니다. 행을 끌어 순서를 바꾸세요. 최대 {max}개.',
     'settings.toolbar.pick': '모든 명령 검색',
+    'settings.toolbar.align.name': '버튼 정렬',
+    'settings.toolbar.align.desc': '버튼이 줄에서 놓이는 위치입니다.',
+    'settings.toolbar.align.left': '왼쪽',
+    'settings.toolbar.align.center': '가운데',
+    'settings.toolbar.align.right': '오른쪽',
     'settings.calloutTitles.name': '콜아웃 제목 삽입',
     'settings.calloutTitles.desc': '콜아웃 이름을 제목으로 넣어 노트에 선택한 언어로 표시되게 합니다. [!note] 안의 키워드는 항상 영어로 유지되며, Obsidian 은 그것으로 종류를 판별합니다.',
 };
@@ -4699,6 +4739,11 @@ var pt = {
     'settings.toolbar.add': 'Adicionar um botão',
     'settings.toolbar.addDesc': 'Qualquer comando do cofre pode ir para a barra, incluindo os do próprio Obsidian e os de outros plugins. Arraste as linhas para reordenar. Até {max} botões.',
     'settings.toolbar.pick': 'Procurar em todos os comandos',
+    'settings.toolbar.align.name': 'Alinhamento dos botões',
+    'settings.toolbar.align.desc': 'Onde os botões ficam na linha.',
+    'settings.toolbar.align.left': 'Esquerda',
+    'settings.toolbar.align.center': 'Centro',
+    'settings.toolbar.align.right': 'Direita',
     'settings.calloutTitles.name': 'Escrever o título do destaque',
     'settings.calloutTitles.desc': 'Inserir o nome do destaque como título, para que a nota o mostre no seu idioma. A palavra-chave dentro de [!note] permanece sempre em inglês - é por ela que o Obsidian identifica o tipo.',
 };
@@ -4789,6 +4834,11 @@ var ru = {
     'settings.toolbar.add': 'Добавить кнопку',
     'settings.toolbar.addDesc': 'На панель можно положить любую команду хранилища, включая команды самого Obsidian и других плагинов. Порядок меняется перетаскиванием. До {max} кнопок.',
     'settings.toolbar.pick': 'Поиск по всем командам',
+    'settings.toolbar.align.name': 'Выравнивание кнопок',
+    'settings.toolbar.align.desc': 'Где кнопки стоят в ряду.',
+    'settings.toolbar.align.left': 'По левому краю',
+    'settings.toolbar.align.center': 'По центру',
+    'settings.toolbar.align.right': 'По правому краю',
     'settings.calloutTitles.name': 'Писать заголовок коллаута',
     'settings.calloutTitles.desc': 'Вставлять название коллаута как заголовок, чтобы в заметке оно отображалось на вашем языке. Ключевое слово внутри [!note] всегда остаётся английским — именно по нему Obsidian опознаёт тип.',
 };
@@ -4876,6 +4926,11 @@ var uk = {
     'settings.toolbar.add': 'Додати кнопку',
     'settings.toolbar.addDesc': 'На панель можна покласти будь-яку команду сховища, зокрема команди самого Obsidian та інших плагінів. Порядок змінюється перетягуванням. До {max} кнопок.',
     'settings.toolbar.pick': 'Пошук за всіма командами',
+    'settings.toolbar.align.name': 'Вирівнювання кнопок',
+    'settings.toolbar.align.desc': 'Де кнопки стоять у ряду.',
+    'settings.toolbar.align.left': 'За лівим краєм',
+    'settings.toolbar.align.center': 'По центру',
+    'settings.toolbar.align.right': 'За правим краєм',
     'settings.calloutTitles.name': 'Писати заголовок виноски',
     'settings.calloutTitles.desc': 'Вставляти назву виноски як заголовок, щоб у нотатці вона відображалася вашою мовою. Ключове слово всередині [!note] завжди залишається англійським — саме за ним Obsidian розпізнає тип.',
 };
@@ -4964,6 +5019,11 @@ var zh = {
     'settings.toolbar.add': '添加按钮',
     'settings.toolbar.addDesc': '库中的任何命令都可以放到工具栏上，包括 Obsidian 自带的命令和其他插件的命令。拖动行即可调整顺序。最多 {max} 个按钮。',
     'settings.toolbar.pick': '搜索全部命令',
+    'settings.toolbar.align.name': '按钮对齐',
+    'settings.toolbar.align.desc': '按钮在这一行中的位置。',
+    'settings.toolbar.align.left': '左对齐',
+    'settings.toolbar.align.center': '居中',
+    'settings.toolbar.align.right': '右对齐',
     'settings.calloutTitles.name': '写入标注标题',
     'settings.calloutTitles.desc': '把标注名称作为标题插入，这样笔记中就会显示你所选语言的名称。[!note] 中的关键字始终保持英文，Obsidian 依靠它识别类型。',
 };
@@ -6141,10 +6201,23 @@ var DEFAULT_TOOLBAR_COMMANDS = [
     'checkList',
     'link',
 ].map(function (id) { return "".concat(PLUGIN_ID, ":").concat(id); });
+var TOOLBAR_ALIGNMENTS = [
+    'left',
+    'center',
+    'right',
+];
 var DEFAULT_TOOLBAR = {
     enabled: false,
     commands: DEFAULT_TOOLBAR_COMMANDS,
+    // Left, because that is where the text starts.
+    alignment: 'left',
 };
+/** Anything unrecognised falls back to the default rather than to no layout. */
+function normaliseToolbarAlignment(value) {
+    return TOOLBAR_ALIGNMENTS.includes(value)
+        ? value
+        : DEFAULT_TOOLBAR.alignment;
+}
 /**
  * Every registered command, in the order a person would look for one.
  *
@@ -6257,7 +6330,7 @@ var EditorToolbar = /** @class */ (function () {
     /** Brings every open markdown pane in line with the current settings. */
     EditorToolbar.prototype.refresh = function () {
         var _this = this;
-        var _a = this.settings(), enabled = _a.enabled, commands = _a.commands;
+        var _a = this.settings(), enabled = _a.enabled, commands = _a.commands, alignment = _a.alignment;
         this.plugin.app.workspace
             .getLeavesOfType('markdown')
             .forEach(function (leaf) {
@@ -6266,7 +6339,7 @@ var EditorToolbar = /** @class */ (function () {
                 return;
             // Reading mode has no editor to write to, and every button here writes.
             var wanted = enabled && commands.length > 0 && view.getMode() === 'source';
-            _this.apply(view, wanted ? commands : []);
+            _this.apply(view, wanted ? commands : [], alignment);
         });
     };
     /** Removes every toolbar this plugin put on the page. */
@@ -6275,7 +6348,7 @@ var EditorToolbar = /** @class */ (function () {
             .querySelectorAll(".".concat(TOOLBAR_CLASS))
             .forEach(function (bar) { return bar.remove(); });
     };
-    EditorToolbar.prototype.apply = function (view, commands) {
+    EditorToolbar.prototype.apply = function (view, commands, alignment) {
         var host = view.contentEl;
         var existing = host.querySelector(":scope > .".concat(TOOLBAR_CLASS));
         if (commands.length === 0) {
@@ -6283,15 +6356,16 @@ var EditorToolbar = /** @class */ (function () {
             return;
         }
         // Rebuilding on every pane switch would be wasteful and would drop the
-        // focus ring mid-click, so the rendered list is stamped on the element and
-        // compared first.
-        var signature = commands.join('\n');
+        // focus ring mid-click, so what was rendered is stamped on the element and
+        // compared first. The alignment is part of that: it is a class on the same
+        // element, and a change to it has to reach a pane that is already showing.
+        var signature = __spreadArray([alignment], commands, true).join('\n');
         if (existing instanceof HTMLElement) {
             if (existing.dataset.signature === signature)
                 return;
             existing.remove();
         }
-        var bar = createDiv({ cls: TOOLBAR_CLASS });
+        var bar = createDiv({ cls: "".concat(TOOLBAR_CLASS, " is-align-").concat(alignment) });
         bar.dataset.signature = signature;
         this.fill(bar, commands);
         // First child, so it sits above the note rather than over it.
@@ -6485,6 +6559,7 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                         this.settings.toolbar = {
                             enabled: Boolean(stored && stored.enabled),
                             commands: normaliseToolbarCommands(stored && stored.commands),
+                            alignment: normaliseToolbarAlignment(stored && stored.alignment),
                         };
                         return [2 /*return*/];
                 }
@@ -6654,6 +6729,27 @@ var SettingsTab = /** @class */ (function (_super) {
         });
         if (!toolbar.enabled)
             return;
+        new obsidian.Setting(containerEl)
+            .setName(t('settings.toolbar.align.name'))
+            .setDesc(t('settings.toolbar.align.desc'))
+            .addDropdown(function (dropdown) {
+            TOOLBAR_ALIGNMENTS.forEach(function (option) {
+                return dropdown.addOption(option, t("settings.toolbar.align.".concat(option)));
+            });
+            dropdown.setValue(toolbar.alignment).onChange(function (value) { return __awaiter(_this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            toolbar.alignment = normaliseToolbarAlignment(value);
+                            return [4 /*yield*/, this.plugin.saveSettings()];
+                        case 1:
+                            _a.sent();
+                            this.plugin.toolbar.refresh();
+                            return [2 /*return*/];
+                    }
+                });
+            }); });
+        });
         var registry = getCommandRegistry(this.plugin);
         var commit = function (commands) { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {

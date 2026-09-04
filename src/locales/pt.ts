@@ -94,6 +94,11 @@ export const pt: LocaleDictionary = {
   'settings.toolbar.add': 'Adicionar um botão',
   'settings.toolbar.addDesc': 'Qualquer comando do cofre pode ir para a barra, incluindo os do próprio Obsidian e os de outros plugins. Arraste as linhas para reordenar. Até {max} botões.',
   'settings.toolbar.pick': 'Procurar em todos os comandos',
+  'settings.toolbar.align.name': 'Alinhamento dos botões',
+  'settings.toolbar.align.desc': 'Onde os botões ficam na linha.',
+  'settings.toolbar.align.left': 'Esquerda',
+  'settings.toolbar.align.center': 'Centro',
+  'settings.toolbar.align.right': 'Direita',
   'settings.calloutTitles.name': 'Escrever o título do destaque',
   'settings.calloutTitles.desc': 'Inserir o nome do destaque como título, para que a nota o mostre no seu idioma. A palavra-chave dentro de [!note] permanece sempre em inglês - é por ela que o Obsidian identifica o tipo.',
 };

@@ -95,6 +95,11 @@ export const de: LocaleDictionary = {
   'settings.toolbar.add': 'Schaltfläche hinzufügen',
   'settings.toolbar.addDesc': 'Jeder Befehl im Vault kann auf die Leiste, auch Obsidians eigene und die anderer Plugins. Die Reihenfolge änderst du per Ziehen. Bis zu {max} Schaltflächen.',
   'settings.toolbar.pick': 'Alle Befehle durchsuchen',
+  'settings.toolbar.align.name': 'Ausrichtung der Schaltflächen',
+  'settings.toolbar.align.desc': 'Wo die Schaltflächen in der Reihe sitzen.',
+  'settings.toolbar.align.left': 'Links',
+  'settings.toolbar.align.center': 'Mittig',
+  'settings.toolbar.align.right': 'Rechts',
   'settings.calloutTitles.name': 'Callout-Überschrift schreiben',
   'settings.calloutTitles.desc': 'Den Namen des Callouts als Überschrift einfügen, damit die Notiz ihn in deiner Sprache zeigt. Das Schlüsselwort in [!note] bleibt immer englisch - daran erkennt Obsidian den Typ.',
 };

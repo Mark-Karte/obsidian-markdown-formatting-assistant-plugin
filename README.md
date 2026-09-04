@@ -106,6 +106,8 @@ A button is an Obsidian command and nothing else. That is what makes the row wor
 
 It starts with everyday formatting: headings, bold, italic, strikethrough, highlight, inline code, quote, the three list kinds and a link. Nothing about that set is special; clear it out and build your own.
 
+The buttons can sit at the left of the row, in the middle, or at the right — whichever suits where your eyes already are.
+
 The bar appears only while you are editing, since every button writes to the note, and it wraps rather than scrolls, so a narrow pane costs a row of height instead of hiding half the buttons.
 
 Desktop only. On mobile Obsidian already puts a toolbar above the keyboard, and a second one would only be in the way.
@@ -179,7 +181,7 @@ For a even easier handling you can select additional options to what should be a
 - Toolbar above the note
 
   - default: off
-  - Shows a row of buttons at the top of the editor, and lets you choose which commands appear on it and in what order. Desktop only.
+  - Shows a row of buttons at the top of the editor, and lets you choose which commands appear on it, in what order, and whether they sit left, centre or right. Desktop only.
 
 - Saved Colors
   - default: one entry

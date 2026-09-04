@@ -93,6 +93,11 @@ export const uk: LocaleDictionary = {
   'settings.toolbar.add': 'Додати кнопку',
   'settings.toolbar.addDesc': 'На панель можна покласти будь-яку команду сховища, зокрема команди самого Obsidian та інших плагінів. Порядок змінюється перетягуванням. До {max} кнопок.',
   'settings.toolbar.pick': 'Пошук за всіма командами',
+  'settings.toolbar.align.name': 'Вирівнювання кнопок',
+  'settings.toolbar.align.desc': 'Де кнопки стоять у ряду.',
+  'settings.toolbar.align.left': 'За лівим краєм',
+  'settings.toolbar.align.center': 'По центру',
+  'settings.toolbar.align.right': 'За правим краєм',
   'settings.calloutTitles.name': 'Писати заголовок виноски',
   'settings.calloutTitles.desc': 'Вставляти назву виноски як заголовок, щоб у нотатці вона відображалася вашою мовою. Ключове слово всередині [!note] завжди залишається англійським — саме за ним Obsidian розпізнає тип.',
 };

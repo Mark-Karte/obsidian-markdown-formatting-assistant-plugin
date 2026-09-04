@@ -94,6 +94,11 @@ export const it: LocaleDictionary = {
   'settings.toolbar.add': 'Aggiungi un pulsante',
   'settings.toolbar.addDesc': 'Sulla barra può finire qualsiasi comando del vault, compresi quelli di Obsidian e di altri plugin. Trascina le righe per riordinarle. Fino a {max} pulsanti.',
   'settings.toolbar.pick': 'Cerca fra tutti i comandi',
+  'settings.toolbar.align.name': 'Allineamento dei pulsanti',
+  'settings.toolbar.align.desc': 'Dove stanno i pulsanti nella riga.',
+  'settings.toolbar.align.left': 'Sinistra',
+  'settings.toolbar.align.center': 'Centro',
+  'settings.toolbar.align.right': 'Destra',
   'settings.calloutTitles.name': 'Scrivere il titolo del riquadro',
   'settings.calloutTitles.desc': 'Inserire il nome del riquadro come titolo, così la nota lo mostra nella tua lingua. La parola chiave dentro [!note] resta sempre in inglese: è quella che Obsidian riconosce.',
 };

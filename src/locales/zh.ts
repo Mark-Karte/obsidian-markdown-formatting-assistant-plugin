@@ -91,6 +91,11 @@ export const zh: LocaleDictionary = {
   'settings.toolbar.add': '添加按钮',
   'settings.toolbar.addDesc': '库中的任何命令都可以放到工具栏上，包括 Obsidian 自带的命令和其他插件的命令。拖动行即可调整顺序。最多 {max} 个按钮。',
   'settings.toolbar.pick': '搜索全部命令',
+  'settings.toolbar.align.name': '按钮对齐',
+  'settings.toolbar.align.desc': '按钮在这一行中的位置。',
+  'settings.toolbar.align.left': '左对齐',
+  'settings.toolbar.align.center': '居中',
+  'settings.toolbar.align.right': '右对齐',
   'settings.calloutTitles.name': '写入标注标题',
   'settings.calloutTitles.desc': '把标注名称作为标题插入，这样笔记中就会显示你所选语言的名称。[!note] 中的关键字始终保持英文，Obsidian 依靠它识别类型。',
 };

@@ -96,6 +96,11 @@ export const fr: LocaleDictionary = {
   'settings.toolbar.add': 'Ajouter un bouton',
   'settings.toolbar.addDesc': 'N’importe quelle commande du coffre peut aller sur la barre, y compris celles d’Obsidian et des autres extensions. Glissez les lignes pour les réordonner. Jusqu’à {max} boutons.',
   'settings.toolbar.pick': 'Rechercher parmi toutes les commandes',
+  'settings.toolbar.align.name': 'Alignement des boutons',
+  'settings.toolbar.align.desc': 'Où les boutons se placent dans la rangée.',
+  'settings.toolbar.align.left': 'Gauche',
+  'settings.toolbar.align.center': 'Centre',
+  'settings.toolbar.align.right': 'Droite',
   'settings.calloutTitles.name': 'Écrire le titre de l’encadré',
   'settings.calloutTitles.desc': 'Insérer le nom de l’encadré comme titre, afin que la note l’affiche dans votre langue. Le mot-clé dans [!note] reste toujours en anglais : c’est lui qu’Obsidian reconnaît.',
 };

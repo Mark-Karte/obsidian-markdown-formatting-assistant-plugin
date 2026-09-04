@@ -93,6 +93,11 @@ export const es: LocaleDictionary = {
   'settings.toolbar.add': 'Añadir un botón',
   'settings.toolbar.addDesc': 'Cualquier comando del almacén puede ir en la barra, incluidos los de Obsidian y los de otros plugins. Arrastra las filas para reordenarlas. Hasta {max} botones.',
   'settings.toolbar.pick': 'Buscar en todos los comandos',
+  'settings.toolbar.align.name': 'Alineación de los botones',
+  'settings.toolbar.align.desc': 'Dónde se colocan los botones en la fila.',
+  'settings.toolbar.align.left': 'Izquierda',
+  'settings.toolbar.align.center': 'Centro',
+  'settings.toolbar.align.right': 'Derecha',
   'settings.calloutTitles.name': 'Escribir el título de la llamada',
   'settings.calloutTitles.desc': 'Insertar el nombre de la llamada como título, para que la nota lo muestre en tu idioma. La palabra clave dentro de [!note] siempre queda en inglés: es la que reconoce Obsidian.',
 };

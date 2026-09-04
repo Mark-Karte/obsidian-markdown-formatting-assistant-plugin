@@ -92,6 +92,11 @@ export const ja: LocaleDictionary = {
   'settings.toolbar.add': 'ボタンを追加',
   'settings.toolbar.addDesc': 'Obsidian 自身や他プラグインのものも含め、保管庫のどのコマンドでもツールバーに置けます。行をドラッグすると並べ替えられます。最大 {max} 個。',
   'settings.toolbar.pick': 'すべてのコマンドを検索',
+  'settings.toolbar.align.name': 'ボタンの配置',
+  'settings.toolbar.align.desc': '行の中でボタンを寄せる位置です。',
+  'settings.toolbar.align.left': '左寄せ',
+  'settings.toolbar.align.center': '中央',
+  'settings.toolbar.align.right': '右寄せ',
   'settings.calloutTitles.name': 'コールアウトの見出しを書き込む',
   'settings.calloutTitles.desc': 'コールアウト名を見出しとして挿入し、ノートで選択した言語のまま表示されるようにします。[!note] の中のキーワードは常に英語のままです。Obsidian はそれで種類を判別します。',
 };

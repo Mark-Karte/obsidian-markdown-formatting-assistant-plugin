@@ -95,6 +95,11 @@ export const ru: LocaleDictionary = {
   'settings.toolbar.add': 'Добавить кнопку',
   'settings.toolbar.addDesc': 'На панель можно положить любую команду хранилища, включая команды самого Obsidian и других плагинов. Порядок меняется перетаскиванием. До {max} кнопок.',
   'settings.toolbar.pick': 'Поиск по всем командам',
+  'settings.toolbar.align.name': 'Выравнивание кнопок',
+  'settings.toolbar.align.desc': 'Где кнопки стоят в ряду.',
+  'settings.toolbar.align.left': 'По левому краю',
+  'settings.toolbar.align.center': 'По центру',
+  'settings.toolbar.align.right': 'По правому краю',
   'settings.calloutTitles.name': 'Писать заголовок коллаута',
   'settings.calloutTitles.desc': 'Вставлять название коллаута как заголовок, чтобы в заметке оно отображалось на вашем языке. Ключевое слово внутри [!note] всегда остаётся английским — именно по нему Obsidian опознаёт тип.',
 };
