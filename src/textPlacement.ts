@@ -10,7 +10,6 @@
 
 export const CURSOR_PLACEHOLDER = '{cursor}';
 export const SELECTION_PLACEHOLDER = '{selection}';
-export const LABEL_PLACEHOLDER = '{label}';
 
 export interface expandedTemplate {
   /** The text to insert, placeholders resolved and removed. */
@@ -39,26 +38,24 @@ function continuationPrefix(lineSoFar: string): string {
 }
 
 /**
- * Resolves the placeholders of a snippet template.
+ * Resolves the placeholders of an insertion template.
  *
- * `{selection}` becomes the selected text and `{label}` the snippet's own
- * label - every occurrence, so a template may mention either twice. `{cursor}`
- * marks where the caret ends up; the first one wins and any further ones are
- * simply dropped. A template without a `{cursor}` leaves the caret at the end,
- * which is what typing would do.
+ * `{selection}` becomes the selected text - every occurrence, so a template may
+ * mention it twice. `{cursor}` marks where the caret ends up; the first one
+ * wins and any further ones are simply dropped. A template without a `{cursor}`
+ * leaves the caret at the end, which is what typing would do.
  *
  * Everything happens in one pass over the TEMPLATE, which is what keeps the
- * substituted values inert: the selection is the user's own document text and
- * may well contain the word `{cursor}` or `{label}`, and a second pass would
- * then treat it as markup and mangle their note.
+ * substituted text inert: the selection is the user's own document text and may
+ * well contain the word `{cursor}`, and a second pass would then treat it as
+ * markup and mangle their note.
  */
 export function expandTemplate(
   template: string,
   selection: string,
-  label = '',
 ): expandedTemplate {
   // Kept in step with the exported placeholder constants above.
-  const tokens = /\{(cursor|selection|label)\}/g;
+  const tokens = /\{(cursor|selection)\}/g;
 
   let text = '';
   let cursorOffset = -1;
@@ -73,10 +70,9 @@ export function expandTemplate(
       continue;
     }
 
-    const value = token[1] === 'selection' ? selection : label;
     const prefix = continuationPrefix(text.slice(text.lastIndexOf('\n') + 1));
 
-    text += prefix ? value.split('\n').join('\n' + prefix) : value;
+    text += prefix ? selection.split('\n').join('\n' + prefix) : selection;
   }
 
   text += template.slice(copied);

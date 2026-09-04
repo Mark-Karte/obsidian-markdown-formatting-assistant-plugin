@@ -19,11 +19,9 @@ export const en = {
   'section.greekLetters': 'Greek Letters',
   'section.colors': 'Colors',
   'section.callouts': 'Callouts',
-  'section.custom': 'My Snippets',
 
   // Panel body
   'panel.noLeaf': 'Could not open the panel: the sidebar is unavailable.',
-  'custom.empty': 'No snippets yet - add them in the settings.',
   'tables.pick': 'Pick a size',
   'tables.size': '{rows} x {columns}',
   'tables.align.default': 'Plain',
@@ -76,21 +74,6 @@ export const en = {
     'Colours kept for the palette in the side panel. Pick one to add it, click a swatch to remove it.',
   'settings.savedColors.empty': 'No saved colours yet.',
   'settings.savedColors.removeHint': 'click to remove',
-  'settings.customSnippets.name': 'My Snippets',
-  'settings.customSnippets.desc':
-    'Your own buttons, shown in their own section of the panel and in the {hotkey} window. Write {cursor} where the caret should land and {selection} where the selected text should go.',
-  'settings.customSnippets.add': 'Add snippet',
-  'settings.customSnippets.labelPlaceholder': 'Label',
-  'settings.customSnippets.templatePlaceholder': 'Template',
-  'settings.customSnippets.remove': 'Remove this snippet',
-  'settings.customSnippets.empty': 'No snippets yet.',
-  'settings.customSnippets.color': 'Colour',
-  'settings.customSnippets.icon': 'Icon',
-  'settings.customSnippets.templateHint':
-    'What gets inserted. {cursor} is where the caret lands, {selection} is replaced by the selected text and {label} by the name above. Start from an example below if you like.',
-  'settings.customSnippets.exampleCallout': 'Callout',
-  'settings.customSnippets.exampleWrap': 'Wrap selection',
-  'settings.customSnippets.exampleBlock': 'Code block',
 
   // Callout button labels. Only the label is translated - the callout type
   // inside '> [!note]' is a keyword Obsidian matches in English.

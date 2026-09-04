@@ -10,11 +10,6 @@ import {
 } from './greekFormatter';
 import { latexFormatterSettings, latexFormatter } from './latexFormatter';
 import { htmlFormatterSettings, htmlFormatter } from './htmlFormatter';
-import {
-  customFormatter,
-  customSnippetSetting,
-  isUsableSnippet,
-} from './customFormatter';
 
 const builtInSuggestions = R.values(formatSettings).concat(
   // @ts-ignore
@@ -26,7 +21,6 @@ const builtInSuggestions = R.values(formatSettings).concat(
 
 export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
   private editor: Editor;
-  public customSnippets: customSnippetSetting[] = [];
 
   public setEditor = (editor: Editor) => {
     this.editor = editor;
@@ -34,20 +28,12 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
 
   // Returns all available suggestions.
   getSuggestions(query: string): baseFormatterSetting[] {
-    // Built-in entries are fixed at load time, the user's own are read per
-    // opening so edits in the settings show up without a restart. Blank ones
-    // are skipped - a freshly added row is empty until it is filled in.
     // The tables are heterogeneous - only some entries carry an icon, a text or
     // a type - so they do not structurally satisfy baseFormatterSetting. Every
     // reader below branches on objectType before touching those fields, which
     // is what makes this safe in practice.
-    const suggestions = (
-      builtInSuggestions as unknown as baseFormatterSetting[]
-    ).concat(
-      this.customSnippets.filter(
-        isUsableSnippet,
-      ) as unknown as baseFormatterSetting[],
-    );
+    const suggestions =
+      builtInSuggestions as unknown as baseFormatterSetting[];
 
     // Matching the id as well as the label keeps every command reachable by
     // its English name once the labels get translated.
@@ -99,9 +85,6 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
         iconDiv.appendChild(div);
       }
       cell2.style.color = '#25e712';
-    } else if (baseFormatterSetting.objectType === 'customSnippetSetting') {
-      iconDiv.appendText('★');
-      cell2.style.color = 'var(--text-accent)';
     } else {
       iconDiv.appendText('HTML');
     }
@@ -127,22 +110,14 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
     } else if (item.objectType === 'greekFormatterSetting') {
       // @ts-ignore
       greekFormatter(this.editor, item);
-    } else if (item.objectType === 'customSnippetSetting') {
-      // @ts-ignore
-      customFormatter(this.editor, item);
     }
 
     // new Notice(`Selected ${baseFormatterSetting.des}`);
   }
 
-  public static display = (
-    app: App,
-    editor: Editor,
-    customSnippets: customSnippetSetting[] = [],
-  ): void => {
+  public static display = (app: App, editor: Editor): void => {
     const modal = new CodeSuggestionModal(app);
     modal.setEditor(editor);
-    modal.customSnippets = customSnippets;
     modal.open();
   };
 }

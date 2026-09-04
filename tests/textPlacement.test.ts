@@ -108,7 +108,7 @@ test('a selection becomes the callout body', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Snippet templates
+// Template expansion
 // ---------------------------------------------------------------------------
 
 test('a template without placeholders is inserted as is', () => {
@@ -198,50 +198,6 @@ test('an empty template inserts nothing and keeps the caret put', () => {
   assert.equal(result.cursorOffset, 0);
 });
 
-test('{label} is replaced by the snippet name', () => {
-  // The reason this placeholder exists: a snippet named "Информация" wrote a
-  // callout with no heading, so Obsidian filled in its own English "Note".
-  const result = expandTemplate(
-    buildCalloutTemplate('note', '{label}'),
-    '',
-    'Информация',
-  );
-
-  assert.equal(result.text, '> [!note] Информация\n> ');
-});
-
-test('an unnamed snippet leaves the heading empty rather than printing a token', () => {
-  const result = expandTemplate(buildCalloutTemplate('note', '{label}'), '');
-
-  assert.equal(result.text, '> [!note] \n> ');
-});
-
-test('the label may appear more than once', () => {
-  const result = expandTemplate('{label}: {selection} ({label})', 'x', 'Tip');
-
-  assert.equal(result.text, 'Tip: x (Tip)');
-});
-
-test('a literal {label} inside the selection survives', () => {
-  // One substitution pass, so the selection is never re-scanned for tokens.
-  const result = expandTemplate('{label} - {selection}', 'about {label}', 'Doc');
-
-  assert.equal(result.text, 'Doc - about {label}');
-});
-
-test('a {selection} token inside the label is not expanded either', () => {
-  const result = expandTemplate('{label}', 'body', 'odd {selection} name');
-
-  assert.equal(result.text, 'odd {selection} name');
-});
-
-test('the caret offset accounts for the label before it', () => {
-  const result = expandTemplate('{label}{cursor}!', '', 'Note');
-
-  assert.equal(result.text, 'Note!');
-  assert.equal(result.cursorOffset, 4);
-});
-
 // ---------------------------------------------------------------------------
 // Multi-line values inside a quote
 // ---------------------------------------------------------------------------
@@ -281,7 +237,7 @@ test('inline wrapping of a multi-line selection is left alone', () => {
 test('a quote prefix only counts when nothing else precedes the value', () => {
   // '> [!note] ' leads with a marker but carries text, so it is a heading, not
   // a prefix to repeat.
-  const result = expandTemplate('> [!note] {label}', '', 'a\nb');
+  const result = expandTemplate('> [!note] {selection}', 'a\nb');
 
   assert.equal(result.text, '> [!note] a\nb');
 });

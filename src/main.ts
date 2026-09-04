@@ -8,7 +8,6 @@ import {
   PluginSettingTab,
   Setting,
   debounce,
-  setIcon,
   Workspace,
   EditorPosition,
 } from 'obsidian';
@@ -21,19 +20,6 @@ import {
 } from './SidePanelControlView';
 import { CodeSuggestionModal } from './CommandListView';
 import { CalloutsSuggestionModal } from './CalloutsListView';
-import {
-  CURSOR_PLACEHOLDER,
-  LABEL_PLACEHOLDER,
-  SELECTION_PLACEHOLDER,
-  SNIPPET_EXAMPLES,
-  customSnippetSetting,
-} from './customFormatter';
-import {
-  DEFAULT_SNIPPET_COLOR,
-  SNIPPET_ICONS,
-  snippetColorPresets,
-  tintFromColor,
-} from './snippetStyle';
 import type { tableAlignment } from './tableFormatter';
 import {
   AUTO_LOCALE,
@@ -56,10 +42,12 @@ export interface PluginSettings {
   sidePaneSideLeft: Boolean;
   savedColors: string[];
   regionSettings: Array<RegionSetting>;
-  customSnippets: customSnippetSetting[];
   tableAlignment: tableAlignment;
   calloutTitles: boolean;
 }
+
+/** Preselected in the saved-colours picker, so it never opens on black. */
+const DEFAULT_PICKER_COLOR = '#448aff';
 
 const DEFAULT_SETTINGS: PluginSettings = {
   language: AUTO_LOCALE,
@@ -74,9 +62,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
     { name: 'greekLetters', active: true, visible: false },
     { name: 'colors', active: true, visible: false },
     { name: 'callouts', active: true, visible: false },
-    { name: 'custom', active: true, visible: false },
   ],
-  customSnippets: [],
   tableAlignment: 'default',
   calloutTitles: true,
 };
@@ -113,11 +99,7 @@ export default class MarkdownAutocompletePlugin extends Plugin {
       name: t('command.openCommandSelector'),
       hotkeys: [{ modifiers: ['Alt'], key: 'q' }],
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        CodeSuggestionModal.display(
-          this.app,
-          editor,
-          this.settings.customSnippets,
-        );
+        CodeSuggestionModal.display(this.app, editor);
       },
     });
 
@@ -160,6 +142,9 @@ export default class MarkdownAutocompletePlugin extends Plugin {
 
     this.settings.regionSettings = storedRegions
       .filter((region) => region && typeof region.name === 'string')
+      // A section removed since the file was written has no renderer any more,
+      // so keeping its entry would only leave a dead toggle behind.
+      .filter((region) => SECTION_ORDER.includes(region.name))
       .map((region) => ({
         name: region.name,
         active: region.active !== false,
@@ -178,22 +163,6 @@ export default class MarkdownAutocompletePlugin extends Plugin {
         ? this.settings.savedColors
         : DEFAULT_SETTINGS.savedColors
     ).filter((color) => typeof color === 'string');
-
-    // Colour and icon were added after the first snippets shipped, so entries
-    // saved before that carry neither. Filling them in here means the rest of
-    // the code never has to reason about undefined.
-    this.settings.customSnippets = (
-      Array.isArray(this.settings.customSnippets)
-        ? this.settings.customSnippets
-        : []
-    )
-      .filter((snippet) => snippet && typeof snippet.template === 'string')
-      .map((snippet) => ({
-        ...snippet,
-        des: typeof snippet.des === 'string' ? snippet.des : '',
-        color: snippet.color || DEFAULT_SNIPPET_COLOR,
-        icon: typeof snippet.icon === 'string' ? snippet.icon : '',
-      }));
   }
 
   async saveSettings() {
@@ -349,7 +318,6 @@ class SettingsTab extends PluginSettingTab {
     });
 
     this.addSavedColorSettings(containerEl);
-    this.addCustomSnippetSettings(containerEl);
   }
 
   /**
@@ -367,9 +335,9 @@ class SettingsTab extends PluginSettingTab {
       .setName(t('settings.savedColors.name'))
       .setDesc(t('settings.savedColors.desc'));
 
-    // Built into the control area ahead of the picker, which is the row the
-    // snippet editor already uses. Loose under the description they read as
-    // leftover decoration rather than as a control.
+    // Built into the control area ahead of the picker rather than left loose
+    // under the description, where they read as leftover decoration instead of
+    // as a control.
     const swatches = setting.controlEl.createDiv({ cls: 'mfa-color-swatches' });
 
     if (colors.length === 0) {
@@ -396,7 +364,7 @@ class SettingsTab extends PluginSettingTab {
     });
 
     setting.addColorPicker((picker) =>
-      picker.setValue(DEFAULT_SNIPPET_COLOR).onChange(async (value) => {
+      picker.setValue(DEFAULT_PICKER_COLOR).onChange(async (value) => {
         if (colors.includes(value)) return;
 
         colors.push(value);
@@ -404,243 +372,5 @@ class SettingsTab extends PluginSettingTab {
         this.display();
       }),
     );
-  }
-
-  /**
-   * Editor for the user's own snippets: one row per snippet, plus a button to
-   * append an empty one. Every edit saves immediately, matching how the rest of
-   * this tab behaves.
-   */
-  private addCustomSnippetSettings(containerEl: HTMLElement) {
-    const snippets = this.plugin.settings.customSnippets;
-
-    new Setting(containerEl)
-      .setName(t('settings.customSnippets.name'))
-      .setDesc(
-        t('settings.customSnippets.desc', {
-          hotkey: 'ALT+Q',
-          cursor: CURSOR_PLACEHOLDER,
-          selection: SELECTION_PLACEHOLDER,
-        }),
-      )
-      .addButton((button) =>
-        button
-          .setButtonText(t('settings.customSnippets.add'))
-          .setCta()
-          .onClick(async () => {
-            snippets.push({
-              // Date.now alone would collide when two are added in the same
-              // millisecond, which a double click manages easily.
-              id: `custom-${Date.now()}-${snippets.length}`,
-              des: '',
-              template: '',
-              color: DEFAULT_SNIPPET_COLOR,
-              icon: SNIPPET_ICONS[0],
-              objectType: 'customSnippetSetting',
-            });
-            await this.plugin.saveSettings();
-            this.display();
-          }),
-      );
-
-    if (snippets.length === 0) {
-      const empty = containerEl.createEl('p');
-      empty.appendText(t('settings.customSnippets.empty'));
-      empty.style.color = 'var(--text-muted)';
-      empty.style.fontSize = '12px';
-      return;
-    }
-
-    snippets.forEach((snippet, index) => {
-      this.addSnippetRow(containerEl, snippet, index);
-    });
-  }
-
-  private addSnippetRow(
-    containerEl: HTMLElement,
-    snippet: customSnippetSetting,
-    index: number,
-  ) {
-    const card = containerEl.createDiv({ cls: 'mfa-snippet-card' });
-
-    // ---- label, live preview and removal -------------------------------
-    const header = new Setting(card)
-      .addText((text) =>
-        text
-          .setPlaceholder(t('settings.customSnippets.labelPlaceholder'))
-          .setValue(snippet.des)
-          .onChange((value) => {
-            snippet.des = value;
-            renderPreview();
-            this.saveSoon();
-          }),
-      )
-      .addExtraButton((button) =>
-        button
-          .setIcon('trash-2')
-          .setTooltip(t('settings.customSnippets.remove'))
-          .onClick(() => {
-            // Same reasoning as the colour swatches: redraw first so no stale
-            // index survives into a second click.
-            this.plugin.settings.customSnippets.splice(index, 1);
-            this.display();
-            void this.plugin.saveSettings();
-          }),
-      );
-
-    const preview = header.nameEl.createDiv({ cls: 'nav-action-text-button' });
-    preview.style.display = 'inline-flex';
-    preview.style.alignItems = 'center';
-    preview.style.gap = '4px';
-    preview.style.margin = '0';
-
-    const renderPreview = () => {
-      preview.textContent = '';
-
-      if (snippet.icon) {
-        const iconEl = preview.createSpan();
-        setIcon(iconEl, snippet.icon);
-        iconEl.style.color = snippet.color;
-        iconEl.style.display = 'inline-flex';
-      }
-
-      preview.createSpan().setText(
-        snippet.des || t('settings.customSnippets.labelPlaceholder'),
-      );
-      preview.style.backgroundColor = tintFromColor(snippet.color);
-    };
-
-    // ---- template with ready-made starting points -----------------------
-    const templateSetting = new Setting(card)
-      .setName(t('settings.customSnippets.templatePlaceholder'))
-      .setDesc(
-        t('settings.customSnippets.templateHint', {
-          cursor: CURSOR_PLACEHOLDER,
-          selection: SELECTION_PLACEHOLDER,
-          label: LABEL_PLACEHOLDER,
-        }),
-      );
-
-    templateSetting.addTextArea((text) => {
-      text.inputEl.rows = 3;
-      text.inputEl.style.width = '100%';
-      text.inputEl.style.fontFamily = 'var(--font-monospace)';
-
-      text
-        .setPlaceholder(SNIPPET_EXAMPLES[0].template)
-        .setValue(snippet.template)
-        .onChange((value) => {
-          snippet.template = value;
-          this.saveSoon();
-        });
-    });
-
-    const examples = card.createDiv();
-    examples.style.display = 'flex';
-    examples.style.flexWrap = 'wrap';
-    examples.style.gap = '4px';
-    examples.style.marginBottom = '8px';
-
-    SNIPPET_EXAMPLES.forEach((example) => {
-      const button = examples.createDiv({ cls: 'nav-action-text-button' });
-      button.style.fontSize = '11px';
-      button.setText(t(example.labelKey));
-      button.onClickEvent(async () => {
-        snippet.template = example.template;
-        await this.plugin.saveSettings();
-        this.display();
-      });
-    });
-
-    // ---- colour ---------------------------------------------------------
-    const colorSetting = new Setting(card).setName(
-      t('settings.customSnippets.color'),
-    );
-
-    const swatches = colorSetting.controlEl.createDiv({
-      cls: 'mfa-color-swatches',
-    });
-
-    // Nothing marked the active colour before, so the only way to tell which
-    // one a snippet used was to read it off the preview button.
-    const highlightColors = () => {
-      Array.from(swatches.children).forEach((child) => {
-        const element = child as HTMLElement;
-        element.toggleClass(
-          'is-selected',
-          (element.dataset.color || '').toLowerCase() ===
-            (snippet.color || '').toLowerCase(),
-        );
-      });
-    };
-
-    snippetColorPresets(this.plugin.settings.savedColors).forEach((color) => {
-      const swatch = swatches.createDiv({ cls: 'mfa-color-icon' });
-      swatch.dataset.color = color;
-      swatch.style.backgroundColor = color;
-      swatch.onClickEvent(async () => {
-        snippet.color = color;
-        highlightColors();
-        renderPreview();
-        await this.plugin.saveSettings();
-      });
-    });
-
-    colorSetting.addColorPicker((picker) =>
-      picker.setValue(snippet.color).onChange(async (value) => {
-        snippet.color = value;
-        highlightColors();
-        renderPreview();
-        await this.plugin.saveSettings();
-      }),
-    );
-
-    // ---- icon -----------------------------------------------------------
-    const iconSetting = new Setting(card).setName(
-      t('settings.customSnippets.icon'),
-    );
-
-    const iconRow = iconSetting.controlEl.createDiv();
-    iconRow.style.display = 'flex';
-    iconRow.style.flexWrap = 'wrap';
-    iconRow.style.gap = '2px';
-    iconRow.style.maxWidth = '280px';
-
-    const highlightIcons = () => {
-      Array.from(iconRow.children).forEach((child) => {
-        const element = child as HTMLElement;
-        element.style.backgroundColor =
-          element.dataset.icon === snippet.icon
-            ? 'var(--background-modifier-hover)'
-            : 'transparent';
-      });
-    };
-
-    ([''] as string[]).concat(SNIPPET_ICONS).forEach((name) => {
-      const choice = iconRow.createDiv();
-      choice.dataset.icon = name;
-      choice.style.padding = '3px';
-      choice.style.borderRadius = '4px';
-      choice.style.cursor = 'pointer';
-      choice.style.display = 'inline-flex';
-
-      if (name) {
-        setIcon(choice, name);
-      } else {
-        // The "no icon" choice, so a plain text button stays possible.
-        choice.setText('—');
-      }
-
-      choice.onClickEvent(async () => {
-        snippet.icon = name;
-        highlightIcons();
-        renderPreview();
-        await this.plugin.saveSettings();
-      });
-    });
-
-    renderPreview();
-    highlightIcons();
-    highlightColors();
   }
 }

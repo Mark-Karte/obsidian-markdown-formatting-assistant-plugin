@@ -23,8 +23,6 @@ import {
   calloutsFormatterSetting,
 } from './calloutsFormatter';
 import { colorFormatter } from '../formatters/colorFormatter';
-import { customFormatter, isUsableSnippet } from './customFormatter';
-import { tintFromColor } from './snippetStyle';
 import {
   MAX_TABLE_COLUMNS,
   MAX_TABLE_ROWS,
@@ -221,15 +219,6 @@ export class SidePanelControlView extends ItemView {
       this.addCalloutsButtons(content);
     };
 
-    // --------------
-    // Custom snippets
-    // --------------
-
-    const addCustomSection = () => {
-      const content = this.addSelectableHeader(mainDiv, 'custom');
-      this.addCustomButtons(content);
-    };
-
     const regions = {
       textEdit: addTextEditSection,
       tables: addTabelsSection,
@@ -238,7 +227,6 @@ export class SidePanelControlView extends ItemView {
       greekLetters: addGreekLettersSection,
       colors: addColorsSection,
       callouts: addCalloutsSection,
-      custom: addCustomSection,
     };
 
     this.plugin.settings.regionSettings.map((item) => {
@@ -349,56 +337,6 @@ export class SidePanelControlView extends ItemView {
     });
 
     highlightAlignment();
-  }
-
-  /**
-   * Buttons for the snippets the user defined themselves. Unlike the built-in
-   * sections this one is empty until they add something, so it says so rather
-   * than rendering a bare heading.
-   */
-  private addCustomButtons(mainDiv: HTMLElement) {
-    // A snippet with only a label is a half-finished row in the settings, not
-    // something to offer - clicking it would insert nothing.
-    const snippets = this.plugin.settings.customSnippets.filter(isUsableSnippet);
-
-    if (snippets.length === 0) {
-      const info = mainDiv.createEl('p');
-      info.appendText(t('custom.empty'));
-      info.style.textAlign = 'center';
-      info.style.fontSize = '11px';
-      return;
-    }
-
-    const numberOfCols = 3;
-    let row: HTMLElement = null;
-
-    snippets.forEach((snippet, index) => {
-      if (index % numberOfCols === 0) {
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-      }
-
-      const button = row.createDiv({ cls: 'nav-action-text-button' });
-      button.style.textAlign = 'center';
-      button.style.backgroundColor = tintFromColor(snippet.color);
-
-      if (snippet.icon) {
-        const iconEl = document.createElement('span');
-        setIcon(iconEl, snippet.icon);
-        iconEl.style.verticalAlign = 'middle';
-        iconEl.style.color = snippet.color;
-        button.appendChild(iconEl);
-      }
-
-      const label = document.createElement('span');
-      label.textContent =
-        ' ' + (snippet.des || snippet.template.slice(0, 12));
-      button.appendChild(label);
-
-      button.onClickEvent(() => {
-        const editor = getTargetEditor(this.app.workspace);
-        if (editor) customFormatter(editor, snippet);
-      });
-    });
   }
 
   private addHtmlButtons(mainDiv: HTMLElement) {

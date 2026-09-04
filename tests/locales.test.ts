@@ -31,14 +31,7 @@ const SAME_IN_BOTH: Record<string, string[]> = {
   uk: ['section.html'],
   be: ['section.html'],
   zh: ['section.html'],
-  de: [
-    'section.html',
-    'section.callouts',
-    'settings.customSnippets.exampleCallout',
-    'callout.info',
-    'callout.bug',
-    'callout.faq',
-  ],
+  de: ['section.html', 'section.callouts', 'callout.info', 'callout.bug', 'callout.faq'],
   es: ['section.html', 'callout.error'],
   fr: [
     'section.html',

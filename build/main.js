@@ -3410,7 +3410,6 @@ function latexFormatter(editor, item) {
  */
 var CURSOR_PLACEHOLDER = '{cursor}';
 var SELECTION_PLACEHOLDER = '{selection}';
-var LABEL_PLACEHOLDER = '{label}';
 /**
  * The markers a value has to carry onto its own continuation lines.
  *
@@ -3425,23 +3424,21 @@ function continuationPrefix(lineSoFar) {
     return /^[ \t]*>[>\s]*$/.test(lineSoFar) ? lineSoFar : '';
 }
 /**
- * Resolves the placeholders of a snippet template.
+ * Resolves the placeholders of an insertion template.
  *
- * `{selection}` becomes the selected text and `{label}` the snippet's own
- * label - every occurrence, so a template may mention either twice. `{cursor}`
- * marks where the caret ends up; the first one wins and any further ones are
- * simply dropped. A template without a `{cursor}` leaves the caret at the end,
- * which is what typing would do.
+ * `{selection}` becomes the selected text - every occurrence, so a template may
+ * mention it twice. `{cursor}` marks where the caret ends up; the first one
+ * wins and any further ones are simply dropped. A template without a `{cursor}`
+ * leaves the caret at the end, which is what typing would do.
  *
  * Everything happens in one pass over the TEMPLATE, which is what keeps the
- * substituted values inert: the selection is the user's own document text and
- * may well contain the word `{cursor}` or `{label}`, and a second pass would
- * then treat it as markup and mangle their note.
+ * substituted text inert: the selection is the user's own document text and may
+ * well contain the word `{cursor}`, and a second pass would then treat it as
+ * markup and mangle their note.
  */
-function expandTemplate(template, selection, label) {
-    if (label === void 0) { label = ''; }
+function expandTemplate(template, selection) {
     // Kept in step with the exported placeholder constants above.
-    var tokens = /\{(cursor|selection|label)\}/g;
+    var tokens = /\{(cursor|selection)\}/g;
     var text = '';
     var cursorOffset = -1;
     var copied = 0;
@@ -3453,9 +3450,8 @@ function expandTemplate(template, selection, label) {
                 cursorOffset = text.length;
             continue;
         }
-        var value = token[1] === 'selection' ? selection : label;
         var prefix = continuationPrefix(text.slice(text.lastIndexOf('\n') + 1));
-        text += prefix ? value.split('\n').join('\n' + prefix) : value;
+        text += prefix ? selection.split('\n').join('\n' + prefix) : selection;
     }
     text += template.slice(copied);
     return { text: text, cursorOffset: cursorOffset < 0 ? text.length : cursorOffset };
@@ -3838,129 +3834,6 @@ function colorFormatter(editor, color) {
     editor.setCursor(curserStart);
 }
 
-/** Ready-made snippets offered in the editor, so nobody starts from a blank field. */
-var SNIPPET_EXAMPLES = [
-    {
-        labelKey: 'settings.customSnippets.exampleCallout',
-        // Built from the same helper as the built-in callouts, with the label as
-        // the heading: a snippet called "Информация" has to produce a callout
-        // headed "Информация", not Obsidian's default English "Note".
-        template: buildCalloutTemplate('note', LABEL_PLACEHOLDER),
-    },
-    { labelKey: 'settings.customSnippets.exampleWrap', template: '**{selection}{cursor}**' },
-    { labelKey: 'settings.customSnippets.exampleBlock', template: '```\n{selection}{cursor}\n```' },
-];
-/** A snippet only does something once it has a body to insert. */
-function isUsableSnippet(snippet) {
-    return Boolean(snippet && snippet.template);
-}
-function customFormatter(editor, item) {
-    if (!editor)
-        return;
-    // Without this an unfinished snippet would replace the selection with
-    // nothing - a button that silently deletes the user's text.
-    if (!isUsableSnippet(item))
-        return;
-    var selection = editor.getSelection();
-    var start = editor.getCursor('from');
-    var _a = surroundingText(editor), before = _a.before, after = _a.after;
-    editor.focus();
-    var expanded = expandTemplate(item.template, selection, item.des || '');
-    // A multi-line snippet - a callout, a fenced block - has to start its own
-    // line or it renders as plain text. Single-line ones stay inline.
-    var _b = placeBlock(expanded.text, expanded.cursorOffset, before, after), text = _b.text, cursorOffset = _b.cursorOffset;
-    editor.replaceSelection(text);
-    editor.setCursor(resolveCursorPosition(text, cursorOffset, start));
-}
-
-/**
- * Appearance choices for user-defined snippets. A leaf module with no imports,
- * so the tests can reach it directly - see the note in textPlacement.ts.
- */
-/** Offered in the snippet editor when the user has no saved colours yet. */
-var DEFAULT_SNIPPET_COLORS = [
-    '#448aff',
-    '#00b8d4',
-    '#00bfa5',
-    '#00c853',
-    '#63c000',
-    '#ffab00',
-    '#ff6f00',
-    '#ff5252',
-    '#e91e63',
-    '#7c4dff',
-];
-/**
- * A small, deliberately mixed set of lucide icons - Obsidian ships them all, so
- * no assets are needed and they match the callout buttons visually.
- */
-var SNIPPET_ICONS = [
-    'lucide-star',
-    'lucide-pencil',
-    'lucide-info',
-    'lucide-check-circle-2',
-    'lucide-alert-triangle',
-    'lucide-flame',
-    'lucide-bookmark',
-    'lucide-tag',
-    'lucide-quote',
-    'lucide-code',
-    'lucide-list',
-    'lucide-table',
-    'lucide-link',
-    'lucide-image',
-    'lucide-calendar',
-    'lucide-clock',
-    'lucide-heart',
-    'lucide-zap',
-];
-/** The colour a snippet gets when the user has not picked one. */
-var DEFAULT_SNIPPET_COLOR = DEFAULT_SNIPPET_COLORS[0];
-/**
- * Turns '#rrggbb' into an rgba() tint for the button background.
- *
- * Anything that is not a six-digit hex colour yields a transparent background
- * rather than an invalid CSS value, so a half-typed colour in the settings
- * cannot break the panel.
- */
-function tintFromColor(color, alpha) {
-    if (alpha === void 0) { alpha = 0.12; }
-    var match = /^#([0-9a-fA-F]{6})$/.exec((color || '').trim());
-    if (!match)
-        return 'transparent';
-    var value = parseInt(match[1], 16);
-    var red = (value >> 16) & 255;
-    var green = (value >> 8) & 255;
-    var blue = value & 255;
-    return "rgba(".concat(red, ", ").concat(green, ", ").concat(blue, ", ").concat(alpha, ")");
-}
-/**
- * Colour presets to show in the snippet editor.
- *
- * The user's own saved colours come first and the built-in palette tops the row
- * up to a full strip. Showing the saved ones alone was the obvious reading of
- * "replace the presets with mine", but someone who has picked two colours then
- * gets a two-swatch row and no way back to the rest.
- */
-function snippetColorPresets(savedColors) {
-    var presets = [];
-    var seen = new Set();
-    for (var _i = 0, _a = (savedColors || []).concat(DEFAULT_SNIPPET_COLORS); _i < _a.length; _i++) {
-        var color = _a[_i];
-        var value = (color || '').trim();
-        // Compared case-insensitively, so a hand-typed '#FF0000' does not sit next
-        // to the palette's own '#ff0000' as if they were two different colours.
-        if (!/^#[0-9a-fA-F]{6}$/.test(value) || seen.has(value.toLowerCase())) {
-            continue;
-        }
-        seen.add(value.toLowerCase());
-        presets.push(value);
-        if (presets.length === DEFAULT_SNIPPET_COLORS.length)
-            break;
-    }
-    return presets;
-}
-
 function tableFormatter(editor, rows, columns, alignment) {
     if (!editor)
         return;
@@ -3992,10 +3865,8 @@ var en = {
     'section.greekLetters': 'Greek Letters',
     'section.colors': 'Colors',
     'section.callouts': 'Callouts',
-    'section.custom': 'My Snippets',
     // Panel body
     'panel.noLeaf': 'Could not open the panel: the sidebar is unavailable.',
-    'custom.empty': 'No snippets yet - add them in the settings.',
     'tables.pick': 'Pick a size',
     'tables.size': '{rows} x {columns}',
     'tables.align.default': 'Plain',
@@ -4040,19 +3911,6 @@ var en = {
     'settings.savedColors.desc': 'Colours kept for the palette in the side panel. Pick one to add it, click a swatch to remove it.',
     'settings.savedColors.empty': 'No saved colours yet.',
     'settings.savedColors.removeHint': 'click to remove',
-    'settings.customSnippets.name': 'My Snippets',
-    'settings.customSnippets.desc': 'Your own buttons, shown in their own section of the panel and in the {hotkey} window. Write {cursor} where the caret should land and {selection} where the selected text should go.',
-    'settings.customSnippets.add': 'Add snippet',
-    'settings.customSnippets.labelPlaceholder': 'Label',
-    'settings.customSnippets.templatePlaceholder': 'Template',
-    'settings.customSnippets.remove': 'Remove this snippet',
-    'settings.customSnippets.empty': 'No snippets yet.',
-    'settings.customSnippets.color': 'Colour',
-    'settings.customSnippets.icon': 'Icon',
-    'settings.customSnippets.templateHint': 'What gets inserted. {cursor} is where the caret lands, {selection} is replaced by the selected text and {label} by the name above. Start from an example below if you like.',
-    'settings.customSnippets.exampleCallout': 'Callout',
-    'settings.customSnippets.exampleWrap': 'Wrap selection',
-    'settings.customSnippets.exampleBlock': 'Code block',
     // Callout button labels. Only the label is translated - the callout type
     // inside '> [!note]' is a keyword Obsidian matches in English.
     'callout.note': 'Note',
@@ -4094,7 +3952,6 @@ var be = {
     'section.greekLetters': 'Грэчаскія літары',
     'section.colors': 'Колеры',
     'section.callouts': 'Выноскі',
-    'section.custom': 'Мае сніпеты',
     'panel.noLeaf': 'Не ўдалося адкрыць панэль: бакавая панэль недаступная.',
     'tables.pick': 'Выберыце памер',
     'tables.size': '{rows} x {columns}',
@@ -4160,22 +4017,8 @@ var be = {
     'callout.bug': 'Баг',
     'callout.example': 'Прыклад',
     'callout.quote': 'Цытата',
-    'custom.empty': 'Пакуль пуста — дадайце іх у наладах.',
-    'settings.customSnippets.name': 'Мае сніпеты',
-    'settings.customSnippets.desc': 'Вашы ўласныя кнопкі: з’явяцца асобнай секцыяй у панэлі і ў акне {hotkey}. Напішыце {cursor} там, дзе павінен апынуцца курсор, і {selection} — куды падставіць вылучаны тэкст.',
-    'settings.customSnippets.add': 'Дадаць сніпет',
-    'settings.customSnippets.labelPlaceholder': 'Подпіс',
-    'settings.customSnippets.templatePlaceholder': 'Шаблон',
-    'settings.customSnippets.remove': 'Выдаліць гэты сніпет',
-    'settings.customSnippets.empty': 'Сніпетаў пакуль няма.',
     'settings.savedColors.empty': 'Захаваных колераў пакуль няма.',
     'settings.savedColors.removeHint': 'націсніце, каб выдаліць',
-    'settings.customSnippets.color': 'Колер',
-    'settings.customSnippets.icon': 'Значок',
-    'settings.customSnippets.templateHint': 'Што будзе ўстаўлена. {cursor} — куды стане курсор, {selection} — заменіцца вылучаным тэкстам, {label} — подпісам зверху. Можна пачаць з гатовага прыкладу ніжэй.',
-    'settings.customSnippets.exampleCallout': 'Выноска',
-    'settings.customSnippets.exampleWrap': 'Абгарнуць вылучэнне',
-    'settings.customSnippets.exampleBlock': 'Блок кода',
     'settings.calloutTitles.name': 'Пісаць загаловак выноскі',
     'settings.calloutTitles.desc': 'Устаўляць назву выноскі як загаловак, каб у нататцы яна адлюстроўвалася на вашай мове. Ключавое слова ўнутры [!note] заўсёды застаецца англійскім — менавіта па ім Obsidian вызначае тып.',
 };
@@ -4191,7 +4034,6 @@ var de = {
     'section.greekLetters': 'Griechische Buchstaben',
     'section.colors': 'Farben',
     'section.callouts': 'Callouts',
-    'section.custom': 'Meine Snippets',
     'panel.noLeaf': 'Das Panel konnte nicht geöffnet werden: die Seitenleiste ist nicht verfügbar.',
     'tables.pick': 'Größe wählen',
     'tables.size': '{rows} x {columns}',
@@ -4257,22 +4099,8 @@ var de = {
     'callout.bug': 'Bug',
     'callout.example': 'Beispiel',
     'callout.quote': 'Zitat',
-    'custom.empty': 'Noch nichts da - lege sie in den Einstellungen an.',
-    'settings.customSnippets.name': 'Meine Snippets',
-    'settings.customSnippets.desc': 'Deine eigenen Schaltflächen: erscheinen als eigener Bereich im Panel und im {hotkey}-Fenster. Schreibe {cursor}, wo der Cursor landen soll, und {selection}, wo der markierte Text hin soll.',
-    'settings.customSnippets.add': 'Snippet hinzufügen',
-    'settings.customSnippets.labelPlaceholder': 'Bezeichnung',
-    'settings.customSnippets.templatePlaceholder': 'Vorlage',
-    'settings.customSnippets.remove': 'Dieses Snippet entfernen',
-    'settings.customSnippets.empty': 'Noch keine Snippets.',
     'settings.savedColors.empty': 'Noch keine gespeicherten Farben.',
     'settings.savedColors.removeHint': 'zum Entfernen klicken',
-    'settings.customSnippets.color': 'Farbe',
-    'settings.customSnippets.icon': 'Symbol',
-    'settings.customSnippets.templateHint': 'Was eingefügt wird. {cursor} ist die Position des Cursors, {selection} wird durch den markierten Text ersetzt und {label} durch die Bezeichnung oben. Du kannst auch mit einem Beispiel unten anfangen.',
-    'settings.customSnippets.exampleCallout': 'Callout',
-    'settings.customSnippets.exampleWrap': 'Auswahl umschließen',
-    'settings.customSnippets.exampleBlock': 'Codeblock',
     'settings.calloutTitles.name': 'Callout-Überschrift schreiben',
     'settings.calloutTitles.desc': 'Den Namen des Callouts als Überschrift einfügen, damit die Notiz ihn in deiner Sprache zeigt. Das Schlüsselwort in [!note] bleibt immer englisch - daran erkennt Obsidian den Typ.',
 };
@@ -4288,7 +4116,6 @@ var es = {
     'section.greekLetters': 'Letras griegas',
     'section.colors': 'Colores',
     'section.callouts': 'Llamadas',
-    'section.custom': 'Mis fragmentos',
     'panel.noLeaf': 'No se pudo abrir el panel: la barra lateral no está disponible.',
     'tables.pick': 'Elige un tamaño',
     'tables.size': '{rows} x {columns}',
@@ -4354,22 +4181,8 @@ var es = {
     'callout.bug': 'Error de software',
     'callout.example': 'Ejemplo',
     'callout.quote': 'Cita',
-    'custom.empty': 'Aún no hay ninguno: añádelos en los ajustes.',
-    'settings.customSnippets.name': 'Mis fragmentos',
-    'settings.customSnippets.desc': 'Tus propios botones: aparecen en su propia sección del panel y en la ventana {hotkey}. Escribe {cursor} donde deba quedar el cursor y {selection} donde deba ir el texto seleccionado.',
-    'settings.customSnippets.add': 'Añadir fragmento',
-    'settings.customSnippets.labelPlaceholder': 'Etiqueta',
-    'settings.customSnippets.templatePlaceholder': 'Plantilla',
-    'settings.customSnippets.remove': 'Eliminar este fragmento',
-    'settings.customSnippets.empty': 'Todavía no hay fragmentos.',
     'settings.savedColors.empty': 'Todavía no hay colores guardados.',
     'settings.savedColors.removeHint': 'pulsa para quitar',
-    'settings.customSnippets.color': 'Color',
-    'settings.customSnippets.icon': 'Icono',
-    'settings.customSnippets.templateHint': 'Lo que se insertará. {cursor} es donde queda el cursor, {selection} se sustituye por el texto seleccionado y {label} por la etiqueta de arriba. Puedes partir de un ejemplo de abajo.',
-    'settings.customSnippets.exampleCallout': 'Llamada',
-    'settings.customSnippets.exampleWrap': 'Envolver selección',
-    'settings.customSnippets.exampleBlock': 'Bloque de código',
     'settings.calloutTitles.name': 'Escribir el título de la llamada',
     'settings.calloutTitles.desc': 'Insertar el nombre de la llamada como título, para que la nota lo muestre en tu idioma. La palabra clave dentro de [!note] siempre queda en inglés: es la que reconoce Obsidian.',
 };
@@ -4385,7 +4198,6 @@ var fr = {
     'section.greekLetters': 'Lettres grecques',
     'section.colors': 'Couleurs',
     'section.callouts': 'Encadrés',
-    'section.custom': 'Mes extraits',
     'panel.noLeaf': 'Impossible d’ouvrir le panneau : la barre latérale n’est pas disponible.',
     'tables.pick': 'Choisir une taille',
     'tables.size': '{rows} x {columns}',
@@ -4451,22 +4263,8 @@ var fr = {
     'callout.bug': 'Bogue',
     'callout.example': 'Exemple',
     'callout.quote': 'Citation',
-    'custom.empty': 'Rien pour l’instant : ajoutez-les dans les réglages.',
-    'settings.customSnippets.name': 'Mes extraits',
-    'settings.customSnippets.desc': 'Vos propres boutons : ils apparaissent dans une section dédiée du panneau et dans la fenêtre {hotkey}. Écrivez {cursor} là où le curseur doit se placer et {selection} là où le texte sélectionné doit aller.',
-    'settings.customSnippets.add': 'Ajouter un extrait',
-    'settings.customSnippets.labelPlaceholder': 'Libellé',
-    'settings.customSnippets.templatePlaceholder': 'Modèle',
-    'settings.customSnippets.remove': 'Supprimer cet extrait',
-    'settings.customSnippets.empty': 'Aucun extrait pour l’instant.',
     'settings.savedColors.empty': 'Aucune couleur enregistrée pour l’instant.',
     'settings.savedColors.removeHint': 'cliquer pour retirer',
-    'settings.customSnippets.color': 'Couleur',
-    'settings.customSnippets.icon': 'Icône',
-    'settings.customSnippets.templateHint': 'Ce qui sera inséré. {cursor} indique où se place le curseur, {selection} est remplacé par le texte sélectionné et {label} par le libellé ci-dessus. Vous pouvez partir d’un exemple ci-dessous.',
-    'settings.customSnippets.exampleCallout': 'Encadré',
-    'settings.customSnippets.exampleWrap': 'Entourer la sélection',
-    'settings.customSnippets.exampleBlock': 'Bloc de code',
     'settings.calloutTitles.name': 'Écrire le titre de l’encadré',
     'settings.calloutTitles.desc': 'Insérer le nom de l’encadré comme titre, afin que la note l’affiche dans votre langue. Le mot-clé dans [!note] reste toujours en anglais : c’est lui qu’Obsidian reconnaît.',
 };
@@ -4482,7 +4280,6 @@ var it = {
     'section.greekLetters': 'Lettere greche',
     'section.colors': 'Colori',
     'section.callouts': 'Riquadri',
-    'section.custom': 'I miei frammenti',
     'panel.noLeaf': 'Impossibile aprire il pannello: la barra laterale non è disponibile.',
     'tables.pick': 'Scegli una dimensione',
     'tables.size': '{rows} x {columns}',
@@ -4548,22 +4345,8 @@ var it = {
     'callout.bug': 'Bug',
     'callout.example': 'Esempio',
     'callout.quote': 'Citazione',
-    'custom.empty': 'Ancora nessuno: aggiungili nelle impostazioni.',
-    'settings.customSnippets.name': 'I miei frammenti',
-    'settings.customSnippets.desc': 'I tuoi pulsanti: compaiono in una sezione dedicata del pannello e nella finestra {hotkey}. Scrivi {cursor} dove deve finire il cursore e {selection} dove va il testo selezionato.',
-    'settings.customSnippets.add': 'Aggiungi frammento',
-    'settings.customSnippets.labelPlaceholder': 'Etichetta',
-    'settings.customSnippets.templatePlaceholder': 'Modello',
-    'settings.customSnippets.remove': 'Rimuovi questo frammento',
-    'settings.customSnippets.empty': 'Nessun frammento per ora.',
     'settings.savedColors.empty': 'Nessun colore salvato per ora.',
     'settings.savedColors.removeHint': 'tocca per rimuovere',
-    'settings.customSnippets.color': 'Colore',
-    'settings.customSnippets.icon': 'Icona',
-    'settings.customSnippets.templateHint': 'Cosa verrà inserito. {cursor} indica dove finisce il cursore, {selection} viene sostituito dal testo selezionato e {label} dall’etichetta qui sopra. Puoi partire da un esempio qui sotto.',
-    'settings.customSnippets.exampleCallout': 'Riquadro',
-    'settings.customSnippets.exampleWrap': 'Racchiudi selezione',
-    'settings.customSnippets.exampleBlock': 'Blocco di codice',
     'settings.calloutTitles.name': 'Scrivere il titolo del riquadro',
     'settings.calloutTitles.desc': 'Inserire il nome del riquadro come titolo, così la nota lo mostra nella tua lingua. La parola chiave dentro [!note] resta sempre in inglese: è quella che Obsidian riconosce.',
 };
@@ -4579,7 +4362,6 @@ var ja = {
     'section.greekLetters': 'ギリシャ文字',
     'section.colors': '色',
     'section.callouts': 'コールアウト',
-    'section.custom': 'マイスニペット',
     'panel.noLeaf': 'パネルを開けませんでした：サイドバーが利用できません。',
     'tables.pick': 'サイズを選択',
     'tables.size': '{rows} x {columns}',
@@ -4645,22 +4427,8 @@ var ja = {
     'callout.bug': 'バグ',
     'callout.example': '例',
     'callout.quote': '引用',
-    'custom.empty': 'まだありません。設定から追加してください。',
-    'settings.customSnippets.name': 'マイスニペット',
-    'settings.customSnippets.desc': '自分専用のボタンです。パネルの専用セクションと {hotkey} ウィンドウに表示されます。カーソルを置きたい位置に {cursor}、選択テキストを入れたい位置に {selection} と書いてください。',
-    'settings.customSnippets.add': 'スニペットを追加',
-    'settings.customSnippets.labelPlaceholder': 'ラベル',
-    'settings.customSnippets.templatePlaceholder': 'テンプレート',
-    'settings.customSnippets.remove': 'このスニペットを削除',
-    'settings.customSnippets.empty': 'スニペットはまだありません。',
     'settings.savedColors.empty': '保存された色はまだありません。',
     'settings.savedColors.removeHint': 'クリックで削除',
-    'settings.customSnippets.color': '色',
-    'settings.customSnippets.icon': 'アイコン',
-    'settings.customSnippets.templateHint': '挿入される内容です。{cursor} はカーソルの位置、{selection} は選択したテキスト、{label} は上のラベルに置き換わります。下の例から始めることもできます。',
-    'settings.customSnippets.exampleCallout': 'コールアウト',
-    'settings.customSnippets.exampleWrap': '選択範囲を囲む',
-    'settings.customSnippets.exampleBlock': 'コードブロック',
     'settings.calloutTitles.name': 'コールアウトの見出しを書き込む',
     'settings.calloutTitles.desc': 'コールアウト名を見出しとして挿入し、ノートで選択した言語のまま表示されるようにします。[!note] の中のキーワードは常に英語のままです。Obsidian はそれで種類を判別します。',
 };
@@ -4676,7 +4444,6 @@ var ko = {
     'section.greekLetters': '그리스 문자',
     'section.colors': '색상',
     'section.callouts': '콜아웃',
-    'section.custom': '내 스니펫',
     'panel.noLeaf': '패널을 열 수 없습니다: 사이드바를 사용할 수 없습니다.',
     'tables.pick': '크기 선택',
     'tables.size': '{rows} x {columns}',
@@ -4742,22 +4509,8 @@ var ko = {
     'callout.bug': '버그',
     'callout.example': '예시',
     'callout.quote': '인용',
-    'custom.empty': '아직 없습니다. 설정에서 추가하세요.',
-    'settings.customSnippets.name': '내 스니펫',
-    'settings.customSnippets.desc': '직접 만든 버튼입니다. 패널의 전용 섹션과 {hotkey} 창에 나타납니다. 커서가 놓일 자리에 {cursor}, 선택한 텍스트가 들어갈 자리에 {selection} 을 적으세요.',
-    'settings.customSnippets.add': '스니펫 추가',
-    'settings.customSnippets.labelPlaceholder': '이름',
-    'settings.customSnippets.templatePlaceholder': '템플릿',
-    'settings.customSnippets.remove': '이 스니펫 삭제',
-    'settings.customSnippets.empty': '아직 스니펫이 없습니다.',
     'settings.savedColors.empty': '저장된 색상이 아직 없습니다.',
     'settings.savedColors.removeHint': '클릭하면 삭제',
-    'settings.customSnippets.color': '색상',
-    'settings.customSnippets.icon': '아이콘',
-    'settings.customSnippets.templateHint': '삽입될 내용입니다. {cursor} 는 커서가 놓일 자리, {selection} 은 선택한 텍스트로, {label} 은 위의 이름으로 바뀝니다. 아래 예시에서 시작해도 됩니다.',
-    'settings.customSnippets.exampleCallout': '콜아웃',
-    'settings.customSnippets.exampleWrap': '선택 영역 감싸기',
-    'settings.customSnippets.exampleBlock': '코드 블록',
     'settings.calloutTitles.name': '콜아웃 제목 삽입',
     'settings.calloutTitles.desc': '콜아웃 이름을 제목으로 넣어 노트에 선택한 언어로 표시되게 합니다. [!note] 안의 키워드는 항상 영어로 유지되며, Obsidian 은 그것으로 종류를 판별합니다.',
 };
@@ -4773,7 +4526,6 @@ var pt = {
     'section.greekLetters': 'Letras gregas',
     'section.colors': 'Cores',
     'section.callouts': 'Destaques',
-    'section.custom': 'Meus trechos',
     'panel.noLeaf': 'Não foi possível abrir o painel: a barra lateral não está disponível.',
     'tables.pick': 'Escolha um tamanho',
     'tables.size': '{rows} x {columns}',
@@ -4839,22 +4591,8 @@ var pt = {
     'callout.bug': 'Bug',
     'callout.example': 'Exemplo',
     'callout.quote': 'Citação',
-    'custom.empty': 'Ainda não há nenhum - adicione-os nas configurações.',
-    'settings.customSnippets.name': 'Meus trechos',
-    'settings.customSnippets.desc': 'Seus próprios botões: aparecem numa seção própria do painel e na janela {hotkey}. Escreva {cursor} onde o cursor deve ficar e {selection} onde o texto selecionado deve entrar.',
-    'settings.customSnippets.add': 'Adicionar trecho',
-    'settings.customSnippets.labelPlaceholder': 'Rótulo',
-    'settings.customSnippets.templatePlaceholder': 'Modelo',
-    'settings.customSnippets.remove': 'Remover este trecho',
-    'settings.customSnippets.empty': 'Ainda não há trechos.',
     'settings.savedColors.empty': 'Ainda não há cores guardadas.',
     'settings.savedColors.removeHint': 'clique para remover',
-    'settings.customSnippets.color': 'Cor',
-    'settings.customSnippets.icon': 'Ícone',
-    'settings.customSnippets.templateHint': 'O que será inserido. {cursor} é onde o cursor fica, {selection} é substituído pelo texto selecionado e {label} pelo rótulo acima. Pode começar por um exemplo abaixo.',
-    'settings.customSnippets.exampleCallout': 'Destaque',
-    'settings.customSnippets.exampleWrap': 'Envolver seleção',
-    'settings.customSnippets.exampleBlock': 'Bloco de código',
     'settings.calloutTitles.name': 'Escrever o título do destaque',
     'settings.calloutTitles.desc': 'Inserir o nome do destaque como título, para que a nota o mostre no seu idioma. A palavra-chave dentro de [!note] permanece sempre em inglês - é por ela que o Obsidian identifica o tipo.',
 };
@@ -4871,7 +4609,6 @@ var ru = {
     'section.greekLetters': 'Греческие буквы',
     'section.colors': 'Цвета',
     'section.callouts': 'Коллауты',
-    'section.custom': 'Мои сниппеты',
     'panel.noLeaf': 'Не удалось открыть панель: боковая панель недоступна.',
     'tables.pick': 'Выберите размер',
     'tables.size': '{rows} x {columns}',
@@ -4939,22 +4676,8 @@ var ru = {
     'callout.bug': 'Баг',
     'callout.example': 'Пример',
     'callout.quote': 'Цитата',
-    'custom.empty': 'Пока пусто — добавьте их в настройках.',
-    'settings.customSnippets.name': 'Мои сниппеты',
-    'settings.customSnippets.desc': 'Ваши собственные кнопки: появятся отдельной секцией в панели и в окне {hotkey}. Напишите {cursor} там, где должен оказаться курсор, и {selection} — куда подставить выделенный текст.',
-    'settings.customSnippets.add': 'Добавить сниппет',
-    'settings.customSnippets.labelPlaceholder': 'Подпись',
-    'settings.customSnippets.templatePlaceholder': 'Шаблон',
-    'settings.customSnippets.remove': 'Удалить этот сниппет',
-    'settings.customSnippets.empty': 'Сниппетов пока нет.',
     'settings.savedColors.empty': 'Сохранённых цветов пока нет.',
     'settings.savedColors.removeHint': 'нажмите, чтобы удалить',
-    'settings.customSnippets.color': 'Цвет',
-    'settings.customSnippets.icon': 'Значок',
-    'settings.customSnippets.templateHint': 'Что будет вставлено. {cursor} — куда встанет курсор, {selection} — заменится выделенным текстом, {label} — подписью сверху. Можно начать с готового примера ниже.',
-    'settings.customSnippets.exampleCallout': 'Коллаут',
-    'settings.customSnippets.exampleWrap': 'Обернуть выделение',
-    'settings.customSnippets.exampleBlock': 'Блок кода',
     'settings.calloutTitles.name': 'Писать заголовок коллаута',
     'settings.calloutTitles.desc': 'Вставлять название коллаута как заголовок, чтобы в заметке оно отображалось на вашем языке. Ключевое слово внутри [!note] всегда остаётся английским — именно по нему Obsidian опознаёт тип.',
 };
@@ -4970,7 +4693,6 @@ var uk = {
     'section.greekLetters': 'Грецькі літери',
     'section.colors': 'Кольори',
     'section.callouts': 'Виноски',
-    'section.custom': 'Мої сніпети',
     'panel.noLeaf': 'Не вдалося відкрити панель: бічна панель недоступна.',
     'tables.pick': 'Оберіть розмір',
     'tables.size': '{rows} x {columns}',
@@ -5036,22 +4758,8 @@ var uk = {
     'callout.bug': 'Баг',
     'callout.example': 'Приклад',
     'callout.quote': 'Цитата',
-    'custom.empty': 'Поки порожньо — додайте їх у налаштуваннях.',
-    'settings.customSnippets.name': 'Мої сніпети',
-    'settings.customSnippets.desc': 'Ваші власні кнопки: з’являться окремою секцією в панелі та у вікні {hotkey}. Напишіть {cursor} там, де має опинитися курсор, і {selection} — куди підставити виділений текст.',
-    'settings.customSnippets.add': 'Додати сніпет',
-    'settings.customSnippets.labelPlaceholder': 'Підпис',
-    'settings.customSnippets.templatePlaceholder': 'Шаблон',
-    'settings.customSnippets.remove': 'Видалити цей сніпет',
-    'settings.customSnippets.empty': 'Сніпетів поки немає.',
     'settings.savedColors.empty': 'Збережених кольорів поки немає.',
     'settings.savedColors.removeHint': 'натисніть, щоб видалити',
-    'settings.customSnippets.color': 'Колір',
-    'settings.customSnippets.icon': 'Значок',
-    'settings.customSnippets.templateHint': 'Що буде вставлено. {cursor} — куди стане курсор, {selection} — заміниться виділеним текстом, {label} — підписом згори. Можна почати з готового прикладу нижче.',
-    'settings.customSnippets.exampleCallout': 'Виноска',
-    'settings.customSnippets.exampleWrap': 'Обгорнути виділення',
-    'settings.customSnippets.exampleBlock': 'Блок коду',
     'settings.calloutTitles.name': 'Писати заголовок виноски',
     'settings.calloutTitles.desc': 'Вставляти назву виноски як заголовок, щоб у нотатці вона відображалася вашою мовою. Ключове слово всередині [!note] завжди залишається англійським — саме за ним Obsidian розпізнає тип.',
 };
@@ -5068,7 +4776,6 @@ var zh = {
     'section.greekLetters': '希腊字母',
     'section.colors': '颜色',
     'section.callouts': '标注',
-    'section.custom': '我的片段',
     'panel.noLeaf': '无法打开面板：侧边栏不可用。',
     'tables.pick': '选择大小',
     'tables.size': '{rows} x {columns}',
@@ -5134,22 +4841,8 @@ var zh = {
     'callout.bug': '缺陷',
     'callout.example': '示例',
     'callout.quote': '引用',
-    'custom.empty': '暂无片段，请在设置中添加。',
-    'settings.customSnippets.name': '我的片段',
-    'settings.customSnippets.desc': '你自己的按钮：会作为独立板块显示在面板中，也会出现在 {hotkey} 窗口里。用 {cursor} 标记光标位置，用 {selection} 标记选中文本的位置。',
-    'settings.customSnippets.add': '添加片段',
-    'settings.customSnippets.labelPlaceholder': '名称',
-    'settings.customSnippets.templatePlaceholder': '模板',
-    'settings.customSnippets.remove': '删除此片段',
-    'settings.customSnippets.empty': '暂无片段。',
     'settings.savedColors.empty': '暂无已保存的颜色。',
     'settings.savedColors.removeHint': '点击删除',
-    'settings.customSnippets.color': '颜色',
-    'settings.customSnippets.icon': '图标',
-    'settings.customSnippets.templateHint': '将要插入的内容。{cursor} 表示光标位置，{selection} 会被选中的文本替换，{label} 会被上面的名称替换。也可以直接使用下面的示例。',
-    'settings.customSnippets.exampleCallout': '标注',
-    'settings.customSnippets.exampleWrap': '包裹选区',
-    'settings.customSnippets.exampleBlock': '代码块',
     'settings.calloutTitles.name': '写入标注标题',
     'settings.calloutTitles.desc': '把标注名称作为标题插入，这样笔记中就会显示你所选语言的名称。[!note] 中的关键字始终保持英文，Obsidian 依靠它识别类型。',
 };
@@ -5213,7 +4906,6 @@ var SECTION_LABEL_KEYS = {
     greekLetters: 'section.greekLetters',
     colors: 'section.colors',
     callouts: 'section.callouts',
-    custom: 'section.custom',
 };
 var activeLocale = 'en';
 function isSupported(code) {
@@ -5413,13 +5105,6 @@ var SidePanelControlView = /** @class */ (function (_super) {
             var content = _this.addSelectableHeader(mainDiv, 'callouts');
             _this.addCalloutsButtons(content);
         };
-        // --------------
-        // Custom snippets
-        // --------------
-        var addCustomSection = function () {
-            var content = _this.addSelectableHeader(mainDiv, 'custom');
-            _this.addCustomButtons(content);
-        };
         var regions = {
             textEdit: addTextEditSection,
             tables: addTabelsSection,
@@ -5428,7 +5113,6 @@ var SidePanelControlView = /** @class */ (function (_super) {
             greekLetters: addGreekLettersSection,
             colors: addColorsSection,
             callouts: addCalloutsSection,
-            custom: addCustomSection,
         };
         this.plugin.settings.regionSettings.map(function (item) {
             // @ts-ignore
@@ -5529,50 +5213,6 @@ var SidePanelControlView = /** @class */ (function (_super) {
             alignmentButtons.push(button);
         });
         highlightAlignment();
-    };
-    /**
-     * Buttons for the snippets the user defined themselves. Unlike the built-in
-     * sections this one is empty until they add something, so it says so rather
-     * than rendering a bare heading.
-     */
-    SidePanelControlView.prototype.addCustomButtons = function (mainDiv) {
-        var _this = this;
-        // A snippet with only a label is a half-finished row in the settings, not
-        // something to offer - clicking it would insert nothing.
-        var snippets = this.plugin.settings.customSnippets.filter(isUsableSnippet);
-        if (snippets.length === 0) {
-            var info = mainDiv.createEl('p');
-            info.appendText(t('custom.empty'));
-            info.style.textAlign = 'center';
-            info.style.fontSize = '11px';
-            return;
-        }
-        var numberOfCols = 3;
-        var row = null;
-        snippets.forEach(function (snippet, index) {
-            if (index % numberOfCols === 0) {
-                row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-            }
-            var button = row.createDiv({ cls: 'nav-action-text-button' });
-            button.style.textAlign = 'center';
-            button.style.backgroundColor = tintFromColor(snippet.color);
-            if (snippet.icon) {
-                var iconEl = document.createElement('span');
-                obsidian.setIcon(iconEl, snippet.icon);
-                iconEl.style.verticalAlign = 'middle';
-                iconEl.style.color = snippet.color;
-                button.appendChild(iconEl);
-            }
-            var label = document.createElement('span');
-            label.textContent =
-                ' ' + (snippet.des || snippet.template.slice(0, 12));
-            button.appendChild(label);
-            button.onClickEvent(function () {
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    customFormatter(editor, snippet);
-            });
-        });
     };
     SidePanelControlView.prototype.addHtmlButtons = function (mainDiv) {
         var _this = this;
@@ -6148,7 +5788,6 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
     __extends(CodeSuggestionModal, _super);
     function CodeSuggestionModal() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.customSnippets = [];
         _this.setEditor = function (editor) {
             _this.editor = editor;
         };
@@ -6156,14 +5795,11 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
     }
     // Returns all available suggestions.
     CodeSuggestionModal.prototype.getSuggestions = function (query) {
-        // Built-in entries are fixed at load time, the user's own are read per
-        // opening so edits in the settings show up without a restart. Blank ones
-        // are skipped - a freshly added row is empty until it is filled in.
         // The tables are heterogeneous - only some entries carry an icon, a text or
         // a type - so they do not structurally satisfy baseFormatterSetting. Every
         // reader below branches on objectType before touching those fields, which
         // is what makes this safe in practice.
-        var suggestions = builtInSuggestions.concat(this.customSnippets.filter(isUsableSnippet));
+        var suggestions = builtInSuggestions;
         // Matching the id as well as the label keeps every command reachable by
         // its English name once the labels get translated.
         var needle = query.toLowerCase();
@@ -6210,10 +5846,6 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
             }
             cell2.style.color = '#25e712';
         }
-        else if (baseFormatterSetting.objectType === 'customSnippetSetting') {
-            iconDiv.appendText('★');
-            cell2.style.color = 'var(--text-accent)';
-        }
         else {
             iconDiv.appendText('HTML');
         }
@@ -6238,17 +5870,11 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
             // @ts-ignore
             greekFormatter(this.editor, item);
         }
-        else if (item.objectType === 'customSnippetSetting') {
-            // @ts-ignore
-            customFormatter(this.editor, item);
-        }
         // new Notice(`Selected ${baseFormatterSetting.des}`);
     };
-    CodeSuggestionModal.display = function (app, editor, customSnippets) {
-        if (customSnippets === void 0) { customSnippets = []; }
+    CodeSuggestionModal.display = function (app, editor) {
         var modal = new CodeSuggestionModal(app);
         modal.setEditor(editor);
-        modal.customSnippets = customSnippets;
         modal.open();
     };
     return CodeSuggestionModal;
@@ -6315,6 +5941,8 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
     return CalloutsSuggestionModal;
 }(obsidian.SuggestModal));
 
+/** Preselected in the saved-colours picker, so it never opens on black. */
+var DEFAULT_PICKER_COLOR = '#448aff';
 var DEFAULT_SETTINGS = {
     language: AUTO_LOCALE,
     triggerChar: '\\',
@@ -6328,9 +5956,7 @@ var DEFAULT_SETTINGS = {
         { name: 'greekLetters', active: true, visible: false },
         { name: 'colors', active: true, visible: false },
         { name: 'callouts', active: true, visible: false },
-        { name: 'custom', active: true, visible: false },
     ],
-    customSnippets: [],
     tableAlignment: 'default',
     calloutTitles: true,
 };
@@ -6393,7 +6019,7 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                             name: t('command.openCommandSelector'),
                             hotkeys: [{ modifiers: ['Alt'], key: 'q' }],
                             editorCallback: function (editor, view) {
-                                CodeSuggestionModal.display(_this.app, editor, _this.settings.customSnippets);
+                                CodeSuggestionModal.display(_this.app, editor);
                             },
                         });
                         this.addCommand({
@@ -6438,6 +6064,9 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                             : DEFAULT_SETTINGS.regionSettings;
                         this.settings.regionSettings = storedRegions
                             .filter(function (region) { return region && typeof region.name === 'string'; })
+                            // A section removed since the file was written has no renderer any more,
+                            // so keeping its entry would only leave a dead toggle behind.
+                            .filter(function (region) { return SECTION_ORDER.includes(region.name); })
                             .map(function (region) { return ({
                             name: region.name,
                             active: region.active !== false,
@@ -6450,14 +6079,6 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
                         this.settings.savedColors = (Array.isArray(this.settings.savedColors)
                             ? this.settings.savedColors
                             : DEFAULT_SETTINGS.savedColors).filter(function (color) { return typeof color === 'string'; });
-                        // Colour and icon were added after the first snippets shipped, so entries
-                        // saved before that carry neither. Filling them in here means the rest of
-                        // the code never has to reason about undefined.
-                        this.settings.customSnippets = (Array.isArray(this.settings.customSnippets)
-                            ? this.settings.customSnippets
-                            : [])
-                            .filter(function (snippet) { return snippet && typeof snippet.template === 'string'; })
-                            .map(function (snippet) { return (__assign(__assign({}, snippet), { des: typeof snippet.des === 'string' ? snippet.des : '', color: snippet.color || DEFAULT_SNIPPET_COLOR, icon: typeof snippet.icon === 'string' ? snippet.icon : '' })); });
                         return [2 /*return*/];
                 }
             });
@@ -6604,7 +6225,6 @@ var SettingsTab = /** @class */ (function (_super) {
             });
         });
         this.addSavedColorSettings(containerEl);
-        this.addCustomSnippetSettings(containerEl);
     };
     /**
      * Saved colours as swatches rather than a text field.
@@ -6620,9 +6240,9 @@ var SettingsTab = /** @class */ (function (_super) {
         var setting = new obsidian.Setting(containerEl)
             .setName(t('settings.savedColors.name'))
             .setDesc(t('settings.savedColors.desc'));
-        // Built into the control area ahead of the picker, which is the row the
-        // snippet editor already uses. Loose under the description they read as
-        // leftover decoration rather than as a control.
+        // Built into the control area ahead of the picker rather than left loose
+        // under the description, where they read as leftover decoration instead of
+        // as a control.
         var swatches = setting.controlEl.createDiv({ cls: 'mfa-color-swatches' });
         if (colors.length === 0) {
             swatches.createSpan({ cls: 'mfa-color-empty' }).setText(t('settings.savedColors.empty'));
@@ -6643,7 +6263,7 @@ var SettingsTab = /** @class */ (function (_super) {
             });
         });
         setting.addColorPicker(function (picker) {
-            return picker.setValue(DEFAULT_SNIPPET_COLOR).onChange(function (value) { return __awaiter(_this, void 0, void 0, function () {
+            return picker.setValue(DEFAULT_PICKER_COLOR).onChange(function (value) { return __awaiter(_this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -6659,243 +6279,6 @@ var SettingsTab = /** @class */ (function (_super) {
                 });
             }); });
         });
-    };
-    /**
-     * Editor for the user's own snippets: one row per snippet, plus a button to
-     * append an empty one. Every edit saves immediately, matching how the rest of
-     * this tab behaves.
-     */
-    SettingsTab.prototype.addCustomSnippetSettings = function (containerEl) {
-        var _this = this;
-        var snippets = this.plugin.settings.customSnippets;
-        new obsidian.Setting(containerEl)
-            .setName(t('settings.customSnippets.name'))
-            .setDesc(t('settings.customSnippets.desc', {
-            hotkey: 'ALT+Q',
-            cursor: CURSOR_PLACEHOLDER,
-            selection: SELECTION_PLACEHOLDER,
-        }))
-            .addButton(function (button) {
-            return button
-                .setButtonText(t('settings.customSnippets.add'))
-                .setCta()
-                .onClick(function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            snippets.push({
-                                // Date.now alone would collide when two are added in the same
-                                // millisecond, which a double click manages easily.
-                                id: "custom-".concat(Date.now(), "-").concat(snippets.length),
-                                des: '',
-                                template: '',
-                                color: DEFAULT_SNIPPET_COLOR,
-                                icon: SNIPPET_ICONS[0],
-                                objectType: 'customSnippetSetting',
-                            });
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            this.display();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
-        });
-        if (snippets.length === 0) {
-            var empty = containerEl.createEl('p');
-            empty.appendText(t('settings.customSnippets.empty'));
-            empty.style.color = 'var(--text-muted)';
-            empty.style.fontSize = '12px';
-            return;
-        }
-        snippets.forEach(function (snippet, index) {
-            _this.addSnippetRow(containerEl, snippet, index);
-        });
-    };
-    SettingsTab.prototype.addSnippetRow = function (containerEl, snippet, index) {
-        var _this = this;
-        var card = containerEl.createDiv({ cls: 'mfa-snippet-card' });
-        // ---- label, live preview and removal -------------------------------
-        var header = new obsidian.Setting(card)
-            .addText(function (text) {
-            return text
-                .setPlaceholder(t('settings.customSnippets.labelPlaceholder'))
-                .setValue(snippet.des)
-                .onChange(function (value) {
-                snippet.des = value;
-                renderPreview();
-                _this.saveSoon();
-            });
-        })
-            .addExtraButton(function (button) {
-            return button
-                .setIcon('trash-2')
-                .setTooltip(t('settings.customSnippets.remove'))
-                .onClick(function () {
-                // Same reasoning as the colour swatches: redraw first so no stale
-                // index survives into a second click.
-                _this.plugin.settings.customSnippets.splice(index, 1);
-                _this.display();
-                void _this.plugin.saveSettings();
-            });
-        });
-        var preview = header.nameEl.createDiv({ cls: 'nav-action-text-button' });
-        preview.style.display = 'inline-flex';
-        preview.style.alignItems = 'center';
-        preview.style.gap = '4px';
-        preview.style.margin = '0';
-        var renderPreview = function () {
-            preview.textContent = '';
-            if (snippet.icon) {
-                var iconEl = preview.createSpan();
-                obsidian.setIcon(iconEl, snippet.icon);
-                iconEl.style.color = snippet.color;
-                iconEl.style.display = 'inline-flex';
-            }
-            preview.createSpan().setText(snippet.des || t('settings.customSnippets.labelPlaceholder'));
-            preview.style.backgroundColor = tintFromColor(snippet.color);
-        };
-        // ---- template with ready-made starting points -----------------------
-        var templateSetting = new obsidian.Setting(card)
-            .setName(t('settings.customSnippets.templatePlaceholder'))
-            .setDesc(t('settings.customSnippets.templateHint', {
-            cursor: CURSOR_PLACEHOLDER,
-            selection: SELECTION_PLACEHOLDER,
-            label: LABEL_PLACEHOLDER,
-        }));
-        templateSetting.addTextArea(function (text) {
-            text.inputEl.rows = 3;
-            text.inputEl.style.width = '100%';
-            text.inputEl.style.fontFamily = 'var(--font-monospace)';
-            text
-                .setPlaceholder(SNIPPET_EXAMPLES[0].template)
-                .setValue(snippet.template)
-                .onChange(function (value) {
-                snippet.template = value;
-                _this.saveSoon();
-            });
-        });
-        var examples = card.createDiv();
-        examples.style.display = 'flex';
-        examples.style.flexWrap = 'wrap';
-        examples.style.gap = '4px';
-        examples.style.marginBottom = '8px';
-        SNIPPET_EXAMPLES.forEach(function (example) {
-            var button = examples.createDiv({ cls: 'nav-action-text-button' });
-            button.style.fontSize = '11px';
-            button.setText(t(example.labelKey));
-            button.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            snippet.template = example.template;
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            this.display();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
-        });
-        // ---- colour ---------------------------------------------------------
-        var colorSetting = new obsidian.Setting(card).setName(t('settings.customSnippets.color'));
-        var swatches = colorSetting.controlEl.createDiv({
-            cls: 'mfa-color-swatches',
-        });
-        // Nothing marked the active colour before, so the only way to tell which
-        // one a snippet used was to read it off the preview button.
-        var highlightColors = function () {
-            Array.from(swatches.children).forEach(function (child) {
-                var element = child;
-                element.toggleClass('is-selected', (element.dataset.color || '').toLowerCase() ===
-                    (snippet.color || '').toLowerCase());
-            });
-        };
-        snippetColorPresets(this.plugin.settings.savedColors).forEach(function (color) {
-            var swatch = swatches.createDiv({ cls: 'mfa-color-icon' });
-            swatch.dataset.color = color;
-            swatch.style.backgroundColor = color;
-            swatch.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            snippet.color = color;
-                            highlightColors();
-                            renderPreview();
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
-        });
-        colorSetting.addColorPicker(function (picker) {
-            return picker.setValue(snippet.color).onChange(function (value) { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            snippet.color = value;
-                            highlightColors();
-                            renderPreview();
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
-        });
-        // ---- icon -----------------------------------------------------------
-        var iconSetting = new obsidian.Setting(card).setName(t('settings.customSnippets.icon'));
-        var iconRow = iconSetting.controlEl.createDiv();
-        iconRow.style.display = 'flex';
-        iconRow.style.flexWrap = 'wrap';
-        iconRow.style.gap = '2px';
-        iconRow.style.maxWidth = '280px';
-        var highlightIcons = function () {
-            Array.from(iconRow.children).forEach(function (child) {
-                var element = child;
-                element.style.backgroundColor =
-                    element.dataset.icon === snippet.icon
-                        ? 'var(--background-modifier-hover)'
-                        : 'transparent';
-            });
-        };
-        [''].concat(SNIPPET_ICONS).forEach(function (name) {
-            var choice = iconRow.createDiv();
-            choice.dataset.icon = name;
-            choice.style.padding = '3px';
-            choice.style.borderRadius = '4px';
-            choice.style.cursor = 'pointer';
-            choice.style.display = 'inline-flex';
-            if (name) {
-                obsidian.setIcon(choice, name);
-            }
-            else {
-                // The "no icon" choice, so a plain text button stays possible.
-                choice.setText('—');
-            }
-            choice.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            snippet.icon = name;
-                            highlightIcons();
-                            renderPreview();
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
-        });
-        renderPreview();
-        highlightIcons();
-        highlightColors();
     };
     return SettingsTab;
 }(obsidian.PluginSettingTab));
