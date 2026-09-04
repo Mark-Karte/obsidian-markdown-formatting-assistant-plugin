@@ -48,11 +48,6 @@ export const de: LocaleDictionary = {
   'settings.language.desc':
     'Sprache der Plugin-Oberfläche. (Neustart erforderlich)',
   'settings.language.auto': 'Wie Obsidian',
-  'settings.triggerChar.name': 'Auslösezeichen',
-  'settings.triggerChar.desc':
-    'Zeichen, das die Autovervollständigung auslöst',
-  'settings.triggerChar.placeholder':
-    'Zeichen für die Autovervollständigung eingeben',
   'settings.sidePaneSide.name': 'Seite der Seitenleiste',
   'settings.sidePaneSide.desc':
     'Lege fest, auf welcher Seite die Seitenleiste erscheint.',

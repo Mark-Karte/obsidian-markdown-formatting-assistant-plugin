@@ -47,10 +47,6 @@ export const ru: LocaleDictionary = {
   'settings.language.name': 'Язык',
   'settings.language.desc': 'Язык интерфейса плагина. (требуется перезапуск)',
   'settings.language.auto': 'Как в Obsidian',
-  'settings.triggerChar.name': 'Символ-триггер',
-  'settings.triggerChar.desc': 'Символ, запускающий автодополнение',
-  'settings.triggerChar.placeholder':
-    'Введите символ для запуска автодополнения',
   'settings.sidePaneSide.name': 'Сторона панели',
   'settings.sidePaneSide.desc': 'С какой стороны открывается боковая панель.',
   // 'left' and 'right' are the literal values this field accepts, so they are

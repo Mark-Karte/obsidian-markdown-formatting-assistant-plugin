@@ -56,10 +56,6 @@ export const en = {
   'settings.language.desc':
     'Language of the plugin interface. (restart required)',
   'settings.language.auto': 'Same as Obsidian',
-  'settings.triggerChar.name': 'Trigger Char',
-  'settings.triggerChar.desc': 'Char which triggers the autocompletion',
-  'settings.triggerChar.placeholder':
-    'Enter a char to trigger the autocompletion',
   'settings.sidePaneSide.name': 'Side Pane Side',
   'settings.sidePaneSide.desc': 'Choose on which side the Side Pane appears.',
   'settings.sidePaneSide.placeholder': 'Enter left or right',

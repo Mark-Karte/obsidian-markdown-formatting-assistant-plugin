@@ -38,7 +38,6 @@ interface RegionSetting {
 }
 export interface PluginSettings {
   language: LocaleSetting;
-  triggerChar: string;
   sidePaneSideLeft: Boolean;
   savedColors: string[];
   regionSettings: Array<RegionSetting>;
@@ -51,7 +50,6 @@ const DEFAULT_PICKER_COLOR = '#448aff';
 
 const DEFAULT_SETTINGS: PluginSettings = {
   language: AUTO_LOCALE,
-  triggerChar: '\\',
   sidePaneSideLeft: false,
   savedColors: ['#ff0000'],
   regionSettings: [
@@ -249,19 +247,6 @@ class SettingsTab extends PluginSettingTab {
             this.display();
           });
       });
-
-    new Setting(containerEl)
-      .setName(t('settings.triggerChar.name'))
-      .setDesc(t('settings.triggerChar.desc'))
-      .addText((text) =>
-        text
-          .setPlaceholder(t('settings.triggerChar.placeholder'))
-          .setValue(this.plugin.settings.triggerChar)
-          .onChange((value) => {
-            this.plugin.settings.triggerChar = value;
-            this.saveSoon();
-          }),
-      );
 
     new Setting(containerEl)
       .setName(t('settings.sidePaneSide.name'))

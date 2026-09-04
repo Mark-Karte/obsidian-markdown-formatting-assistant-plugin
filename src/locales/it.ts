@@ -47,11 +47,6 @@ export const it: LocaleDictionary = {
   'settings.language.desc':
     "Lingua dell'interfaccia del plugin. (riavvio necessario)",
   'settings.language.auto': 'Come Obsidian',
-  'settings.triggerChar.name': 'Carattere di attivazione',
-  'settings.triggerChar.desc':
-    'Carattere che attiva il completamento automatico',
-  'settings.triggerChar.placeholder':
-    'Inserisci un carattere per attivare il completamento automatico',
   'settings.sidePaneSide.name': 'Lato del pannello laterale',
   'settings.sidePaneSide.desc':
     'Scegli su quale lato compare il pannello laterale.',

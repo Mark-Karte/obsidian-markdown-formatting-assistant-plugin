@@ -49,10 +49,6 @@ export const fr: LocaleDictionary = {
   'settings.language.desc':
     'Langue de l’interface du plugin. (redémarrage requis)',
   'settings.language.auto': 'Comme Obsidian',
-  'settings.triggerChar.name': 'Caractère déclencheur',
-  'settings.triggerChar.desc': 'Caractère qui déclenche l’autocomplétion',
-  'settings.triggerChar.placeholder':
-    'Saisissez un caractère pour déclencher l’autocomplétion',
   'settings.sidePaneSide.name': 'Côté du volet latéral',
   'settings.sidePaneSide.desc':
     'Choisissez de quel côté apparaît le volet latéral.',

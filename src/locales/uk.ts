@@ -47,10 +47,6 @@ export const uk: LocaleDictionary = {
   'settings.language.desc':
     'Мова інтерфейсу плагіна. (потрібен перезапуск)',
   'settings.language.auto': 'Як в Obsidian',
-  'settings.triggerChar.name': 'Символ-тригер',
-  'settings.triggerChar.desc': 'Символ, що запускає автодоповнення',
-  'settings.triggerChar.placeholder':
-    'Введіть символ для запуску автодоповнення',
   'settings.sidePaneSide.name': 'Сторона панелі',
   'settings.sidePaneSide.desc': 'З якого боку відкривається бічна панель.',
   'settings.sidePaneSide.placeholder': 'Введіть left або right',

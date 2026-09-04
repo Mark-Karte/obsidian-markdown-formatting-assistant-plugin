@@ -48,10 +48,6 @@ export const pt: LocaleDictionary = {
   'settings.language.desc':
     'Idioma da interface do plugin. (requer reinício)',
   'settings.language.auto': 'Igual ao Obsidian',
-  'settings.triggerChar.name': 'Caractere de ativação',
-  'settings.triggerChar.desc': 'Caractere que ativa o preenchimento automático',
-  'settings.triggerChar.placeholder':
-    'Digite um caractere para ativar o preenchimento automático',
   'settings.sidePaneSide.name': 'Lado do painel lateral',
   'settings.sidePaneSide.desc': 'Escolha de que lado o painel lateral aparece.',
   'settings.sidePaneSide.placeholder': 'Digite left ou right',

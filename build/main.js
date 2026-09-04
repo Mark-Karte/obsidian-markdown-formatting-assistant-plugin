@@ -3897,9 +3897,6 @@ var en = {
     'settings.language.name': 'Language',
     'settings.language.desc': 'Language of the plugin interface. (restart required)',
     'settings.language.auto': 'Same as Obsidian',
-    'settings.triggerChar.name': 'Trigger Char',
-    'settings.triggerChar.desc': 'Char which triggers the autocompletion',
-    'settings.triggerChar.placeholder': 'Enter a char to trigger the autocompletion',
     'settings.sidePaneSide.name': 'Side Pane Side',
     'settings.sidePaneSide.desc': 'Choose on which side the Side Pane appears.',
     'settings.sidePaneSide.placeholder': 'Enter left or right',
@@ -3981,9 +3978,6 @@ var be = {
     'settings.language.name': 'Мова',
     'settings.language.desc': 'Мова інтэрфейсу плагіна. (патрэбны перазапуск)',
     'settings.language.auto': 'Як у Obsidian',
-    'settings.triggerChar.name': 'Сімвал-трыгер',
-    'settings.triggerChar.desc': 'Сімвал, які запускае аўтадапаўненне',
-    'settings.triggerChar.placeholder': 'Увядзіце сімвал для запуску аўтадапаўнення',
     'settings.sidePaneSide.name': 'Бок панэлі',
     'settings.sidePaneSide.desc': 'З якога боку адкрываецца бакавая панэль.',
     'settings.sidePaneSide.placeholder': 'Увядзіце left або right',
@@ -4063,9 +4057,6 @@ var de = {
     'settings.language.name': 'Sprache',
     'settings.language.desc': 'Sprache der Plugin-Oberfläche. (Neustart erforderlich)',
     'settings.language.auto': 'Wie Obsidian',
-    'settings.triggerChar.name': 'Auslösezeichen',
-    'settings.triggerChar.desc': 'Zeichen, das die Autovervollständigung auslöst',
-    'settings.triggerChar.placeholder': 'Zeichen für die Autovervollständigung eingeben',
     'settings.sidePaneSide.name': 'Seite der Seitenleiste',
     'settings.sidePaneSide.desc': 'Lege fest, auf welcher Seite die Seitenleiste erscheint.',
     'settings.sidePaneSide.placeholder': 'left oder right eingeben',
@@ -4145,9 +4136,6 @@ var es = {
     'settings.language.name': 'Idioma',
     'settings.language.desc': 'Idioma de la interfaz del plugin. (requiere reiniciar)',
     'settings.language.auto': 'Igual que Obsidian',
-    'settings.triggerChar.name': 'Carácter activador',
-    'settings.triggerChar.desc': 'Carácter que activa el autocompletado',
-    'settings.triggerChar.placeholder': 'Introduce un carácter para activar el autocompletado',
     'settings.sidePaneSide.name': 'Lado del panel lateral',
     'settings.sidePaneSide.desc': 'Elige en qué lado aparece el panel lateral.',
     'settings.sidePaneSide.placeholder': 'Introduce left o right',
@@ -4227,9 +4215,6 @@ var fr = {
     'settings.language.name': 'Langue',
     'settings.language.desc': 'Langue de l’interface du plugin. (redémarrage requis)',
     'settings.language.auto': 'Comme Obsidian',
-    'settings.triggerChar.name': 'Caractère déclencheur',
-    'settings.triggerChar.desc': 'Caractère qui déclenche l’autocomplétion',
-    'settings.triggerChar.placeholder': 'Saisissez un caractère pour déclencher l’autocomplétion',
     'settings.sidePaneSide.name': 'Côté du volet latéral',
     'settings.sidePaneSide.desc': 'Choisissez de quel côté apparaît le volet latéral.',
     'settings.sidePaneSide.placeholder': 'Saisissez left ou right',
@@ -4309,9 +4294,6 @@ var it = {
     'settings.language.name': 'Lingua',
     'settings.language.desc': "Lingua dell'interfaccia del plugin. (riavvio necessario)",
     'settings.language.auto': 'Come Obsidian',
-    'settings.triggerChar.name': 'Carattere di attivazione',
-    'settings.triggerChar.desc': 'Carattere che attiva il completamento automatico',
-    'settings.triggerChar.placeholder': 'Inserisci un carattere per attivare il completamento automatico',
     'settings.sidePaneSide.name': 'Lato del pannello laterale',
     'settings.sidePaneSide.desc': 'Scegli su quale lato compare il pannello laterale.',
     'settings.sidePaneSide.placeholder': 'Inserisci left o right',
@@ -4391,9 +4373,6 @@ var ja = {
     'settings.language.name': '言語',
     'settings.language.desc': 'プラグインの表示言語。（再起動が必要）',
     'settings.language.auto': 'Obsidian に合わせる',
-    'settings.triggerChar.name': 'トリガー文字',
-    'settings.triggerChar.desc': '自動補完を起動する文字',
-    'settings.triggerChar.placeholder': '自動補完を起動する文字を入力',
     'settings.sidePaneSide.name': 'サイドパネルの位置',
     'settings.sidePaneSide.desc': 'サイドパネルを表示する側を選びます。',
     'settings.sidePaneSide.placeholder': 'left または right を入力',
@@ -4473,9 +4452,6 @@ var ko = {
     'settings.language.name': '언어',
     'settings.language.desc': '플러그인 인터페이스 언어입니다. (재시작 필요)',
     'settings.language.auto': 'Obsidian과 동일',
-    'settings.triggerChar.name': '트리거 문자',
-    'settings.triggerChar.desc': '자동 완성을 시작하는 문자',
-    'settings.triggerChar.placeholder': '자동 완성을 시작할 문자를 입력하세요',
     'settings.sidePaneSide.name': '사이드 패널 위치',
     'settings.sidePaneSide.desc': '사이드 패널이 나타날 쪽을 선택하세요.',
     'settings.sidePaneSide.placeholder': 'left 또는 right 입력',
@@ -4555,9 +4531,6 @@ var pt = {
     'settings.language.name': 'Idioma',
     'settings.language.desc': 'Idioma da interface do plugin. (requer reinício)',
     'settings.language.auto': 'Igual ao Obsidian',
-    'settings.triggerChar.name': 'Caractere de ativação',
-    'settings.triggerChar.desc': 'Caractere que ativa o preenchimento automático',
-    'settings.triggerChar.placeholder': 'Digite um caractere para ativar o preenchimento automático',
     'settings.sidePaneSide.name': 'Lado do painel lateral',
     'settings.sidePaneSide.desc': 'Escolha de que lado o painel lateral aparece.',
     'settings.sidePaneSide.placeholder': 'Digite left ou right',
@@ -4638,9 +4611,6 @@ var ru = {
     'settings.language.name': 'Язык',
     'settings.language.desc': 'Язык интерфейса плагина. (требуется перезапуск)',
     'settings.language.auto': 'Как в Obsidian',
-    'settings.triggerChar.name': 'Символ-триггер',
-    'settings.triggerChar.desc': 'Символ, запускающий автодополнение',
-    'settings.triggerChar.placeholder': 'Введите символ для запуска автодополнения',
     'settings.sidePaneSide.name': 'Сторона панели',
     'settings.sidePaneSide.desc': 'С какой стороны открывается боковая панель.',
     // 'left' and 'right' are the literal values this field accepts, so they are
@@ -4722,9 +4692,6 @@ var uk = {
     'settings.language.name': 'Мова',
     'settings.language.desc': 'Мова інтерфейсу плагіна. (потрібен перезапуск)',
     'settings.language.auto': 'Як в Obsidian',
-    'settings.triggerChar.name': 'Символ-тригер',
-    'settings.triggerChar.desc': 'Символ, що запускає автодоповнення',
-    'settings.triggerChar.placeholder': 'Введіть символ для запуску автодоповнення',
     'settings.sidePaneSide.name': 'Сторона панелі',
     'settings.sidePaneSide.desc': 'З якого боку відкривається бічна панель.',
     'settings.sidePaneSide.placeholder': 'Введіть left або right',
@@ -4805,9 +4772,6 @@ var zh = {
     'settings.language.name': '语言',
     'settings.language.desc': '插件界面语言。（需要重启）',
     'settings.language.auto': '与 Obsidian 一致',
-    'settings.triggerChar.name': '触发字符',
-    'settings.triggerChar.desc': '触发自动补全的字符',
-    'settings.triggerChar.placeholder': '输入触发自动补全的字符',
     'settings.sidePaneSide.name': '侧边栏位置',
     'settings.sidePaneSide.desc': '选择侧边栏出现在哪一侧。',
     'settings.sidePaneSide.placeholder': '输入 left 或 right',
@@ -5945,7 +5909,6 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
 var DEFAULT_PICKER_COLOR = '#448aff';
 var DEFAULT_SETTINGS = {
     language: AUTO_LOCALE,
-    triggerChar: '\\',
     sidePaneSideLeft: false,
     savedColors: ['#ff0000'],
     regionSettings: [
@@ -6149,18 +6112,6 @@ var SettingsTab = /** @class */ (function (_super) {
                     }
                 });
             }); });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(t('settings.triggerChar.name'))
-            .setDesc(t('settings.triggerChar.desc'))
-            .addText(function (text) {
-            return text
-                .setPlaceholder(t('settings.triggerChar.placeholder'))
-                .setValue(_this.plugin.settings.triggerChar)
-                .onChange(function (value) {
-                _this.plugin.settings.triggerChar = value;
-                _this.saveSoon();
-            });
         });
         new obsidian.Setting(containerEl)
             .setName(t('settings.sidePaneSide.name'))
