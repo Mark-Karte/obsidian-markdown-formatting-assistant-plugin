@@ -87,6 +87,16 @@ Just press the shortcut/hotkey `ALT+Q` on any place. It doesn't matter if you ar
 The shortcut/hotkey `ALT+Q` was selected becaus it can be  comfortable reached with just one hand, but you can change it to what ever you want.
 
 ![](assets/Suggestion_Window_change_hot_key.gif)
+
+## Hotkeys for individual commands
+
+Every Text Edit action and every callout is registered as an Obsidian command, so you can bind a key to any of them under `Settings → Hotkeys`. Search for the plugin's name to see the whole list. Nothing is bound out of the box apart from `ALT+Q` and `ALT+C`, so no existing shortcut of yours is taken over.
+
+That covers headings, bold, italic, underline, strikethrough, highlight, inline code, code and mermaid blocks, links, images, quotes, the three list kinds, and the 26 callouts. `Cmd+1` for `H1` and `Cmd+2` for `H2` is a common arrangement.
+
+The side panel itself has a command too, so it can be opened without reaching for the ribbon icon.
+
+The HTML, LaTeX and Greek sections are deliberately left out. Between them they hold another 93 entries, and a hotkey list is not a useful place to look for `\alpha` — the `ALT+Q` window is, and it searches all of them.
 ## Color Picker
 
 ### Select a color

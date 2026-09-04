@@ -3,6 +3,7 @@ import { addIcon } from 'obsidian';
 import * as mdiIcons from '@mdi/js';
 import { removeIcon } from 'obsidian';
 import * as iconPaths from './iconPaths';
+import { splitMarkup } from './markup';
 
 function pathToSvg(icon: string) {
   return `
@@ -79,12 +80,27 @@ export const svgToElement = (key: string | number): HTMLElement => {
   if (key.toString().includes('.svg')) {
     const img = document.createElement('img');
     img.src = key.toString();
-    img.style.width = '24px';
-    img.style.height = '24px';
+    img.addClass('mfa-icon-image');
 
     return img;
   } else {
     const parser = new DOMParser();
     return parser.parseFromString(icons[key], 'text/xml').documentElement;
   }
+};
+
+/**
+ * Writes a button label, honouring the `<sup>` and `<sub>` some of them carry.
+ *
+ * Built node by node rather than handed to innerHTML: see the note in
+ * markup.ts for why that matters even for the plugin's own constants.
+ */
+export const appendLabel = (parent: HTMLElement, label: string): void => {
+  splitMarkup(label).forEach((part) => {
+    if (part.tag === 'text') {
+      parent.appendText(part.value);
+    } else {
+      parent.createEl(part.tag).setText(part.value);
+    }
+  });
 };

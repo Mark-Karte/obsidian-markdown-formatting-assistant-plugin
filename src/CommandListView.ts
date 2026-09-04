@@ -2,7 +2,7 @@ import { App, Editor, Notice, SuggestModal } from 'obsidian';
 import { baseFormatterSetting, iconFormatter } from './formatter';
 import { formatSettings, formatterSetting } from './formatter';
 import * as R from 'ramda';
-import { svgToElement } from './icons';
+import { appendLabel, svgToElement } from './icons';
 import {
   greekLowerCaseFormatterSettings,
   greekUpperCaseFormatterSettings,
@@ -63,28 +63,29 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
     cell2.classList.add('mfa-suggestion-text');
     cell2.setText(baseFormatterSetting.des);
 
+    // The label is tinted by which table the entry came from, so the four
+    // groups stay apart at a glance. The tints are theme variables now: the
+    // fixed hexes they replace were picked against a dark background, and the
+    // green in particular was close to unreadable on a light one.
     if (baseFormatterSetting.objectType === 'formatterSetting') {
       iconDiv.appendChild(svgToElement(baseFormatterSetting.icon));
-      cell2.style.color = '#c7254e';
+      cell2.addClass('mfa-suggestion-text--markdown');
     } else if (baseFormatterSetting.objectType === 'htmlFormatterSetting') {
       iconDiv.appendText('HTML');
-      cell2.style.color = '#0055F2';
+      cell2.addClass('mfa-suggestion-text--html');
     } else if (baseFormatterSetting.objectType === 'greekFormatterSetting') {
       iconDiv.appendChild(svgToElement(baseFormatterSetting.icon));
-      cell2.style.color = '#25e712';
+      cell2.addClass('mfa-suggestion-text--greek');
     } else if (baseFormatterSetting.objectType === 'latexFormatterSetting') {
       const item = baseFormatterSetting;
       if (item.type === 'icon') {
-        let svg = svgToElement(item.text);
-        svg.style.display = 'inline-block';
-        svg.style.verticalAlign = 'middle';
+        const svg = svgToElement(item.text);
+        svg.addClass('mfa-inline-svg');
         iconDiv.appendChild(svg);
       } else if (item.type === 'text') {
-        let div = document.createElement('div');
-        div.innerHTML = item.text;
-        iconDiv.appendChild(div);
+        appendLabel(iconDiv.createDiv(), item.text);
       }
-      cell2.style.color = '#25e712';
+      cell2.addClass('mfa-suggestion-text--latex');
     } else {
       iconDiv.appendText('HTML');
     }
