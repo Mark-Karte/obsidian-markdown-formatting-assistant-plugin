@@ -13,7 +13,13 @@ export const it: LocaleDictionary = {
   'section.colors': 'Colori',
   'section.callouts': 'Riquadri',
 
-  'tables.upcoming': 'in arrivo ...',
+  'panel.noLeaf': 'Impossibile aprire il pannello: la barra laterale non è disponibile.',
+  'tables.pick': 'Scegli una dimensione',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Nessuno',
+  'tables.align.left': 'Sinistra',
+  'tables.align.center': 'Centro',
+  'tables.align.right': 'Destra',
   'html.reportMissingTag': 'Manca un tag? Segnalalo!',
   'latex.introduction': 'Introduzione alla matematica in LaTeX',
   'latex.reportMissingFunction': 'Manca una funzione LaTeX? Segnalalo!',
@@ -41,11 +47,6 @@ export const it: LocaleDictionary = {
   'settings.language.desc':
     "Lingua dell'interfaccia del plugin. (riavvio necessario)",
   'settings.language.auto': 'Come Obsidian',
-  'settings.triggerChar.name': 'Carattere di attivazione',
-  'settings.triggerChar.desc':
-    'Carattere che attiva il completamento automatico',
-  'settings.triggerChar.placeholder':
-    'Inserisci un carattere per attivare il completamento automatico',
   'settings.sidePaneSide.name': 'Lato del pannello laterale',
   'settings.sidePaneSide.desc':
     'Scegli su quale lato compare il pannello laterale.',
@@ -56,8 +57,6 @@ export const it: LocaleDictionary = {
   'settings.savedColors.name': 'Colori salvati',
   'settings.savedColors.desc':
     'Colori salvati tramite il selettore di colore. Viene considerato anche l’ordine. Richiede il riavvio di Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'Il colore {color} alla riga {line} ha un formato errato e non verrà salvato.',
 
   'callout.note': 'Nota',
   'callout.info': 'Info',
@@ -85,4 +84,8 @@ export const it: LocaleDictionary = {
   'callout.bug': 'Bug',
   'callout.example': 'Esempio',
   'callout.quote': 'Citazione',
+  'settings.savedColors.empty': 'Nessun colore salvato per ora.',
+  'settings.savedColors.removeHint': 'tocca per rimuovere',
+  'settings.calloutTitles.name': 'Scrivere il titolo del riquadro',
+  'settings.calloutTitles.desc': 'Inserire il nome del riquadro come titolo, così la nota lo mostra nella tua lingua. La parola chiave dentro [!note] resta sempre in inglese: è quella che Obsidian riconosce.',
 };

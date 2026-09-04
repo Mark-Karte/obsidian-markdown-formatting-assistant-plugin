@@ -14,7 +14,13 @@ export const ru: LocaleDictionary = {
   'section.colors': 'Цвета',
   'section.callouts': 'Коллауты',
 
-  'tables.upcoming': 'скоро ...',
+  'panel.noLeaf': 'Не удалось открыть панель: боковая панель недоступна.',
+  'tables.pick': 'Выберите размер',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Без',
+  'tables.align.left': 'Слева',
+  'tables.align.center': 'По центру',
+  'tables.align.right': 'Справа',
   'html.reportMissingTag': 'Не хватает тега? Сообщите!',
   'latex.introduction': 'Введение в математику LaTeX',
   'latex.reportMissingFunction': 'Не хватает функции LaTeX? Сообщите!',
@@ -41,10 +47,6 @@ export const ru: LocaleDictionary = {
   'settings.language.name': 'Язык',
   'settings.language.desc': 'Язык интерфейса плагина. (требуется перезапуск)',
   'settings.language.auto': 'Как в Obsidian',
-  'settings.triggerChar.name': 'Символ-триггер',
-  'settings.triggerChar.desc': 'Символ, запускающий автодополнение',
-  'settings.triggerChar.placeholder':
-    'Введите символ для запуска автодополнения',
   'settings.sidePaneSide.name': 'Сторона панели',
   'settings.sidePaneSide.desc': 'С какой стороны открывается боковая панель.',
   // 'left' and 'right' are the literal values this field accepts, so they are
@@ -56,8 +58,6 @@ export const ru: LocaleDictionary = {
   'settings.savedColors.name': 'Сохранённые цвета',
   'settings.savedColors.desc':
     'Цвета, сохранённые через палитру. Порядок тоже учитывается. Требуется перезапуск Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'Цвет {color} в строке {line} имеет неверный формат и не будет сохранён.',
 
   'callout.note': 'Заметка',
   'callout.info': 'Информация',
@@ -85,4 +85,8 @@ export const ru: LocaleDictionary = {
   'callout.bug': 'Баг',
   'callout.example': 'Пример',
   'callout.quote': 'Цитата',
+  'settings.savedColors.empty': 'Сохранённых цветов пока нет.',
+  'settings.savedColors.removeHint': 'нажмите, чтобы удалить',
+  'settings.calloutTitles.name': 'Писать заголовок коллаута',
+  'settings.calloutTitles.desc': 'Вставлять название коллаута как заголовок, чтобы в заметке оно отображалось на вашем языке. Ключевое слово внутри [!note] всегда остаётся английским — именно по нему Obsidian опознаёт тип.',
 };

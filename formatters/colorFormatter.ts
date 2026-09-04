@@ -1,23 +1,14 @@
-import { checkIfSelection } from '../src/generalFunctions';
+import { Editor } from 'obsidian';
 
-export function colorFormatter(editor: CodeMirror.Editor, color: string) {
-  if (editor) {
-    const isSelection = checkIfSelection(editor);
-    const selection = editor.getSelection();
-    const curserStart = editor.getCursor('from');
-    const curserEnd = editor.getCursor('to');
-    const line = editor.getLine(curserStart.line);
+export function colorFormatter(editor: Editor, color: string) {
+  if (!editor) return;
 
-    editor.focus();
+  const curserStart = editor.getCursor('from');
 
-    if (isSelection) {
-      let replacment = selection.trim();
+  editor.focus();
 
-      editor.replaceSelection(color);
-      editor.setCursor(curserStart);
-    } else {
-      editor.replaceRange(color, curserStart);
-      editor.setCursor(curserStart);
-    }
-  }
+  // Both paths land on the same result - replaceSelection inserts at the
+  // cursor when nothing is selected.
+  editor.replaceSelection(color);
+  editor.setCursor(curserStart);
 }

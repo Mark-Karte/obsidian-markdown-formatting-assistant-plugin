@@ -1,6 +1,7 @@
 import * as R from 'ramda';
 import { addIcon } from 'obsidian';
 import * as mdiIcons from '@mdi/js';
+import { removeIcon } from 'obsidian';
 import * as iconPaths from './iconPaths';
 
 function pathToSvg(icon: string) {
@@ -59,12 +60,23 @@ export const addIcons = (): void => {
 };
 
 /**
+ * addIcon is a module-level function, not a Plugin method, so Component's
+ * automatic teardown does not cover it - without this the icons stay in the
+ * app's global registry after the plugin is disabled.
+ */
+export const removeIcons = (): void => {
+  Object.keys(icons).forEach((key) => {
+    removeIcon(key);
+  });
+};
+
+/**
  * Convert an svg string into an HTML element.
  *
  * @param svgText svg image as a string
  */
 export const svgToElement = (key: string | number): HTMLElement => {
-  if (key.toString().contains('.svg')) {
+  if (key.toString().includes('.svg')) {
     const img = document.createElement('img');
     img.src = key.toString();
     img.style.width = '24px';

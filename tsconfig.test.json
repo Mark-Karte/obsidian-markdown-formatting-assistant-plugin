@@ -1,0 +1,24 @@
+{
+  // Tests are run by Node directly, which strips the types instead of
+  // compiling them, so imports carry a real '.ts' extension. That flag is only
+  // legal without emit, hence a config of their own rather than the build one.
+  //
+  // The target also differs on purpose: the plugin bundle targets es5 for
+  // Obsidian, but the tests only ever run on the local Node, so they may use
+  // import.meta and modern iteration.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "target": "ES2022",
+    // ES2022 would otherwise switch on useDefineForClassFields, changing class
+    // field semantics from what the es5 build actually emits.
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["tests/**/*.ts", "src/**/*.ts"],
+  "exclude": []
+}

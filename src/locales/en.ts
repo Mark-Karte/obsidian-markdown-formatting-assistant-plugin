@@ -21,7 +21,13 @@ export const en = {
   'section.callouts': 'Callouts',
 
   // Panel body
-  'tables.upcoming': 'upcoming ...',
+  'panel.noLeaf': 'Could not open the panel: the sidebar is unavailable.',
+  'tables.pick': 'Pick a size',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Plain',
+  'tables.align.left': 'Left',
+  'tables.align.center': 'Center',
+  'tables.align.right': 'Right',
   'html.reportMissingTag': 'Do you miss a Tag? report it!',
   'latex.introduction': 'Introduction into latex mathematics',
   'latex.reportMissingFunction': 'Do you miss a latex function? report it!',
@@ -50,21 +56,20 @@ export const en = {
   'settings.language.desc':
     'Language of the plugin interface. (restart required)',
   'settings.language.auto': 'Same as Obsidian',
-  'settings.triggerChar.name': 'Trigger Char',
-  'settings.triggerChar.desc': 'Char which triggers the autocompletion',
-  'settings.triggerChar.placeholder':
-    'Enter a char to trigger the autocompletion',
   'settings.sidePaneSide.name': 'Side Pane Side',
   'settings.sidePaneSide.desc': 'Choose on which side the Side Pane appears.',
   'settings.sidePaneSide.placeholder': 'Enter left or right',
   'settings.toggleSection.name': 'Toggle {section} Section',
   'settings.toggleSection.desc':
     'Activate or deactivate the {section} section. (restart required)',
+  'settings.calloutTitles.name': 'Write callout headings',
+  'settings.calloutTitles.desc':
+    'Insert the callout name as its heading, so a note shows it in your language. The keyword inside [!note] always stays English - that is what Obsidian matches on.',
   'settings.savedColors.name': 'Saved Colors',
   'settings.savedColors.desc':
-    'Colors which are saved via the color picker. The order will be also considered. Requires a restart of obsidian.',
-  'settings.savedColors.invalidFormat':
-    'The color {color} on line {line} has the wrong format and will not be saved.',
+    'Colours kept for the palette in the side panel. Pick one to add it, click a swatch to remove it.',
+  'settings.savedColors.empty': 'No saved colours yet.',
+  'settings.savedColors.removeHint': 'click to remove',
 
   // Callout button labels. Only the label is translated - the callout type
   // inside '> [!note]' is a keyword Obsidian matches in English.

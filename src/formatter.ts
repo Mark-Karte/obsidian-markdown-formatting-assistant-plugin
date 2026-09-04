@@ -245,7 +245,7 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
 
     editor.focus();
 
-    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].contains(item.id)) {
+    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(item.id)) {
       const reStringExact = '^\\s*' + item.symbol + '+\\s*';
       const reStringAny = '^\\s*#+\\s*';
       const cleanedLine = line.replace(new RegExp(reStringAny, 'g'), '');
@@ -286,7 +286,7 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
         'image',
         'underline',
         'highlight',
-      ].contains(item.id)
+      ].includes(item.id)
     ) {
       if (isSelection) {
         editor.replaceSelection(
@@ -304,8 +304,8 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
         editor.setCursor(curserStart.line, curserStart.ch + item.shift);
       }
     } else if (
-      ['codeBlock'].contains(item.id) ||
-      ['mermaidBlock'].contains(item.id)
+      item.id === 'codeBlock' ||
+      item.id === 'mermaidBlock'
     ) {
       if (isSelection) {
         const re = new RegExp('^(```).*(```)$', 'gs');
@@ -348,7 +348,7 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
         );
       }
     } else if (
-      ['blockquote', 'bulletList', 'numberList', 'checkList'].contains(item.id)
+      ['blockquote', 'bulletList', 'numberList', 'checkList'].includes(item.id)
     ) {
       // The symbol goes into a regex, so its own special characters have to be
       // escaped - '1. ' would otherwise let the dot match anything.

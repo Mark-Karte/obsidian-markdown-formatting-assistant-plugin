@@ -13,7 +13,14 @@ export const fr: LocaleDictionary = {
   'section.colors': 'Couleurs',
   'section.callouts': 'Encadrés',
 
-  'tables.upcoming': 'bientôt ...',
+  'panel.noLeaf':
+    'Impossible d’ouvrir le panneau : la barre latérale n’est pas disponible.',
+  'tables.pick': 'Choisir une taille',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Aucun',
+  'tables.align.left': 'Gauche',
+  'tables.align.center': 'Centre',
+  'tables.align.right': 'Droite',
   'html.reportMissingTag': 'Une balise manque ? Signalez-le !',
   'latex.introduction': 'Introduction aux mathématiques en LaTeX',
   'latex.reportMissingFunction': 'Une fonction LaTeX manque ? Signalez-le !',
@@ -42,10 +49,6 @@ export const fr: LocaleDictionary = {
   'settings.language.desc':
     'Langue de l’interface du plugin. (redémarrage requis)',
   'settings.language.auto': 'Comme Obsidian',
-  'settings.triggerChar.name': 'Caractère déclencheur',
-  'settings.triggerChar.desc': 'Caractère qui déclenche l’autocomplétion',
-  'settings.triggerChar.placeholder':
-    'Saisissez un caractère pour déclencher l’autocomplétion',
   'settings.sidePaneSide.name': 'Côté du volet latéral',
   'settings.sidePaneSide.desc':
     'Choisissez de quel côté apparaît le volet latéral.',
@@ -56,8 +59,6 @@ export const fr: LocaleDictionary = {
   'settings.savedColors.name': 'Couleurs enregistrées',
   'settings.savedColors.desc':
     'Couleurs enregistrées via le sélecteur de couleur. L’ordre est également pris en compte. Nécessite un redémarrage d’Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'La couleur {color} à la ligne {line} a un format incorrect et ne sera pas enregistrée.',
 
   'callout.note': 'Note',
   'callout.info': 'Info',
@@ -85,4 +86,8 @@ export const fr: LocaleDictionary = {
   'callout.bug': 'Bogue',
   'callout.example': 'Exemple',
   'callout.quote': 'Citation',
+  'settings.savedColors.empty': 'Aucune couleur enregistrée pour l’instant.',
+  'settings.savedColors.removeHint': 'cliquer pour retirer',
+  'settings.calloutTitles.name': 'Écrire le titre de l’encadré',
+  'settings.calloutTitles.desc': 'Insérer le nom de l’encadré comme titre, afin que la note l’affiche dans votre langue. Le mot-clé dans [!note] reste toujours en anglais : c’est lui qu’Obsidian reconnaît.',
 };

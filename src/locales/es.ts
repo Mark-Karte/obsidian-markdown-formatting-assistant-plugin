@@ -13,7 +13,13 @@ export const es: LocaleDictionary = {
   'section.colors': 'Colores',
   'section.callouts': 'Llamadas',
 
-  'tables.upcoming': 'próximamente ...',
+  'panel.noLeaf': 'No se pudo abrir el panel: la barra lateral no está disponible.',
+  'tables.pick': 'Elige un tamaño',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Sin',
+  'tables.align.left': 'Izquierda',
+  'tables.align.center': 'Centro',
+  'tables.align.right': 'Derecha',
   'html.reportMissingTag': '¿Falta una etiqueta? ¡Avísanos!',
   'latex.introduction': 'Introducción a las matemáticas en LaTeX',
   'latex.reportMissingFunction': '¿Falta una función de LaTeX? ¡Avísanos!',
@@ -41,10 +47,6 @@ export const es: LocaleDictionary = {
   'settings.language.desc':
     'Idioma de la interfaz del plugin. (requiere reiniciar)',
   'settings.language.auto': 'Igual que Obsidian',
-  'settings.triggerChar.name': 'Carácter activador',
-  'settings.triggerChar.desc': 'Carácter que activa el autocompletado',
-  'settings.triggerChar.placeholder':
-    'Introduce un carácter para activar el autocompletado',
   'settings.sidePaneSide.name': 'Lado del panel lateral',
   'settings.sidePaneSide.desc': 'Elige en qué lado aparece el panel lateral.',
   'settings.sidePaneSide.placeholder': 'Introduce left o right',
@@ -54,8 +56,6 @@ export const es: LocaleDictionary = {
   'settings.savedColors.name': 'Colores guardados',
   'settings.savedColors.desc':
     'Colores guardados mediante el selector de color. También se tiene en cuenta el orden. Requiere reiniciar Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'El color {color} de la línea {line} tiene un formato incorrecto y no se guardará.',
 
   'callout.note': 'Nota',
   'callout.info': 'Información',
@@ -83,4 +83,8 @@ export const es: LocaleDictionary = {
   'callout.bug': 'Error de software',
   'callout.example': 'Ejemplo',
   'callout.quote': 'Cita',
+  'settings.savedColors.empty': 'Todavía no hay colores guardados.',
+  'settings.savedColors.removeHint': 'pulsa para quitar',
+  'settings.calloutTitles.name': 'Escribir el título de la llamada',
+  'settings.calloutTitles.desc': 'Insertar el nombre de la llamada como título, para que la nota lo muestre en tu idioma. La palabra clave dentro de [!note] siempre queda en inglés: es la que reconoce Obsidian.',
 };

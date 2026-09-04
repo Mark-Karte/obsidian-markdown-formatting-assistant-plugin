@@ -13,7 +13,13 @@ export const ja: LocaleDictionary = {
   'section.colors': '色',
   'section.callouts': 'コールアウト',
 
-  'tables.upcoming': '近日公開 ...',
+  'panel.noLeaf': 'パネルを開けませんでした：サイドバーが利用できません。',
+  'tables.pick': 'サイズを選択',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'なし',
+  'tables.align.left': '左寄せ',
+  'tables.align.center': '中央',
+  'tables.align.right': '右寄せ',
   'html.reportMissingTag': '足りないタグがありますか？ご報告ください！',
   'latex.introduction': 'LaTeX 数式入門',
   'latex.reportMissingFunction':
@@ -40,9 +46,6 @@ export const ja: LocaleDictionary = {
   'settings.language.name': '言語',
   'settings.language.desc': 'プラグインの表示言語。（再起動が必要）',
   'settings.language.auto': 'Obsidian に合わせる',
-  'settings.triggerChar.name': 'トリガー文字',
-  'settings.triggerChar.desc': '自動補完を起動する文字',
-  'settings.triggerChar.placeholder': '自動補完を起動する文字を入力',
   'settings.sidePaneSide.name': 'サイドパネルの位置',
   'settings.sidePaneSide.desc': 'サイドパネルを表示する側を選びます。',
   'settings.sidePaneSide.placeholder': 'left または right を入力',
@@ -52,8 +55,6 @@ export const ja: LocaleDictionary = {
   'settings.savedColors.name': '保存した色',
   'settings.savedColors.desc':
     'カラーピッカーで保存した色です。並び順も保持されます。Obsidian の再起動が必要です。',
-  'settings.savedColors.invalidFormat':
-    '{line} 行目の色 {color} は形式が正しくないため保存されません。',
 
   'callout.note': 'ノート',
   'callout.info': '情報',
@@ -81,4 +82,8 @@ export const ja: LocaleDictionary = {
   'callout.bug': 'バグ',
   'callout.example': '例',
   'callout.quote': '引用',
+  'settings.savedColors.empty': '保存された色はまだありません。',
+  'settings.savedColors.removeHint': 'クリックで削除',
+  'settings.calloutTitles.name': 'コールアウトの見出しを書き込む',
+  'settings.calloutTitles.desc': 'コールアウト名を見出しとして挿入し、ノートで選択した言語のまま表示されるようにします。[!note] の中のキーワードは常に英語のままです。Obsidian はそれで種類を判別します。',
 };

@@ -14,7 +14,13 @@ export const zh: LocaleDictionary = {
   'section.colors': '颜色',
   'section.callouts': '标注',
 
-  'tables.upcoming': '即将推出 ...',
+  'panel.noLeaf': '无法打开面板：侧边栏不可用。',
+  'tables.pick': '选择大小',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': '默认',
+  'tables.align.left': '左对齐',
+  'tables.align.center': '居中',
+  'tables.align.right': '右对齐',
   'html.reportMissingTag': '缺少标签？告诉我们！',
   'latex.introduction': 'LaTeX 数学公式入门',
   'latex.reportMissingFunction': '缺少 LaTeX 函数？告诉我们！',
@@ -40,9 +46,6 @@ export const zh: LocaleDictionary = {
   'settings.language.name': '语言',
   'settings.language.desc': '插件界面语言。（需要重启）',
   'settings.language.auto': '与 Obsidian 一致',
-  'settings.triggerChar.name': '触发字符',
-  'settings.triggerChar.desc': '触发自动补全的字符',
-  'settings.triggerChar.placeholder': '输入触发自动补全的字符',
   'settings.sidePaneSide.name': '侧边栏位置',
   'settings.sidePaneSide.desc': '选择侧边栏出现在哪一侧。',
   'settings.sidePaneSide.placeholder': '输入 left 或 right',
@@ -51,8 +54,6 @@ export const zh: LocaleDictionary = {
   'settings.savedColors.name': '已保存的颜色',
   'settings.savedColors.desc':
     '通过取色器保存的颜色。顺序同样会被保留。需要重启 Obsidian。',
-  'settings.savedColors.invalidFormat':
-    '第 {line} 行的颜色 {color} 格式有误，将不会被保存。',
 
   'callout.note': '笔记',
   'callout.info': '信息',
@@ -80,4 +81,8 @@ export const zh: LocaleDictionary = {
   'callout.bug': '缺陷',
   'callout.example': '示例',
   'callout.quote': '引用',
+  'settings.savedColors.empty': '暂无已保存的颜色。',
+  'settings.savedColors.removeHint': '点击删除',
+  'settings.calloutTitles.name': '写入标注标题',
+  'settings.calloutTitles.desc': '把标注名称作为标题插入，这样笔记中就会显示你所选语言的名称。[!note] 中的关键字始终保持英文，Obsidian 依靠它识别类型。',
 };

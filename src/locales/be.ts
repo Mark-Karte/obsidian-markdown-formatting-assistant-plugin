@@ -13,7 +13,13 @@ export const be: LocaleDictionary = {
   'section.colors': 'Колеры',
   'section.callouts': 'Выноскі',
 
-  'tables.upcoming': 'неўзабаве ...',
+  'panel.noLeaf': 'Не ўдалося адкрыць панэль: бакавая панэль недаступная.',
+  'tables.pick': 'Выберыце памер',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Без',
+  'tables.align.left': 'Злева',
+  'tables.align.center': 'Па цэнтры',
+  'tables.align.right': 'Справа',
   'html.reportMissingTag': 'Не хапае тэга? Паведаміце!',
   'latex.introduction': 'Уводзіны ў матэматыку LaTeX',
   'latex.reportMissingFunction': 'Не хапае функцыі LaTeX? Паведаміце!',
@@ -41,10 +47,6 @@ export const be: LocaleDictionary = {
   'settings.language.desc':
     'Мова інтэрфейсу плагіна. (патрэбны перазапуск)',
   'settings.language.auto': 'Як у Obsidian',
-  'settings.triggerChar.name': 'Сімвал-трыгер',
-  'settings.triggerChar.desc': 'Сімвал, які запускае аўтадапаўненне',
-  'settings.triggerChar.placeholder':
-    'Увядзіце сімвал для запуску аўтадапаўнення',
   'settings.sidePaneSide.name': 'Бок панэлі',
   'settings.sidePaneSide.desc': 'З якога боку адкрываецца бакавая панэль.',
   'settings.sidePaneSide.placeholder': 'Увядзіце left або right',
@@ -54,8 +56,6 @@ export const be: LocaleDictionary = {
   'settings.savedColors.name': 'Захаваныя колеры',
   'settings.savedColors.desc':
     'Колеры, захаваныя праз палітру. Парадак таксама ўлічваецца. Патрэбны перазапуск Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'Колер {color} у радку {line} мае няправільны фармат і не будзе захаваны.',
 
   'callout.note': 'Нататка',
   'callout.info': 'Інфармацыя',
@@ -83,4 +83,8 @@ export const be: LocaleDictionary = {
   'callout.bug': 'Баг',
   'callout.example': 'Прыклад',
   'callout.quote': 'Цытата',
+  'settings.savedColors.empty': 'Захаваных колераў пакуль няма.',
+  'settings.savedColors.removeHint': 'націсніце, каб выдаліць',
+  'settings.calloutTitles.name': 'Пісаць загаловак выноскі',
+  'settings.calloutTitles.desc': 'Устаўляць назву выноскі як загаловак, каб у нататцы яна адлюстроўвалася на вашай мове. Ключавое слова ўнутры [!note] заўсёды застаецца англійскім — менавіта па ім Obsidian вызначае тып.',
 };

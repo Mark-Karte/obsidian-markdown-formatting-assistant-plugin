@@ -13,7 +13,13 @@ export const ko: LocaleDictionary = {
   'section.colors': '색상',
   'section.callouts': '콜아웃',
 
-  'tables.upcoming': '준비 중 ...',
+  'panel.noLeaf': '패널을 열 수 없습니다: 사이드바를 사용할 수 없습니다.',
+  'tables.pick': '크기 선택',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': '없음',
+  'tables.align.left': '왼쪽',
+  'tables.align.center': '가운데',
+  'tables.align.right': '오른쪽',
   'html.reportMissingTag': '없는 태그가 있나요? 알려 주세요!',
   'latex.introduction': 'LaTeX 수식 입문',
   'latex.reportMissingFunction': '없는 LaTeX 함수가 있나요? 알려 주세요!',
@@ -39,9 +45,6 @@ export const ko: LocaleDictionary = {
   'settings.language.name': '언어',
   'settings.language.desc': '플러그인 인터페이스 언어입니다. (재시작 필요)',
   'settings.language.auto': 'Obsidian과 동일',
-  'settings.triggerChar.name': '트리거 문자',
-  'settings.triggerChar.desc': '자동 완성을 시작하는 문자',
-  'settings.triggerChar.placeholder': '자동 완성을 시작할 문자를 입력하세요',
   'settings.sidePaneSide.name': '사이드 패널 위치',
   'settings.sidePaneSide.desc': '사이드 패널이 나타날 쪽을 선택하세요.',
   'settings.sidePaneSide.placeholder': 'left 또는 right 입력',
@@ -51,8 +54,6 @@ export const ko: LocaleDictionary = {
   'settings.savedColors.name': '저장한 색상',
   'settings.savedColors.desc':
     '색상 선택기로 저장한 색상입니다. 순서도 함께 유지됩니다. Obsidian을 다시 시작해야 합니다.',
-  'settings.savedColors.invalidFormat':
-    '{line}번째 줄의 색상 {color}은(는) 형식이 올바르지 않아 저장되지 않습니다.',
 
   'callout.note': '노트',
   'callout.info': '정보',
@@ -80,4 +81,8 @@ export const ko: LocaleDictionary = {
   'callout.bug': '버그',
   'callout.example': '예시',
   'callout.quote': '인용',
+  'settings.savedColors.empty': '저장된 색상이 아직 없습니다.',
+  'settings.savedColors.removeHint': '클릭하면 삭제',
+  'settings.calloutTitles.name': '콜아웃 제목 삽입',
+  'settings.calloutTitles.desc': '콜아웃 이름을 제목으로 넣어 노트에 선택한 언어로 표시되게 합니다. [!note] 안의 키워드는 항상 영어로 유지되며, Obsidian 은 그것으로 종류를 판별합니다.',
 };

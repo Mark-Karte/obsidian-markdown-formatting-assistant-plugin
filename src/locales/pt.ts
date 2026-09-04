@@ -13,7 +13,13 @@ export const pt: LocaleDictionary = {
   'section.colors': 'Cores',
   'section.callouts': 'Destaques',
 
-  'tables.upcoming': 'em breve ...',
+  'panel.noLeaf': 'Não foi possível abrir o painel: a barra lateral não está disponível.',
+  'tables.pick': 'Escolha um tamanho',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Sem',
+  'tables.align.left': 'Esquerda',
+  'tables.align.center': 'Centro',
+  'tables.align.right': 'Direita',
   'html.reportMissingTag': 'Falta alguma tag? Avise!',
   'latex.introduction': 'Introdução à matemática em LaTeX',
   'latex.reportMissingFunction': 'Falta alguma função do LaTeX? Avise!',
@@ -42,10 +48,6 @@ export const pt: LocaleDictionary = {
   'settings.language.desc':
     'Idioma da interface do plugin. (requer reinício)',
   'settings.language.auto': 'Igual ao Obsidian',
-  'settings.triggerChar.name': 'Caractere de ativação',
-  'settings.triggerChar.desc': 'Caractere que ativa o preenchimento automático',
-  'settings.triggerChar.placeholder':
-    'Digite um caractere para ativar o preenchimento automático',
   'settings.sidePaneSide.name': 'Lado do painel lateral',
   'settings.sidePaneSide.desc': 'Escolha de que lado o painel lateral aparece.',
   'settings.sidePaneSide.placeholder': 'Digite left ou right',
@@ -55,8 +57,6 @@ export const pt: LocaleDictionary = {
   'settings.savedColors.name': 'Cores salvas',
   'settings.savedColors.desc':
     'Cores salvas por meio do seletor de cores. A ordem também é considerada. Requer reiniciar o Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'A cor {color} na linha {line} está em formato incorreto e não será salva.',
 
   'callout.note': 'Nota',
   'callout.info': 'Informação',
@@ -84,4 +84,8 @@ export const pt: LocaleDictionary = {
   'callout.bug': 'Bug',
   'callout.example': 'Exemplo',
   'callout.quote': 'Citação',
+  'settings.savedColors.empty': 'Ainda não há cores guardadas.',
+  'settings.savedColors.removeHint': 'clique para remover',
+  'settings.calloutTitles.name': 'Escrever o título do destaque',
+  'settings.calloutTitles.desc': 'Inserir o nome do destaque como título, para que a nota o mostre no seu idioma. A palavra-chave dentro de [!note] permanece sempre em inglês - é por ela que o Obsidian identifica o tipo.',
 };

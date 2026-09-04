@@ -1,8 +1,17 @@
 import { Editor } from 'obsidian';
-import { withIds } from './generalFunctions';
+import { surroundingText, withIds } from './generalFunctions';
+import {
+  buildCalloutTemplate,
+  expandTemplate,
+  placeBlock,
+  resolveCursorPosition,
+} from './textPlacement';
 
 export interface calloutsFormatterSetting {
-  /** Stable identifier, derived from the table key. Never translated. */
+  /**
+   * Stable identifier, derived from the table key. Never translated - it is
+   * also the keyword Obsidian matches inside '> [!note]'.
+   */
   id: string;
   /** Display label shown to the user - translatable. */
   des: string;
@@ -10,9 +19,6 @@ export interface calloutsFormatterSetting {
   icon: string;
   color: string;
   bgColor: string;
-  symbol: string;
-  shift: number;
-  selectionInput: number;
   newLine: boolean;
 }
 
@@ -23,9 +29,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-pencil',
     color: 'rgb(68,138,255)',
     bgColor: 'rgba(68,138,255,0.1)',
-    symbol: '> [!note] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -35,9 +38,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-info',
     color: 'rgb(0,184,212)',
     bgColor: 'rgba(0,184,212,0.1)',
-    symbol: '> [!info] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -47,9 +47,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-check-circle-2',
     color: 'rgb(0,184,212)',
     bgColor: 'rgba(0,184,212,0.1)',
-    symbol: '> [!todo] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -59,9 +56,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-clipboard-list',
     color: 'rgb(0, 176, 255)',
     bgColor: 'rgba(0, 176, 255,0.1)',
-    symbol: '> [!abstract] \n>  ',
-    shift: 17,
-    selectionInput: 17,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -71,9 +65,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-clipboard-list',
     color: 'rgb(0, 176, 255)',
     bgColor: 'rgba(0, 176, 255,0.1)',
-    symbol: '> [!summary] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -83,9 +74,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-clipboard-list',
     color: 'rgb(0, 176, 255)',
     bgColor: 'rgba(0, 176, 255,0.1)',
-    symbol: '> [!tldr] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -96,9 +84,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-flame',
     color: 'rgb(0, 191, 165)',
     bgColor: 'rgba(0, 191, 165,0.1)',
-    symbol: '> [!tip] \n>  ',
-    shift: 12,
-    selectionInput: 12,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -108,9 +93,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-flame',
     color: 'rgb(0, 191, 165)',
     bgColor: 'rgba(0, 191, 165,0.1)',
-    symbol: '> [!hint] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -120,9 +102,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-flame',
     color: 'rgb(0, 191, 165)',
     bgColor: 'rgba(0, 191, 165,0.1)',
-    symbol: '> [!important] \n>  ',
-    shift: 18,
-    selectionInput: 18,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -132,9 +111,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-check',
     color: 'rgb(0, 200, 83)',
     bgColor: 'rgba(0, 200, 83,0.1)',
-    symbol: '> [!success] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -144,9 +120,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-check',
     color: 'rgb(0, 200, 83)',
     bgColor: 'rgba(0, 200, 83,0.1)',
-    symbol: '> [!check] \n>  ',
-    shift: 14,
-    selectionInput: 14,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -156,9 +129,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-check',
     color: 'rgb(0, 200, 83)',
     bgColor: 'rgba(0, 200, 83,0.1)',
-    symbol: '> [!done] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -168,9 +138,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'help-circle',
     color: 'rgb(100, 221, 23)',
     bgColor: 'rgba(100, 221, 23,0.1)',
-    symbol: '> [!question] \n>  ',
-    shift: 17,
-    selectionInput: 17,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -180,9 +147,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'help-circle',
     color: 'rgb(100, 221, 23)',
     bgColor: 'rgba(100, 221, 23,0.1)',
-    symbol: '> [!help] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -192,9 +156,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'help-circle',
     color: 'rgb(100, 221, 23)',
     bgColor: 'rgba(100, 221, 23,0.1)',
-    symbol: '> [!faq] \n>  ',
-    shift: 12,
-    selectionInput: 12,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -204,9 +165,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-alert-triangle',
     color: 'rgb(255, 145, 0)',
     bgColor: 'rgba(255, 145, 0,0.1)',
-    symbol: '> [!warning] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -216,9 +174,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-alert-triangle',
     color: 'rgb(255, 145, 0)',
     bgColor: 'rgba(255, 145, 0,0.1)',
-    symbol: '> [!caution] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -228,9 +183,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-alert-triangle',
     color: 'rgb(255, 145, 0)',
     bgColor: 'rgba(255, 145, 0,0.1)',
-    symbol: '> [!attention] \n>  ',
-    shift: 18,
-    selectionInput: 18,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -240,9 +192,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-x',
     color: 'rgb(255, 82, 82)',
     bgColor: 'rgba(255, 82, 82,0.1)',
-    symbol: '> [!failure] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -252,9 +201,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-x',
     color: 'rgb(255, 82, 82)',
     bgColor: 'rgba(255, 82, 82,0.1)',
-    symbol: '> [!fail] \n>  ',
-    shift: 13,
-    selectionInput: 13,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -264,9 +210,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-x',
     color: 'rgb(255, 82, 82)',
     bgColor: 'rgba(255, 82, 82,0.1)',
-    symbol: '> [!missing] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -276,9 +219,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-zap',
     color: 'rgb(255, 23, 68)',
     bgColor: 'rgba(255, 23, 68,0.1)',
-    symbol: '> [!danger] \n>  ',
-    shift: 15,
-    selectionInput: 15,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -288,9 +228,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-zap',
     color: 'rgb(255, 23, 68)',
     bgColor: 'rgba(255, 23, 68,0.1)',
-    symbol: '> [!error] \n>  ',
-    shift: 14,
-    selectionInput: 14,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -300,9 +237,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-bug',
     color: 'rgb(245, 0, 87)',
     bgColor: 'rgba(245, 0, 87,0.1)',
-    symbol: '> [!bug] \n>  ',
-    shift: 12,
-    selectionInput: 12,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -312,9 +246,6 @@ export const calloutsFormatterSettings = withIds({
     icon: 'lucide-list',
     color: 'rgb(124, 77, 255)',
     bgColor: 'rgba(124, 77, 255,0.1)',
-    symbol: '> [!example] \n>  ',
-    shift: 16,
-    selectionInput: 16,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
@@ -324,35 +255,45 @@ export const calloutsFormatterSettings = withIds({
     icon: 'quote-glyph',
     color: 'rgb(158, 158, 158)',
     bgColor: 'rgba(158, 158, 158,0.1)',
-    symbol: '> [!quote] \n>  ',
-    shift: 14,
-    selectionInput: 14,
     newLine: false,
     objectType: 'calloutsFormatterSetting',
   },
 });
 
-export function calloutsFormatter(editor: Editor, item: calloutsFormatterSetting) {
-  if (editor) {
-    const isSelection = editor.somethingSelected();
-    const selection = editor.getSelection();
-    const curserStart = editor.getCursor('from');
-    const curserEnd = editor.getCursor('to');
-    const line = editor.getLine(curserStart.line);
+/**
+ * Inserts a callout block.
+ *
+ * `title` is written after the keyword so Obsidian renders it instead of its
+ * own English default - that is how a translated heading reaches the note. Pass
+ * an empty string to keep the bare syntax and let the caret land on the
+ * heading instead.
+ */
+export function calloutsFormatter(
+  editor: Editor,
+  item: calloutsFormatterSetting,
+  title = '',
+) {
+  if (!editor) return;
 
-    editor.focus();
-    if (isSelection) {
-      let replacment = selection.trim();
+  const selection = editor.getSelection();
+  const start = editor.getCursor('from');
+  const { before, after } = surroundingText(editor);
 
-      editor.replaceSelection(
-        item.symbol.substring(0, item.selectionInput) +
-          replacment +
-          item.symbol.substring(item.selectionInput),
-      );
-      editor.setCursor(curserStart.line, curserStart.ch + item.shift);
-    } else {
-      editor.replaceRange(item.symbol, curserStart);
-      editor.setCursor(curserStart.line, curserStart.ch + item.shift);
-    }
-  }
+  editor.focus();
+
+  const expanded = expandTemplate(
+    buildCalloutTemplate(item.id, title),
+    selection.trim(),
+  );
+
+  // A callout is a block - it must not be glued into the middle of a sentence.
+  const { text, cursorOffset } = placeBlock(
+    expanded.text,
+    expanded.cursorOffset,
+    before,
+    after,
+  );
+
+  editor.replaceSelection(text);
+  editor.setCursor(resolveCursorPosition(text, cursorOffset, start));
 }

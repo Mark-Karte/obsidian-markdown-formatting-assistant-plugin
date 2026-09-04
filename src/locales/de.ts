@@ -13,7 +13,13 @@ export const de: LocaleDictionary = {
   'section.colors': 'Farben',
   'section.callouts': 'Callouts',
 
-  'tables.upcoming': 'demnächst ...',
+  'panel.noLeaf': 'Das Panel konnte nicht geöffnet werden: die Seitenleiste ist nicht verfügbar.',
+  'tables.pick': 'Größe wählen',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Ohne',
+  'tables.align.left': 'Links',
+  'tables.align.center': 'Zentriert',
+  'tables.align.right': 'Rechts',
   'html.reportMissingTag': 'Fehlt ein Tag? Melde es!',
   'latex.introduction': 'Einführung in die LaTeX-Mathematik',
   'latex.reportMissingFunction': 'Fehlt eine LaTeX-Funktion? Melde es!',
@@ -42,11 +48,6 @@ export const de: LocaleDictionary = {
   'settings.language.desc':
     'Sprache der Plugin-Oberfläche. (Neustart erforderlich)',
   'settings.language.auto': 'Wie Obsidian',
-  'settings.triggerChar.name': 'Auslösezeichen',
-  'settings.triggerChar.desc':
-    'Zeichen, das die Autovervollständigung auslöst',
-  'settings.triggerChar.placeholder':
-    'Zeichen für die Autovervollständigung eingeben',
   'settings.sidePaneSide.name': 'Seite der Seitenleiste',
   'settings.sidePaneSide.desc':
     'Lege fest, auf welcher Seite die Seitenleiste erscheint.',
@@ -57,8 +58,6 @@ export const de: LocaleDictionary = {
   'settings.savedColors.name': 'Gespeicherte Farben',
   'settings.savedColors.desc':
     'Über die Farbauswahl gespeicherte Farben. Die Reihenfolge wird ebenfalls berücksichtigt. Erfordert einen Neustart von Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'Die Farbe {color} in Zeile {line} hat ein falsches Format und wird nicht gespeichert.',
 
   'callout.note': 'Notiz',
   'callout.info': 'Info',
@@ -86,4 +85,8 @@ export const de: LocaleDictionary = {
   'callout.bug': 'Bug',
   'callout.example': 'Beispiel',
   'callout.quote': 'Zitat',
+  'settings.savedColors.empty': 'Noch keine gespeicherten Farben.',
+  'settings.savedColors.removeHint': 'zum Entfernen klicken',
+  'settings.calloutTitles.name': 'Callout-Überschrift schreiben',
+  'settings.calloutTitles.desc': 'Den Namen des Callouts als Überschrift einfügen, damit die Notiz ihn in deiner Sprache zeigt. Das Schlüsselwort in [!note] bleibt immer englisch - daran erkennt Obsidian den Typ.',
 };

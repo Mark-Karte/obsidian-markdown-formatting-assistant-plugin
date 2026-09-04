@@ -1,3 +1,44 @@
+/*
+ * Everything here is scoped under .mfa-scope or a mfa- prefixed class.
+ *
+ * The panel reuses Obsidian's own nav-action-button / nav-action-text-button
+ * classes so it inherits the active theme, but redefining those bare selectors
+ * would restyle the file explorer and the search header across the whole app -
+ * plugin CSS is injected after the app stylesheet, so at equal specificity the
+ * plugin wins. The scope class is what keeps the overrides inside our own UI.
+ */
+
+.mfa-scope .nav-action-button {
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0px;
+  margin: 5px;
+  border-radius: 4px;
+}
+
+.mfa-scope .nav-action-text-button {
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px;
+  margin: 4px;
+  border-radius: 4px;
+  text-align: center;
+  border: 1px solid;
+}
+
+.mfa-scope .nav-action-text-button.is-active {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.mfa-scope .nav-action-text-button.is-active:hover {
+  color: var(--text-on-accent);
+}
+
+.mfa-scope .nav-action-text-button:hover {
+  color: var(--text-accent);
+}
+
 /* The side panel follows whatever width the user drags its leaf to. */
 #SidePaneRootElement {
   width: 100%;
@@ -10,50 +51,48 @@
 
 /*
  * Obsidian pins .nav-buttons-container to a single scrolling line on mobile,
- * which is meant for a short toolbar. This panel is a grid of dozens of
- * buttons, so its rows have to keep wrapping on every platform.
+ * which suits a short toolbar. This panel is a grid of dozens of buttons, so
+ * its rows have to keep wrapping everywhere.
+ *
+ * The core rule is `body.is-mobile .nav-buttons-container`, specificity (0,2,1).
+ * Matching it needs body.is-mobile here too - a plain descendant selector loses
+ * and the buttons stay on one scrolling line, which is the whole bug.
  */
-.markdown-formatting-assistant-panel .nav-buttons-container {
+.markdown-formatting-assistant-panel .nav-buttons-container,
+body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
   flex-wrap: wrap;
   overflow: visible;
 }
 
-/* Colour swatches reflow with the panel instead of sitting in fixed rows. */
-.color-swatch-container {
+/* Colour swatches reflow with their container instead of sitting in fixed rows. */
+.mfa-color-swatches {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-/* Sets all the text color to red! */
-.nav-action-button {
+/* Stands in for the swatches when there are none, so the row keeps its shape. */
+.mfa-color-empty {
   color: var(--text-muted);
-  cursor: pointer;
-  padding: 0px;
-  margin: 5px;
-  border-radius: 4px;
+  font-size: 12px;
 }
 
-.nav-action-text-button {
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 5px;
-  margin: 4px;
-  border-radius: 4px;
-  text-align: center;
-  border: 1px solid;
-}
-.nav-action-text-button.is-active {
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent);
-}
-.nav-action-text-button.is-active:hover {
-  color: var(--text-on-accent);
-}
-.nav-action-text-button:hover {
-  color: var(--text-accent);
+/* The preset currently in use. The offset plus the ring add up to the swatch
+   margin, so marking one does not shift the row. */
+.mfa-color-icon.is-selected {
+  outline: 2px solid var(--text-normal);
+  outline-offset: 1px;
 }
 
-.color-icon {
+/* Saved colours are removed by clicking them, which needs saying before the
+   click rather than after. */
+.mfa-color-icon.mfa-removable:hover {
+  outline: 2px solid var(--text-error);
+  outline-offset: 1px;
+}
+
+.mfa-color-icon {
   color: var(--text-muted);
   cursor: pointer;
   width: 16px;
@@ -65,24 +104,28 @@
   margin: 3px;
   display: inline-block;
   border-radius: 4px;
+  /* Inset rather than a border, so a pale swatch gains an edge on a light
+     theme without changing the box it occupies. */
+  box-shadow: inset 0 0 0 1px var(--background-modifier-border);
 }
 
-.command-list-view-row {
+/* Rows of the ALT+Q and ALT+C suggestion windows. */
+.mfa-suggestion-row {
   display: flex;
 }
-.command-list-view-container {
+
+.mfa-suggestion-icon-container {
   min-width: 60px;
   display: flex;
 }
 
-.command-list-view-icon {
+.mfa-suggestion-icon {
   height: 24px;
   max-height: 24px;
-  border: 1px solid gray;
+  border: 1px solid var(--background-modifier-border);
   margin-right: auto;
 }
 
-.command-list-view-text {
+.mfa-suggestion-text {
   padding-left: 12px;
-  color: #c7254e;
 }

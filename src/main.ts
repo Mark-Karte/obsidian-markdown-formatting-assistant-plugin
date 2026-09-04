@@ -7,19 +7,20 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
+  debounce,
   Workspace,
   EditorPosition,
 } from 'obsidian';
 
-import { addIcons } from './icons';
+import { addIcons, removeIcons } from './icons';
 
 import {
   SidePanelControlView,
   SidePanelControlViewType,
 } from './SidePanelControlView';
-import plugin from 'rollup-plugin-import-css';
 import { CodeSuggestionModal } from './CommandListView';
 import { CalloutsSuggestionModal } from './CalloutsListView';
+import type { tableAlignment } from './tableFormatter';
 import {
   AUTO_LOCALE,
   LOCALE_NAMES,
@@ -37,15 +38,18 @@ interface RegionSetting {
 }
 export interface PluginSettings {
   language: LocaleSetting;
-  triggerChar: string;
   sidePaneSideLeft: Boolean;
   savedColors: string[];
   regionSettings: Array<RegionSetting>;
+  tableAlignment: tableAlignment;
+  calloutTitles: boolean;
 }
+
+/** Preselected in the saved-colours picker, so it never opens on black. */
+const DEFAULT_PICKER_COLOR = '#448aff';
 
 const DEFAULT_SETTINGS: PluginSettings = {
   language: AUTO_LOCALE,
-  triggerChar: '\\',
   sidePaneSideLeft: false,
   savedColors: ['#ff0000'],
   regionSettings: [
@@ -57,6 +61,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
     { name: 'colors', active: true, visible: false },
     { name: 'callouts', active: true, visible: false },
   ],
+  tableAlignment: 'default',
+  calloutTitles: true,
 };
 
 /** Order the section toggles appear in the settings tab. */
@@ -66,7 +72,6 @@ const SECTION_ORDER = DEFAULT_SETTINGS.regionSettings.map(
 
 export default class MarkdownAutocompletePlugin extends Plugin {
   settings: PluginSettings;
-  private sidePanelControlView: SidePanelControlView;
 
   async onload() {
     console.log('loading obsidian-markdown-formatting-assistant-plugin');
@@ -78,10 +83,10 @@ export default class MarkdownAutocompletePlugin extends Plugin {
 
     addIcons();
 
-    this.registerView(SidePanelControlViewType, (leaf) => {
-      this.sidePanelControlView = new SidePanelControlView(leaf, this);
-      return this.sidePanelControlView;
-    });
+    this.registerView(
+      SidePanelControlViewType,
+      (leaf) => new SidePanelControlView(leaf, this),
+    );
 
     this.addRibbonIcon('viewIcon', t('command.openPanel'), () => {
       this.toggleSidePanelControlView();
@@ -101,19 +106,61 @@ export default class MarkdownAutocompletePlugin extends Plugin {
       name: t('command.openCalloutsSelector'),
       hotkeys: [{ modifiers: ['Alt'], key: 'c' }],
       editorCallback: (editor: Editor, view: MarkdownView) => {
-        CalloutsSuggestionModal.display(this.app, editor);
+        CalloutsSuggestionModal.display(
+          this.app,
+          editor,
+          this.settings.calloutTitles,
+        );
       },
     });
 
     this.addSettingTab(new SettingsTab(this.app, this));
   }
 
-  onunload() {}
+  onunload() {
+    // Views, commands, the ribbon icon and the settings tab are torn down by
+    // Plugin itself. Icons are the exception: addIcon is a module-level
+    // function outside that lifecycle.
+    removeIcons();
+  }
 
   async loadSettings() {
     // Merge into a fresh object - assigning onto DEFAULT_SETTINGS would
     // permanently overwrite the defaults for the rest of the session.
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+    // The merge is shallow, so every array either comes straight off disk -
+    // where it may be anything at all - or IS the default array itself. Both
+    // need handling: a malformed value would throw here and take the whole
+    // plugin down with it, and mutating a default would poison it for the
+    // session. Rebuilding each one solves both at once.
+    const storedRegions = Array.isArray(this.settings.regionSettings)
+      ? this.settings.regionSettings
+      : DEFAULT_SETTINGS.regionSettings;
+
+    this.settings.regionSettings = storedRegions
+      .filter((region) => region && typeof region.name === 'string')
+      // A section removed since the file was written has no renderer any more,
+      // so keeping its entry would only leave a dead toggle behind.
+      .filter((region) => SECTION_ORDER.includes(region.name))
+      .map((region) => ({
+        name: region.name,
+        active: region.active !== false,
+        visible: region.visible === true,
+      }));
+
+    // A settings file written by an older version lacks sections added since.
+    const known = this.settings.regionSettings.map((region) => region.name);
+
+    DEFAULT_SETTINGS.regionSettings
+      .filter((region) => !known.includes(region.name))
+      .forEach((region) => this.settings.regionSettings.push({ ...region }));
+
+    this.settings.savedColors = (
+      Array.isArray(this.settings.savedColors)
+        ? this.settings.savedColors
+        : DEFAULT_SETTINGS.savedColors
+    ).filter((color) => typeof color === 'string');
   }
 
   async saveSettings() {
@@ -121,37 +168,47 @@ export default class MarkdownAutocompletePlugin extends Plugin {
   }
 
   private readonly toggleSidePanelControlView = async (): Promise<void> => {
-    // const existing = this.app.workspace.getLeavesOfType(
-    //   SidePanelControlViewType,
-    // );
+    const { workspace } = this.app;
 
-    // if (existing.length) {
-    //   this.app.workspace.revealLeaf(existing[0]);
-    //   return;
-    // }
+    // Detaching first is what lets the ribbon icon move the panel to the other
+    // side after the setting changes.
+    workspace.detachLeavesOfType(SidePanelControlViewType);
 
-    this.app.workspace.detachLeavesOfType(SidePanelControlViewType);
+    // Both getters return null when the sidebar cannot host a leaf.
+    const leaf = this.settings.sidePaneSideLeft
+      ? workspace.getLeftLeaf(false)
+      : workspace.getRightLeaf(false);
 
-    if (this.settings.sidePaneSideLeft) {
-      await this.app.workspace.getLeftLeaf(false).setViewState({
-        type: SidePanelControlViewType,
-        active: true,
-      });
-    } else {
-      await this.app.workspace.getRightLeaf(false).setViewState({
-        type: SidePanelControlViewType,
-        active: true,
-      });
+    if (!leaf) {
+      new Notice(t('panel.noLeaf'));
+      return;
     }
 
-    this.app.workspace.revealLeaf(
-      this.app.workspace.getLeavesOfType(SidePanelControlViewType)[0],
-    );
+    await leaf.setViewState({
+      type: SidePanelControlViewType,
+      active: true,
+    });
+
+    await workspace.revealLeaf(leaf);
   };
 }
 
 class SettingsTab extends PluginSettingTab {
   plugin: MarkdownAutocompletePlugin;
+
+  /**
+   * Text fields fire on every keystroke and each save rewrites data.json in
+   * full, so a 200-character template meant 200 rewrites - and on a synced
+   * vault, 200 chances at a conflict. Coalescing them costs nothing: the
+   * in-memory settings are already up to date when the panel reads them.
+   */
+  private readonly saveSoon = debounce(
+    (): void => {
+      void this.plugin.saveSettings();
+    },
+    400,
+    true,
+  );
 
   constructor(app: App, plugin: MarkdownAutocompletePlugin) {
     super(app, plugin);
@@ -166,7 +223,9 @@ class SettingsTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: t('settings.title') });
+    // Scopes the stylesheet's overrides of Obsidian's own button classes to
+    // this tab, so they cannot restyle the rest of the app.
+    containerEl.addClass('mfa-scope');
 
     new Setting(containerEl)
       .setName(t('settings.language.name'))
@@ -190,31 +249,30 @@ class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName(t('settings.triggerChar.name'))
-      .setDesc(t('settings.triggerChar.desc'))
-      .addText((text) =>
-        text
-          .setPlaceholder(t('settings.triggerChar.placeholder'))
-          .setValue(this.plugin.settings.triggerChar)
-          .onChange(async (value) => {
-            this.plugin.settings.triggerChar = value;
-            await this.plugin.saveSettings();
-          }),
-      );
-
-    new Setting(containerEl)
       .setName(t('settings.sidePaneSide.name'))
       .setDesc(t('settings.sidePaneSide.desc'))
       .addText((text) =>
         text
           .setPlaceholder(t('settings.sidePaneSide.placeholder'))
           .setValue(this.plugin.settings.sidePaneSideLeft ? 'left' : 'right')
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.sidePaneSideLeft =
               value === 'left' ? true : false;
-            await this.plugin.saveSettings();
+            this.saveSoon();
           }),
       );
+
+    new Setting(containerEl)
+      .setName(t('settings.calloutTitles.name'))
+      .setDesc(t('settings.calloutTitles.desc'))
+      .addToggle((comp) => {
+        comp
+          .setValue(this.plugin.settings.calloutTitles)
+          .onChange(async (value) => {
+            this.plugin.settings.calloutTitles = value;
+            await this.plugin.saveSettings();
+          });
+      });
 
     const getRegion = (name: string) => {
       return this.plugin.settings.regionSettings.find(
@@ -244,44 +302,60 @@ class SettingsTab extends PluginSettingTab {
         });
     });
 
-    new Setting(containerEl)
+    this.addSavedColorSettings(containerEl);
+  }
+
+  /**
+   * Saved colours as swatches rather than a text field.
+   *
+   * The old version was a textarea pinned to 400px whatever it held, and it
+   * asked people to type hex codes by hand - so it also needed a validator and
+   * a warning for malformed lines. Showing the actual colours removes all of
+   * that: a swatch cannot be misspelled.
+   */
+  private addSavedColorSettings(containerEl: HTMLElement) {
+    const colors = this.plugin.settings.savedColors;
+
+    const setting = new Setting(containerEl)
       .setName(t('settings.savedColors.name'))
-      .setDesc(t('settings.savedColors.desc'))
-      .addTextArea((text) => {
-        text.inputEl.style.minHeight = '400px';
+      .setDesc(t('settings.savedColors.desc'));
 
-        text
-          .setValue(
-            // Copy before reversing - reverse() works in place and used to
-            // flip the stored order every time this tab was opened.
-            this.plugin.settings.savedColors.slice().reverse().join('\n'),
-          )
-          .onChange(async (value) => {
-            let colors = value.split('\n').reverse();
-            let filteredColors = colors.filter((color) => {
-              return /^#[0-9A-F]{6}$/i.test(color);
-            });
-            this.plugin.settings.savedColors = filteredColors;
-            await this.plugin.saveSettings();
-          });
+    // Built into the control area ahead of the picker rather than left loose
+    // under the description, where they read as leftover decoration instead of
+    // as a control.
+    const swatches = setting.controlEl.createDiv({ cls: 'mfa-color-swatches' });
 
-        text.inputEl.addEventListener('focusout', (ev) => {
-          const value = (ev.target as HTMLTextAreaElement).value;
+    if (colors.length === 0) {
+      swatches.createSpan({ cls: 'mfa-color-empty' }).setText(
+        t('settings.savedColors.empty'),
+      );
+    }
 
-          // Line numbers are counted in the textarea's own order - the old
-          // version reversed the lines first and reported the wrong ones.
-          value.split('\n').forEach((color, index) => {
-            if (color.trim() === '') return;
-            if (/^#[0-9A-F]{6}$/i.test(color)) return;
-
-            new Notice(
-              t('settings.savedColors.invalidFormat', {
-                color,
-                line: index + 1,
-              }),
-            );
-          });
-        });
+    colors.forEach((color, index) => {
+      const swatch = swatches.createDiv({
+        cls: 'mfa-color-icon mfa-removable',
       });
+      swatch.style.backgroundColor = color;
+      swatch.setAttribute('aria-label', color);
+      swatch.title = `${color} - ${t('settings.savedColors.removeHint')}`;
+
+      // Redraw before awaiting the write: the old DOM stays live during the
+      // await, and a second click would still carry its stale index.
+      swatch.onClickEvent(() => {
+        colors.splice(index, 1);
+        this.display();
+        void this.plugin.saveSettings();
+      });
+    });
+
+    setting.addColorPicker((picker) =>
+      picker.setValue(DEFAULT_PICKER_COLOR).onChange(async (value) => {
+        if (colors.includes(value)) return;
+
+        colors.push(value);
+        await this.plugin.saveSettings();
+        this.display();
+      }),
+    );
   }
 }
