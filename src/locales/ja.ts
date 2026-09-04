@@ -13,7 +13,14 @@ export const ja: LocaleDictionary = {
   'section.colors': '色',
   'section.callouts': 'コールアウト',
 
-  'tables.upcoming': '近日公開 ...',
+  'section.custom': 'マイスニペット',
+  'panel.noLeaf': 'パネルを開けませんでした：サイドバーが利用できません。',
+  'tables.pick': 'サイズを選択',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'なし',
+  'tables.align.left': '左寄せ',
+  'tables.align.center': '中央',
+  'tables.align.right': '右寄せ',
   'html.reportMissingTag': '足りないタグがありますか？ご報告ください！',
   'latex.introduction': 'LaTeX 数式入門',
   'latex.reportMissingFunction':
@@ -52,8 +59,6 @@ export const ja: LocaleDictionary = {
   'settings.savedColors.name': '保存した色',
   'settings.savedColors.desc':
     'カラーピッカーで保存した色です。並び順も保持されます。Obsidian の再起動が必要です。',
-  'settings.savedColors.invalidFormat':
-    '{line} 行目の色 {color} は形式が正しくないため保存されません。',
 
   'callout.note': 'ノート',
   'callout.info': '情報',
@@ -81,4 +86,22 @@ export const ja: LocaleDictionary = {
   'callout.bug': 'バグ',
   'callout.example': '例',
   'callout.quote': '引用',
+  'custom.empty': 'まだありません。設定から追加してください。',
+  'settings.customSnippets.name': 'マイスニペット',
+  'settings.customSnippets.desc': '自分専用のボタンです。パネルの専用セクションと {hotkey} ウィンドウに表示されます。カーソルを置きたい位置に {cursor}、選択テキストを入れたい位置に {selection} と書いてください。',
+  'settings.customSnippets.add': 'スニペットを追加',
+  'settings.customSnippets.labelPlaceholder': 'ラベル',
+  'settings.customSnippets.templatePlaceholder': 'テンプレート',
+  'settings.customSnippets.remove': 'このスニペットを削除',
+  'settings.customSnippets.empty': 'スニペットはまだありません。',
+  'settings.savedColors.empty': '保存された色はまだありません。',
+  'settings.savedColors.removeHint': 'クリックで削除',
+  'settings.customSnippets.color': '色',
+  'settings.customSnippets.icon': 'アイコン',
+  'settings.customSnippets.templateHint': '挿入される内容です。{cursor} はカーソルの位置、{selection} は選択したテキスト、{label} は上のラベルに置き換わります。下の例から始めることもできます。',
+  'settings.customSnippets.exampleCallout': 'コールアウト',
+  'settings.customSnippets.exampleWrap': '選択範囲を囲む',
+  'settings.customSnippets.exampleBlock': 'コードブロック',
+  'settings.calloutTitles.name': 'コールアウトの見出しを書き込む',
+  'settings.calloutTitles.desc': 'コールアウト名を見出しとして挿入し、ノートで選択した言語のまま表示されるようにします。[!note] の中のキーワードは常に英語のままです。Obsidian はそれで種類を判別します。',
 };

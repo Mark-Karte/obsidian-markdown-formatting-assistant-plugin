@@ -9,6 +9,8 @@ const suggestions = R.values(calloutsFormatterSettings);
 
 export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetting> {
   private editor: Editor;
+  /** Whether to write the translated heading into the note. */
+  public useTitles = true;
 
   public setEditor = (editor: Editor) => {
     this.editor = editor;
@@ -35,14 +37,14 @@ export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetti
     el: HTMLElement,
   ) {
     const row = el.createEl('div');
-    row.classList.add('command-list-view-row');
+    row.classList.add('mfa-suggestion-row');
     const iconContainer = row.createDiv();
-    iconContainer.classList.add('command-list-view-container');
+    iconContainer.classList.add('mfa-suggestion-icon-container');
     const iconDiv = iconContainer.createDiv();
-    iconDiv.classList.add('command-list-view-icon');
+    iconDiv.classList.add('mfa-suggestion-icon');
 
     const cell2 = row.createDiv();
-    cell2.classList.add('command-list-view-text');
+    cell2.classList.add('mfa-suggestion-text');
     cell2.setText(calloutLabel(calloutsFormatterSetting.id));
     cell2.style.color = 'var(--text-muted)';
 
@@ -63,14 +65,23 @@ export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetti
   ) {
     // @ts-ignore
     const item = calloutsFormatterSetting;
-    calloutsFormatter(this.editor, item);
+    calloutsFormatter(
+      this.editor,
+      item,
+      this.useTitles ? calloutLabel(item.id) : '',
+    );
 
     // new Notice(`Selected ${calloutsFormatterSetting.des}`);
   }
 
-  public static display = (app: App, editor: Editor): void => {
+  public static display = (
+    app: App,
+    editor: Editor,
+    useTitles = true,
+  ): void => {
     const modal = new CalloutsSuggestionModal(app);
     modal.setEditor(editor);
+    modal.useTitles = useTitles;
     modal.open();
   };
 }

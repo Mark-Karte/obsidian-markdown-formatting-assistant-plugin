@@ -13,7 +13,15 @@ export const fr: LocaleDictionary = {
   'section.colors': 'Couleurs',
   'section.callouts': 'Encadrés',
 
-  'tables.upcoming': 'bientôt ...',
+  'section.custom': 'Mes extraits',
+  'panel.noLeaf':
+    'Impossible d’ouvrir le panneau : la barre latérale n’est pas disponible.',
+  'tables.pick': 'Choisir une taille',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Aucun',
+  'tables.align.left': 'Gauche',
+  'tables.align.center': 'Centre',
+  'tables.align.right': 'Droite',
   'html.reportMissingTag': 'Une balise manque ? Signalez-le !',
   'latex.introduction': 'Introduction aux mathématiques en LaTeX',
   'latex.reportMissingFunction': 'Une fonction LaTeX manque ? Signalez-le !',
@@ -56,8 +64,6 @@ export const fr: LocaleDictionary = {
   'settings.savedColors.name': 'Couleurs enregistrées',
   'settings.savedColors.desc':
     'Couleurs enregistrées via le sélecteur de couleur. L’ordre est également pris en compte. Nécessite un redémarrage d’Obsidian.',
-  'settings.savedColors.invalidFormat':
-    'La couleur {color} à la ligne {line} a un format incorrect et ne sera pas enregistrée.',
 
   'callout.note': 'Note',
   'callout.info': 'Info',
@@ -85,4 +91,22 @@ export const fr: LocaleDictionary = {
   'callout.bug': 'Bogue',
   'callout.example': 'Exemple',
   'callout.quote': 'Citation',
+  'custom.empty': 'Rien pour l’instant : ajoutez-les dans les réglages.',
+  'settings.customSnippets.name': 'Mes extraits',
+  'settings.customSnippets.desc': 'Vos propres boutons : ils apparaissent dans une section dédiée du panneau et dans la fenêtre {hotkey}. Écrivez {cursor} là où le curseur doit se placer et {selection} là où le texte sélectionné doit aller.',
+  'settings.customSnippets.add': 'Ajouter un extrait',
+  'settings.customSnippets.labelPlaceholder': 'Libellé',
+  'settings.customSnippets.templatePlaceholder': 'Modèle',
+  'settings.customSnippets.remove': 'Supprimer cet extrait',
+  'settings.customSnippets.empty': 'Aucun extrait pour l’instant.',
+  'settings.savedColors.empty': 'Aucune couleur enregistrée pour l’instant.',
+  'settings.savedColors.removeHint': 'cliquer pour retirer',
+  'settings.customSnippets.color': 'Couleur',
+  'settings.customSnippets.icon': 'Icône',
+  'settings.customSnippets.templateHint': 'Ce qui sera inséré. {cursor} indique où se place le curseur, {selection} est remplacé par le texte sélectionné et {label} par le libellé ci-dessus. Vous pouvez partir d’un exemple ci-dessous.',
+  'settings.customSnippets.exampleCallout': 'Encadré',
+  'settings.customSnippets.exampleWrap': 'Entourer la sélection',
+  'settings.customSnippets.exampleBlock': 'Bloc de code',
+  'settings.calloutTitles.name': 'Écrire le titre de l’encadré',
+  'settings.calloutTitles.desc': 'Insérer le nom de l’encadré comme titre, afin que la note l’affiche dans votre langue. Le mot-clé dans [!note] reste toujours en anglais : c’est lui qu’Obsidian reconnaît.',
 };

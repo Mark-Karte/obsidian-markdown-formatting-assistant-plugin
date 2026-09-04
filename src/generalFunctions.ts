@@ -1,12 +1,20 @@
-import { MarkdownView, WorkspaceLeaf } from 'obsidian';
+import { Editor, MarkdownView, Workspace } from 'obsidian';
 
-export function checkIfSelection(editor: CodeMirror.Editor) {
-  const selection = editor.getSelection();
-  if (!selection || selection === '') {
-    return false;
-  } else {
-    return true;
-  }
+/**
+ * The editor of the markdown pane the user was last in, or null when there is
+ * none to write to.
+ *
+ * The buttons live in a side panel, so the markdown pane is never the *active*
+ * leaf while one is clicked - hence "most recent" rather than "active". Reading
+ * mode is excluded because inserting into it would be discarded.
+ */
+export function getTargetEditor(workspace: Workspace): Editor | null {
+  const view = workspace.getMostRecentLeaf()?.view;
+
+  if (!(view instanceof MarkdownView)) return null;
+  if (view.getMode() !== 'source') return null;
+
+  return view.editor;
 }
 
 /**
@@ -17,6 +25,26 @@ export function checkIfSelection(editor: CodeMirror.Editor) {
  * label that translations may replace, while dispatch and lookups keep using
  * `id`.
  */
+/**
+ * What survives on the line around the range about to be replaced.
+ *
+ * Needed to decide whether a block insert has to break onto its own line: the
+ * whole line is the wrong question, since the selection being replaced may be
+ * the entire line, or only part of it.
+ */
+export function surroundingText(editor: Editor): {
+  before: string;
+  after: string;
+} {
+  const from = editor.getCursor('from');
+  const to = editor.getCursor('to');
+
+  return {
+    before: editor.getLine(from.line).slice(0, from.ch),
+    after: editor.getLine(to.line).slice(to.ch),
+  };
+}
+
 export function withIds<T extends Record<string, object>>(
   settings: T,
 ): { [K in keyof T]: T[K] & { id: string } } {
@@ -26,11 +54,4 @@ export function withIds<T extends Record<string, object>>(
   });
 
   return settings as { [K in keyof T]: T[K] & { id: string } };
-}
-
-export function checkIfMarkdownSource(leaf: WorkspaceLeaf) {
-  return (
-    // @ts-ignore
-    leaf.view instanceof MarkdownView && leaf.view.currentMode.type === 'source'
-  );
 }

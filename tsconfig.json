@@ -7,6 +7,9 @@
     "noImplicitAny": true,
     "moduleResolution": "node",
     "importHelpers": true,
+    // Third-party declaration files are not ours to fix.
+    "skipLibCheck": true,
+    "esModuleInterop": true,
     "lib": [
       "dom",
       "es5",
@@ -19,6 +22,7 @@
   ],
   "exclude": [
     "node_modules",
-    "components"
+    "components",
+    "tests"
   ]
 }

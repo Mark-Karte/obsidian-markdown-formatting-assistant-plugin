@@ -31,6 +31,7 @@ const SECTION_LABEL_KEYS: Record<string, TranslationKey> = {
   greekLetters: 'section.greekLetters',
   colors: 'section.colors',
   callouts: 'section.callouts',
+  custom: 'section.custom',
 };
 
 let activeLocale: LocaleCode = 'en';

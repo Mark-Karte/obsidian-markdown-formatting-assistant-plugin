@@ -23,6 +23,15 @@ import {
   calloutsFormatterSetting,
 } from './calloutsFormatter';
 import { colorFormatter } from '../formatters/colorFormatter';
+import { customFormatter, isUsableSnippet } from './customFormatter';
+import { tintFromColor } from './snippetStyle';
+import {
+  MAX_TABLE_COLUMNS,
+  MAX_TABLE_ROWS,
+  TABLE_ALIGNMENTS,
+  tableFormatter,
+} from './tableFormatter';
+import type { tableAlignment } from './tableFormatter';
 import {
   ButtonComponent,
   ItemView,
@@ -33,7 +42,7 @@ import {
 
 import * as R from 'ramda';
 import MarkdownAutocompletePlugin from './main';
-import { checkIfMarkdownSource } from './generalFunctions';
+import { getTargetEditor } from './generalFunctions';
 import { calloutLabel, sectionLabel, t } from './i18n';
 
 export const SidePanelControlViewType = 'side-panel-control-view';
@@ -90,7 +99,7 @@ export class SidePanelControlView extends ItemView {
     // Width is left to the stylesheet - the leaf is user-resizable, so nothing
     // in here may pin a fixed width.
     const mainDiv = rootEl.createDiv({
-      cls: 'nav-header markdown-formatting-assistant-panel',
+      cls: 'nav-header markdown-formatting-assistant-panel mfa-scope',
     });
 
     // --------------
@@ -107,10 +116,7 @@ export class SidePanelControlView extends ItemView {
     // --------------
     const addTabelsSection = () => {
       const content = this.addSelectableHeader(mainDiv, 'tables');
-
-      const info = content.createEl('p');
-      info.appendText(t('tables.upcoming'));
-      info.style.textAlign = 'center';
+      this.addTableBuilder(content);
     };
 
     // --------------
@@ -215,6 +221,15 @@ export class SidePanelControlView extends ItemView {
       this.addCalloutsButtons(content);
     };
 
+    // --------------
+    // Custom snippets
+    // --------------
+
+    const addCustomSection = () => {
+      const content = this.addSelectableHeader(mainDiv, 'custom');
+      this.addCustomButtons(content);
+    };
+
     const regions = {
       textEdit: addTextEditSection,
       tables: addTabelsSection,
@@ -223,6 +238,7 @@ export class SidePanelControlView extends ItemView {
       greekLetters: addGreekLettersSection,
       colors: addColorsSection,
       callouts: addCalloutsSection,
+      custom: addCustomSection,
     };
 
     this.plugin.settings.regionSettings.map((item) => {
@@ -232,19 +248,167 @@ export class SidePanelControlView extends ItemView {
     });
   }
 
+  /**
+   * A size picker for markdown tables: hovering the grid previews the table
+   * that a click would insert, which is a lot less fiddly in a narrow pane than
+   * two number inputs.
+   */
+  private addTableBuilder(mainDiv: HTMLElement) {
+    let alignment: tableAlignment = this.plugin.settings.tableAlignment;
+
+    const label = mainDiv.createEl('p');
+    label.style.textAlign = 'center';
+    label.style.margin = '4px 0';
+    label.style.fontSize = '12px';
+
+    const idleLabel = () => t('tables.pick');
+    label.setText(idleLabel());
+
+    const grid = mainDiv.createDiv();
+    grid.style.display = 'flex';
+    grid.style.flexDirection = 'column';
+    grid.style.alignItems = 'center';
+    grid.style.gap = '2px';
+
+    const cells: HTMLElement[][] = [];
+
+    const paint = (rows: number, columns: number) => {
+      cells.forEach((cellRow, rowIndex) =>
+        cellRow.forEach((cell, columnIndex) => {
+          const covered = rowIndex < rows && columnIndex < columns;
+          cell.style.backgroundColor = covered
+            ? 'var(--interactive-accent)'
+            : 'transparent';
+        }),
+      );
+    };
+
+    for (let rowIndex = 0; rowIndex < MAX_TABLE_ROWS; rowIndex++) {
+      const rowEl = grid.createDiv();
+      rowEl.style.display = 'flex';
+      rowEl.style.gap = '2px';
+
+      const rowCells: HTMLElement[] = [];
+
+      for (let columnIndex = 0; columnIndex < MAX_TABLE_COLUMNS; columnIndex++) {
+        const cell = rowEl.createDiv();
+        cell.style.width = '16px';
+        cell.style.height = '16px';
+        cell.style.border = '1px solid var(--background-modifier-border)';
+        cell.style.borderRadius = '2px';
+        cell.style.cursor = 'pointer';
+
+        const rows = rowIndex + 1;
+        const columns = columnIndex + 1;
+
+        cell.addEventListener('mouseenter', () => {
+          paint(rows, columns);
+          label.setText(t('tables.size', { rows, columns }));
+        });
+
+        cell.onClickEvent(() => {
+          const editor = getTargetEditor(this.app.workspace);
+          if (editor) tableFormatter(editor, rows, columns, alignment);
+        });
+
+        rowCells.push(cell);
+      }
+
+      cells.push(rowCells);
+    }
+
+    grid.addEventListener('mouseleave', () => {
+      paint(0, 0);
+      label.setText(idleLabel());
+    });
+
+    const alignmentRow = mainDiv.createDiv({ cls: 'nav-buttons-container' });
+    alignmentRow.style.marginTop = '8px';
+
+    const alignmentButtons: HTMLElement[] = [];
+
+    const highlightAlignment = () => {
+      alignmentButtons.forEach((button, index) => {
+        button.toggleClass(
+          'is-active',
+          TABLE_ALIGNMENTS[index] === alignment,
+        );
+      });
+    };
+
+    TABLE_ALIGNMENTS.forEach((option) => {
+      const button = alignmentRow.createDiv({ cls: 'nav-action-text-button' });
+      button.appendText(t(`tables.align.${option}` as never));
+      button.onClickEvent(async () => {
+        alignment = option;
+        this.plugin.settings.tableAlignment = option;
+        await this.plugin.saveSettings();
+        highlightAlignment();
+      });
+      alignmentButtons.push(button);
+    });
+
+    highlightAlignment();
+  }
+
+  /**
+   * Buttons for the snippets the user defined themselves. Unlike the built-in
+   * sections this one is empty until they add something, so it says so rather
+   * than rendering a bare heading.
+   */
+  private addCustomButtons(mainDiv: HTMLElement) {
+    // A snippet with only a label is a half-finished row in the settings, not
+    // something to offer - clicking it would insert nothing.
+    const snippets = this.plugin.settings.customSnippets.filter(isUsableSnippet);
+
+    if (snippets.length === 0) {
+      const info = mainDiv.createEl('p');
+      info.appendText(t('custom.empty'));
+      info.style.textAlign = 'center';
+      info.style.fontSize = '11px';
+      return;
+    }
+
+    const numberOfCols = 3;
+    let row: HTMLElement = null;
+
+    snippets.forEach((snippet, index) => {
+      if (index % numberOfCols === 0) {
+        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
+      }
+
+      const button = row.createDiv({ cls: 'nav-action-text-button' });
+      button.style.textAlign = 'center';
+      button.style.backgroundColor = tintFromColor(snippet.color);
+
+      if (snippet.icon) {
+        const iconEl = document.createElement('span');
+        setIcon(iconEl, snippet.icon);
+        iconEl.style.verticalAlign = 'middle';
+        iconEl.style.color = snippet.color;
+        button.appendChild(iconEl);
+      }
+
+      const label = document.createElement('span');
+      label.textContent =
+        ' ' + (snippet.des || snippet.template.slice(0, 12));
+      button.appendChild(label);
+
+      button.onClickEvent(() => {
+        const editor = getTargetEditor(this.app.workspace);
+        if (editor) customFormatter(editor, snippet);
+      });
+    });
+  }
+
   private addHtmlButtons(mainDiv: HTMLElement) {
     const addClickEvent = (btn: HTMLElement, type: string) => {
       btn.onClickEvent(() => {
         // @ts-ignore
         const formatterSetting = htmlFormatterSettings[type];
 
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        let editor = null;
-        if (checkIfMarkdownSource(leaf)) {
-          // @ts-ignore
-          editor = leaf.view.sourceMode.cmEditor;
-          htmlFormatter(editor, formatterSetting);
-        }
+        const editor = getTargetEditor(this.app.workspace);
+        if (editor) htmlFormatter(editor, formatterSetting);
       });
     };
 
@@ -272,13 +436,18 @@ export class SidePanelControlView extends ItemView {
         // @ts-ignore
         const formatterSetting = calloutsFormatterSettings[type];
 
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        let editor = null;
-        if (checkIfMarkdownSource(leaf)) {
-          // @ts-ignore
-          editor = leaf.view.sourceMode.cmEditor;
-          calloutsFormatter(editor, formatterSetting);
-        }
+        const editor = getTargetEditor(this.app.workspace);
+        if (!editor) return;
+
+        // The heading is written into the note so it renders translated; the
+        // keyword inside [!...] stays English either way.
+        calloutsFormatter(
+          editor,
+          formatterSetting,
+          this.plugin.settings.calloutTitles
+            ? calloutLabel(formatterSetting.id)
+            : '',
+        );
       });
     };
 
@@ -317,13 +486,8 @@ export class SidePanelControlView extends ItemView {
         // @ts-ignore
         const formatterSetting = latexFormatterSettings[type];
 
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        let editor = null;
-        if (checkIfMarkdownSource(leaf)) {
-          // @ts-ignore
-          editor = leaf.view.sourceMode.cmEditor;
-          latexFormatter(editor, formatterSetting);
-        }
+        const editor = getTargetEditor(this.app.workspace);
+        if (editor) latexFormatter(editor, formatterSetting);
       });
     };
 
@@ -363,13 +527,8 @@ export class SidePanelControlView extends ItemView {
         // @ts-ignore
         const formatterSetting = greekLowerCaseFormatterSettings[type];
 
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        let editor = null;
-        if (checkIfMarkdownSource(leaf)) {
-          // @ts-ignore
-          editor = leaf.view.sourceMode.cmEditor;
-          greekFormatter(editor, formatterSetting);
-        }
+        const editor = getTargetEditor(this.app.workspace);
+        if (editor) greekFormatter(editor, formatterSetting);
       });
     };
 
@@ -395,13 +554,8 @@ export class SidePanelControlView extends ItemView {
         // @ts-ignore
         const formatterSetting = greekUpperCaseFormatterSettings[type];
 
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        let editor = null;
-        if (checkIfMarkdownSource(leaf)) {
-          // @ts-ignore
-          editor = leaf.view.sourceMode.cmEditor;
-          greekFormatter(editor, formatterSetting);
-        }
+        const editor = getTargetEditor(this.app.workspace);
+        if (editor) greekFormatter(editor, formatterSetting);
       });
     };
 
@@ -427,13 +581,8 @@ export class SidePanelControlView extends ItemView {
         // @ts-ignore
         const formatterSetting = formatSettings[type];
 
-        const leaf = this.app.workspace.getMostRecentLeaf();
-        let editor = null;
-        if (checkIfMarkdownSource(leaf)) {
-          // @ts-ignore
-          editor = leaf.view.sourceMode.cmEditor;
-          iconFormatter(editor, formatterSetting);
-        }
+        const editor = getTargetEditor(this.app.workspace);
+        if (editor) iconFormatter(editor, formatterSetting);
       });
     };
 
@@ -516,35 +665,29 @@ export class SidePanelControlView extends ItemView {
 
   private addColorBody(mainDiv: HTMLElement) {
     const insertColor = (color: string) => {
-      const leaf = this.app.workspace.getMostRecentLeaf();
-      let editor = null;
-      if (checkIfMarkdownSource(leaf)) {
-        const addColor =
-          // @ts-ignore
-          document.getElementById('inputColorTagCheckBox').checked;
+      const editor = getTargetEditor(this.app.workspace);
+      if (!editor) return;
 
-        const addBackgroundColor =
-          // @ts-ignore
-          document.getElementById('inputBackgroundColorTagCheckBox').checked;
-        const addStyle =
-          // @ts-ignore
-          document.getElementById('inputStyleTagCheckBox').checked;
-        const addHtml =
-          // @ts-ignore
-          document.getElementById('inputHtmlTagCheckBox').checked;
+      const isChecked = (id: string) => {
+        const box = document.getElementById(id) as HTMLInputElement | null;
+        return box ? box.checked : false;
+      };
 
-        let res = color;
-        if (addColor) res = `color: ${color}`;
-        if (addBackgroundColor) res = `background-color: ${color}`;
-        if (addColor && addBackgroundColor)
-          res = `color: ${color}; background-color: ${color}`;
-        if (addStyle) res = `style="${res}"`;
-        // @ts-ignore
-        editor = leaf.view.sourceMode.cmEditor;
-        if (addHtml) res = `<font color="${res}">${editor.getSelection()}</font>`;
-        colorFormatter(editor, res);
-        editor.focus();
-      }
+      const addColor = isChecked('inputColorTagCheckBox');
+      const addBackgroundColor = isChecked('inputBackgroundColorTagCheckBox');
+      const addStyle = isChecked('inputStyleTagCheckBox');
+      const addHtml = isChecked('inputHtmlTagCheckBox');
+
+      let res = color;
+      if (addColor) res = `color: ${color}`;
+      if (addBackgroundColor) res = `background-color: ${color}`;
+      if (addColor && addBackgroundColor)
+        res = `color: ${color}; background-color: ${color}`;
+      if (addStyle) res = `style="${res}"`;
+      if (addHtml) res = `<font color="${res}">${editor.getSelection()}</font>`;
+
+      colorFormatter(editor, res);
+      editor.focus();
     };
 
     const drawLastSelectedColorIcons = (container: HTMLElement = null) => {
@@ -554,7 +697,7 @@ export class SidePanelControlView extends ItemView {
 
       R.reverse(SidePanelControlView.lastColors).forEach((color) => {
         const colorBox = container.createDiv();
-        colorBox.classList.add('color-icon');
+        colorBox.classList.add('mfa-color-icon');
         colorBox.style.backgroundColor = color;
 
         colorBox.onClickEvent((ev) => {
@@ -579,7 +722,7 @@ export class SidePanelControlView extends ItemView {
       R.reverse(this.plugin.settings.savedColors).forEach((color) => {
         const colorBox = container.createDiv();
         colorBox.id = 'lastSavedColorsDiv' + color;
-        colorBox.classList.add('color-icon');
+        colorBox.classList.add('mfa-color-icon');
         colorBox.style.backgroundColor = color;
         colorBox.draggable = true;
 
@@ -668,14 +811,15 @@ export class SidePanelControlView extends ItemView {
         insertColor(color);
         colorSelector.style.backgroundColor = color;
 
-        navigator.clipboard.writeText(color).then(
-          () => {
-            new Notice(t('colors.copied', { color }));
-          },
-          () => {
-            new Notice(t('colors.copyFailed'));
-          },
-        );
+        // Mobile webviews are not a secure context, so navigator.clipboard is
+        // undefined there - reading .writeText would throw synchronously,
+        // which a rejection handler does not catch.
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(color).then(
+            () => new Notice(t('colors.copied', { color })),
+            () => new Notice(t('colors.copyFailed')),
+          );
+        }
       },
       false,
     );
@@ -726,7 +870,7 @@ export class SidePanelControlView extends ItemView {
 
     const lastSelectedColors = colorSection.createEl('div');
     lastSelectedColors.id = 'lastSelectedColorsDiv';
-    lastSelectedColors.classList.add('color-swatch-container');
+    lastSelectedColors.classList.add('mfa-color-swatches');
 
     drawLastSelectedColorIcons(lastSelectedColors);
 
@@ -742,7 +886,7 @@ export class SidePanelControlView extends ItemView {
 
     const lastSavedColors = colorSection.createEl('div');
     lastSavedColors.id = 'lastSavedColorsDiv';
-    lastSavedColors.classList.add('color-swatch-container');
+    lastSavedColors.classList.add('mfa-color-swatches');
 
     drawLastSavedColorIcons(lastSavedColors);
 
@@ -808,31 +952,28 @@ export class SidePanelControlView extends ItemView {
           : undefined;
       };
 
-      const start = event.dataTransfer.getData('sectionHeaderMoveId');
+      event.preventDefault();
+
+      const regions = this.plugin.settings.regionSettings;
+      const start = event.dataTransfer?.getData('sectionHeaderMoveId');
       const end = getDroppedRegionName(event.composedPath());
 
-      const isKnownRegion = this.plugin.settings.regionSettings.some(
-        (region) => region.name === end,
-      );
+      if (!start || !end || start === end) return;
 
-      if (end && isKnownRegion && start !== end) {
-        const startIndex = R.findIndex(
-          R.propEq('name', start),
-          this.plugin.settings.regionSettings,
-        );
-        const endIndex = R.findIndex(
-          R.propEq('name', end),
-          this.plugin.settings.regionSettings,
-        );
+      const startIndex = regions.findIndex((region) => region.name === start);
+      const endIndex = regions.findIndex((region) => region.name === end);
 
-        const startRegion = this.plugin.settings.regionSettings[startIndex];
-        this.plugin.settings.regionSettings[startIndex] =
-          this.plugin.settings.regionSettings[endIndex];
-        this.plugin.settings.regionSettings[endIndex] = startRegion;
-        await this.plugin.saveSettings();
-        this.drawContentOfRootElement();
-      }
-      event.preventDefault();
+      // Headers accept any drag - a note dropped from the file explorer lands
+      // here too, with an empty payload. Both indices must resolve, or the swap
+      // below would write undefined into the array and persist it.
+      if (startIndex < 0 || endIndex < 0) return;
+
+      const startRegion = regions[startIndex];
+      regions[startIndex] = regions[endIndex];
+      regions[endIndex] = startRegion;
+
+      await this.plugin.saveSettings();
+      this.drawContentOfRootElement();
     };
 
     header.ondragover = async (event) => {

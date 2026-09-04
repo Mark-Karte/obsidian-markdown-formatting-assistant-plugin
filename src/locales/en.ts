@@ -19,9 +19,17 @@ export const en = {
   'section.greekLetters': 'Greek Letters',
   'section.colors': 'Colors',
   'section.callouts': 'Callouts',
+  'section.custom': 'My Snippets',
 
   // Panel body
-  'tables.upcoming': 'upcoming ...',
+  'panel.noLeaf': 'Could not open the panel: the sidebar is unavailable.',
+  'custom.empty': 'No snippets yet - add them in the settings.',
+  'tables.pick': 'Pick a size',
+  'tables.size': '{rows} x {columns}',
+  'tables.align.default': 'Plain',
+  'tables.align.left': 'Left',
+  'tables.align.center': 'Center',
+  'tables.align.right': 'Right',
   'html.reportMissingTag': 'Do you miss a Tag? report it!',
   'latex.introduction': 'Introduction into latex mathematics',
   'latex.reportMissingFunction': 'Do you miss a latex function? report it!',
@@ -60,11 +68,29 @@ export const en = {
   'settings.toggleSection.name': 'Toggle {section} Section',
   'settings.toggleSection.desc':
     'Activate or deactivate the {section} section. (restart required)',
+  'settings.calloutTitles.name': 'Write callout headings',
+  'settings.calloutTitles.desc':
+    'Insert the callout name as its heading, so a note shows it in your language. The keyword inside [!note] always stays English - that is what Obsidian matches on.',
   'settings.savedColors.name': 'Saved Colors',
   'settings.savedColors.desc':
-    'Colors which are saved via the color picker. The order will be also considered. Requires a restart of obsidian.',
-  'settings.savedColors.invalidFormat':
-    'The color {color} on line {line} has the wrong format and will not be saved.',
+    'Colours kept for the palette in the side panel. Pick one to add it, click a swatch to remove it.',
+  'settings.savedColors.empty': 'No saved colours yet.',
+  'settings.savedColors.removeHint': 'click to remove',
+  'settings.customSnippets.name': 'My Snippets',
+  'settings.customSnippets.desc':
+    'Your own buttons, shown in their own section of the panel and in the {hotkey} window. Write {cursor} where the caret should land and {selection} where the selected text should go.',
+  'settings.customSnippets.add': 'Add snippet',
+  'settings.customSnippets.labelPlaceholder': 'Label',
+  'settings.customSnippets.templatePlaceholder': 'Template',
+  'settings.customSnippets.remove': 'Remove this snippet',
+  'settings.customSnippets.empty': 'No snippets yet.',
+  'settings.customSnippets.color': 'Colour',
+  'settings.customSnippets.icon': 'Icon',
+  'settings.customSnippets.templateHint':
+    'What gets inserted. {cursor} is where the caret lands, {selection} is replaced by the selected text and {label} by the name above. Start from an example below if you like.',
+  'settings.customSnippets.exampleCallout': 'Callout',
+  'settings.customSnippets.exampleWrap': 'Wrap selection',
+  'settings.customSnippets.exampleBlock': 'Code block',
 
   // Callout button labels. Only the label is translated - the callout type
   // inside '> [!note]' is a keyword Obsidian matches in English.
