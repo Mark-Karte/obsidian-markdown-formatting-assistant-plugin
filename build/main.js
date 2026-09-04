@@ -6086,10 +6086,119 @@ function registerFormattingCommands(plugin, writeCalloutTitle) {
     });
 }
 
+/**
+ * What the toolbar stores and how that list is kept sane. A leaf module with
+ * no imports, so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The toolbar is a list of Obsidian command ids and nothing else. That is the
+ * whole design: anything registered as a command can sit on it, including
+ * Obsidian's own and other plugins', not merely this one's buttons.
+ */
+/**
+ * Must match the `id` in manifest.json - Obsidian namespaces every command by
+ * it, so the default buttons below would resolve to nothing if the two drifted.
+ * There is a test on exactly that.
+ */
+var PLUGIN_ID = 'obsidian-markdown-formatting-assistant-plugin';
+/**
+ * A ceiling rather than a design limit. The toolbar wraps, so a long list
+ * costs the user their writing space rather than breaking anything - but a
+ * settings file that somehow grew unbounded should not take the editor with it.
+ */
+var MAX_TOOLBAR_COMMANDS = 40;
+/** Everyday formatting, in the order a toolbar usually reads. */
+var DEFAULT_TOOLBAR_COMMANDS = [
+    'h1',
+    'h2',
+    'h3',
+    'bold',
+    'italic',
+    'strikethrough',
+    'highlight',
+    'codeInline',
+    'blockquote',
+    'bulletList',
+    'numberList',
+    'checkList',
+    'link',
+].map(function (id) { return "".concat(PLUGIN_ID, ":").concat(id); });
+var DEFAULT_TOOLBAR = {
+    enabled: false,
+    commands: DEFAULT_TOOLBAR_COMMANDS,
+};
+/**
+ * Every registered command, in the order a person would look for one.
+ *
+ * Takes the whole register on purpose. Obsidian also offers `listCommands()`,
+ * which answers a different question - what can run *right now* - and with the
+ * settings dialog focused there is no editor, so every command that writes to a
+ * note is missing from it. That is all but one of this plugin's and most of
+ * Obsidian's, which is exactly what the picker is for.
+ */
+function sortedCommands(commands) {
+    return Object.values(commands || {}).sort(function (a, b) {
+        return (a.name || '').localeCompare(b.name || '');
+    });
+}
+/**
+ * Rebuilds the stored list into something safe to render.
+ *
+ * Anything at all can be in a settings file - it is hand-editable, it is
+ * synced between machines, and it is written by older versions of this plugin.
+ * A duplicate id is the interesting case: two buttons would run the same
+ * command, and removing one of them would look like it removed both.
+ */
+function normaliseToolbarCommands(value) {
+    if (!Array.isArray(value))
+        return __spreadArray([], DEFAULT_TOOLBAR_COMMANDS, true);
+    var seen = new Set();
+    var commands = [];
+    for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
+        var entry = value_1[_i];
+        if (typeof entry !== 'string')
+            continue;
+        var id = entry.trim();
+        if (!id || seen.has(id))
+            continue;
+        seen.add(id);
+        commands.push(id);
+        if (commands.length === MAX_TOOLBAR_COMMANDS)
+            break;
+    }
+    return commands;
+}
+/**
+ * Moves one button to another position.
+ *
+ * Written as remove-then-insert rather than as a swap. The panel's own
+ * reordering used to swap the two entries, which is only the same thing for
+ * neighbours: dragging the first button to the end there sent the last one to
+ * the front rather than shifting the rest along.
+ */
+function moveCommand(commands, from, to) {
+    var next = __spreadArray([], commands, true);
+    if (!Number.isInteger(from) ||
+        !Number.isInteger(to) ||
+        from < 0 ||
+        from >= next.length ||
+        to < 0 ||
+        to >= next.length ||
+        from === to) {
+        return next;
+    }
+    var moved = next.splice(from, 1)[0];
+    next.splice(to, 0, moved);
+    return next;
+}
+
 var TOOLBAR_CLASS = 'mfa-toolbar';
 function getCommandRegistry(plugin) {
     // @ts-ignore - see the note above.
     return plugin.app.commands;
+}
+/** Everything registered, sorted - see sortedCommands for why not listCommands. */
+function allCommands(registry) {
+    return sortedCommands(registry.commands);
 }
 /**
  * A row of buttons above the note.
@@ -6191,97 +6300,6 @@ var EditorToolbar = /** @class */ (function () {
     };
     return EditorToolbar;
 }());
-
-/**
- * What the toolbar stores and how that list is kept sane. A leaf module with
- * no imports, so the tests can reach it - see the note in textPlacement.ts.
- *
- * The toolbar is a list of Obsidian command ids and nothing else. That is the
- * whole design: anything registered as a command can sit on it, including
- * Obsidian's own and other plugins', not merely this one's buttons.
- */
-/**
- * Must match the `id` in manifest.json - Obsidian namespaces every command by
- * it, so the default buttons below would resolve to nothing if the two drifted.
- * There is a test on exactly that.
- */
-var PLUGIN_ID = 'obsidian-markdown-formatting-assistant-plugin';
-/**
- * A ceiling rather than a design limit. The toolbar wraps, so a long list
- * costs the user their writing space rather than breaking anything - but a
- * settings file that somehow grew unbounded should not take the editor with it.
- */
-var MAX_TOOLBAR_COMMANDS = 40;
-/** Everyday formatting, in the order a toolbar usually reads. */
-var DEFAULT_TOOLBAR_COMMANDS = [
-    'h1',
-    'h2',
-    'h3',
-    'bold',
-    'italic',
-    'strikethrough',
-    'highlight',
-    'codeInline',
-    'blockquote',
-    'bulletList',
-    'numberList',
-    'checkList',
-    'link',
-].map(function (id) { return "".concat(PLUGIN_ID, ":").concat(id); });
-var DEFAULT_TOOLBAR = {
-    enabled: false,
-    commands: DEFAULT_TOOLBAR_COMMANDS,
-};
-/**
- * Rebuilds the stored list into something safe to render.
- *
- * Anything at all can be in a settings file - it is hand-editable, it is
- * synced between machines, and it is written by older versions of this plugin.
- * A duplicate id is the interesting case: two buttons would run the same
- * command, and removing one of them would look like it removed both.
- */
-function normaliseToolbarCommands(value) {
-    if (!Array.isArray(value))
-        return __spreadArray([], DEFAULT_TOOLBAR_COMMANDS, true);
-    var seen = new Set();
-    var commands = [];
-    for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
-        var entry = value_1[_i];
-        if (typeof entry !== 'string')
-            continue;
-        var id = entry.trim();
-        if (!id || seen.has(id))
-            continue;
-        seen.add(id);
-        commands.push(id);
-        if (commands.length === MAX_TOOLBAR_COMMANDS)
-            break;
-    }
-    return commands;
-}
-/**
- * Moves one button to another position.
- *
- * Written as remove-then-insert rather than as a swap. The panel's own
- * reordering used to swap the two entries, which is only the same thing for
- * neighbours: dragging the first button to the end there sent the last one to
- * the front rather than shifting the rest along.
- */
-function moveCommand(commands, from, to) {
-    var next = __spreadArray([], commands, true);
-    if (!Number.isInteger(from) ||
-        !Number.isInteger(to) ||
-        from < 0 ||
-        from >= next.length ||
-        to < 0 ||
-        to >= next.length ||
-        from === to) {
-        return next;
-    }
-    var moved = next.splice(from, 1)[0];
-    next.splice(to, 0, moved);
-    return next;
-}
 
 /** Preselected in the saved-colours picker, so it never opens on black. */
 var DEFAULT_PICKER_COLOR = '#448aff';
@@ -6683,7 +6701,7 @@ var SettingsTab = /** @class */ (function (_super) {
                 .setCta()
                 .setDisabled(toolbar.commands.length >= MAX_TOOLBAR_COMMANDS)
                 .onClick(function () {
-                CommandPickerModal.open(_this.app, registry.listCommands(), toolbar.commands, t('settings.toolbar.pick'), function (id) { return void commit(__spreadArray(__spreadArray([], toolbar.commands, true), [id], false)); });
+                CommandPickerModal.open(_this.app, allCommands(registry), toolbar.commands, t('settings.toolbar.pick'), function (id) { return void commit(__spreadArray(__spreadArray([], toolbar.commands, true), [id], false)); });
             });
         });
     };

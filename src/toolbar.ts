@@ -1,6 +1,6 @@
 import { Command, MarkdownView, Plugin, setIcon } from 'obsidian';
 import { shortLabel } from './commandNames';
-import { toolbarSetting } from './toolbarSettings';
+import { sortedCommands, toolbarSetting } from './toolbarSettings';
 
 const TOOLBAR_CLASS = 'mfa-toolbar';
 
@@ -12,13 +12,17 @@ const TOOLBAR_CLASS = 'mfa-toolbar';
  */
 interface commandRegistry {
   commands: Record<string, Command>;
-  listCommands(): Command[];
   executeCommandById(id: string): boolean;
 }
 
 export function getCommandRegistry(plugin: Plugin): commandRegistry {
   // @ts-ignore - see the note above.
   return plugin.app.commands as commandRegistry;
+}
+
+/** Everything registered, sorted - see sortedCommands for why not listCommands. */
+export function allCommands(registry: commandRegistry): Command[] {
+  return sortedCommands(registry.commands);
 }
 
 /**

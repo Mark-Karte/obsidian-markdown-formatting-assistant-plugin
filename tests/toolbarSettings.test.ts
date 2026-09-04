@@ -10,6 +10,7 @@ import {
   PLUGIN_ID,
   moveCommand,
   normaliseToolbarCommands,
+  sortedCommands,
 } from '../src/toolbarSettings.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -42,6 +43,47 @@ test('every default button names a command the plugin registers', () => {
   ).filter((id) => !keys.includes(id));
 
   assert.deepEqual(unknown, [], 'these default buttons would do nothing');
+});
+
+// ---------------------------------------------------------------------------
+// The list the picker offers
+// ---------------------------------------------------------------------------
+
+test('an editor command is offered even though it cannot run right now', () => {
+  // The bug this replaced: the picker was built from Obsidian's listCommands(),
+  // which returns what is runnable at that moment. The settings dialog has no
+  // editor focused, so every command that writes to a note was missing - all
+  // but one of this plugin's, and most of Obsidian's with them.
+  const registry = {
+    'core:palette': { id: 'core:palette', name: 'Command palette' },
+    'mfa:bold': { id: 'mfa:bold', name: 'Assistant: Bold' },
+  };
+
+  assert.deepEqual(
+    sortedCommands(registry).map((command) => command.id),
+    ['mfa:bold', 'core:palette'],
+  );
+});
+
+test('commands are sorted by name, which groups a plugin together', () => {
+  const registry = {
+    c: { id: 'c', name: 'Assistant: H1' },
+    a: { id: 'a', name: 'Bookmarks: Show' },
+    b: { id: 'b', name: 'Assistant: Bold' },
+  };
+
+  assert.deepEqual(
+    sortedCommands(registry).map((command) => command.name),
+    ['Assistant: Bold', 'Assistant: H1', 'Bookmarks: Show'],
+  );
+});
+
+test('a nameless or missing register does not throw', () => {
+  assert.deepEqual(sortedCommands(undefined as never), []);
+  assert.deepEqual(
+    sortedCommands({ a: { id: 'a', name: undefined as never } }).length,
+    1,
+  );
 });
 
 // ---------------------------------------------------------------------------

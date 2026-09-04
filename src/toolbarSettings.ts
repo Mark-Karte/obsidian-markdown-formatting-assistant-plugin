@@ -50,6 +50,29 @@ export const DEFAULT_TOOLBAR: toolbarSetting = {
   commands: DEFAULT_TOOLBAR_COMMANDS,
 };
 
+/** As much of a command as the picker needs to know about. */
+export interface namedCommand {
+  id: string;
+  name: string;
+}
+
+/**
+ * Every registered command, in the order a person would look for one.
+ *
+ * Takes the whole register on purpose. Obsidian also offers `listCommands()`,
+ * which answers a different question - what can run *right now* - and with the
+ * settings dialog focused there is no editor, so every command that writes to a
+ * note is missing from it. That is all but one of this plugin's and most of
+ * Obsidian's, which is exactly what the picker is for.
+ */
+export function sortedCommands<T extends namedCommand>(
+  commands: Record<string, T>,
+): T[] {
+  return Object.values(commands || {}).sort((a, b) =>
+    (a.name || '').localeCompare(b.name || ''),
+  );
+}
+
 /**
  * Rebuilds the stored list into something safe to render.
  *

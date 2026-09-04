@@ -23,7 +23,7 @@ import { CodeSuggestionModal } from './CommandListView';
 import { CalloutsSuggestionModal } from './CalloutsListView';
 import { CommandPickerModal } from './CommandPickerModal';
 import { registerFormattingCommands } from './commands';
-import { EditorToolbar, getCommandRegistry } from './toolbar';
+import { EditorToolbar, allCommands, getCommandRegistry } from './toolbar';
 import {
   DEFAULT_TOOLBAR,
   MAX_TOOLBAR_COMMANDS,
@@ -454,7 +454,7 @@ class SettingsTab extends PluginSettingTab {
           .onClick(() => {
             CommandPickerModal.open(
               this.app,
-              registry.listCommands(),
+              allCommands(registry),
               toolbar.commands,
               t('settings.toolbar.pick'),
               (id) => void commit([...toolbar.commands, id]),
