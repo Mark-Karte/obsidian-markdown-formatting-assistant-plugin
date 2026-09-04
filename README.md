@@ -97,6 +97,20 @@ That covers headings, bold, italic, underline, strikethrough, highlight, inline 
 The side panel itself has a command too, so it can be opened without reaching for the ribbon icon.
 
 The HTML, LaTeX and Greek sections are deliberately left out. Between them they hold another 93 entries, and a hotkey list is not a useful place to look for `\alpha` — the `ALT+Q` window is, and it searches all of them.
+
+## Toolbar above the note
+
+A row of buttons at the top of the editor, so the side panel can stay closed. It is off until you turn it on under `Settings → Markdown Formatting Assistant → Toolbar above the note`, because it takes a strip of room from the note.
+
+A button is an Obsidian command and nothing else. That is what makes the row worth assembling: **any** command in your vault can go on it — Obsidian's own, this plugin's, and other plugins' alike. Add them with the search field, drag the rows to put them in the order you work in, and remove the ones you never press.
+
+It starts with everyday formatting: headings, bold, italic, strikethrough, highlight, inline code, quote, the three list kinds and a link. Nothing about that set is special; clear it out and build your own.
+
+The bar appears only while you are editing, since every button writes to the note, and it wraps rather than scrolls, so a narrow pane costs a row of height instead of hiding half the buttons.
+
+Desktop only. On mobile Obsidian already puts a toolbar above the keyboard, and a second one would only be in the way.
+
+> The toolbar is inserted into the editor's own container, because Obsidian publishes no place to put one. That is the first thing to check if a future Obsidian release moves it or loses it.
 ## Color Picker
 
 ### Select a color
@@ -161,6 +175,11 @@ For a even easier handling you can select additional options to what should be a
 
   - default: on
   - Inserts the callout name as its heading, so the note shows it in your language. The keyword inside `[!note]` stays English either way.
+
+- Toolbar above the note
+
+  - default: off
+  - Shows a row of buttons at the top of the editor, and lets you choose which commands appear on it and in what order. Desktop only.
 
 - Saved Colors
   - default: one entry

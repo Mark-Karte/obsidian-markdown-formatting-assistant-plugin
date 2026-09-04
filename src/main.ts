@@ -8,6 +8,7 @@ import {
   PluginSettingTab,
   Setting,
   debounce,
+  setIcon,
   Workspace,
   EditorPosition,
 } from 'obsidian';
@@ -20,7 +21,16 @@ import {
 } from './SidePanelControlView';
 import { CodeSuggestionModal } from './CommandListView';
 import { CalloutsSuggestionModal } from './CalloutsListView';
+import { CommandPickerModal } from './CommandPickerModal';
 import { registerFormattingCommands } from './commands';
+import { EditorToolbar, getCommandRegistry } from './toolbar';
+import {
+  DEFAULT_TOOLBAR,
+  MAX_TOOLBAR_COMMANDS,
+  moveCommand,
+  normaliseToolbarCommands,
+  toolbarSetting,
+} from './toolbarSettings';
 import type { tableAlignment } from './tableFormatter';
 import {
   AUTO_LOCALE,
@@ -44,6 +54,7 @@ export interface PluginSettings {
   regionSettings: Array<RegionSetting>;
   tableAlignment: tableAlignment;
   calloutTitles: boolean;
+  toolbar: toolbarSetting;
 }
 
 /** Preselected in the saved-colours picker, so it never opens on black. */
@@ -64,6 +75,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
   ],
   tableAlignment: 'default',
   calloutTitles: true,
+  toolbar: DEFAULT_TOOLBAR,
 };
 
 /** Order the section toggles appear in the settings tab. */
@@ -73,6 +85,7 @@ const SECTION_ORDER = DEFAULT_SETTINGS.regionSettings.map(
 
 export default class MarkdownAutocompletePlugin extends Plugin {
   settings: PluginSettings;
+  toolbar: EditorToolbar;
 
   async onload() {
     console.log('loading obsidian-markdown-formatting-assistant-plugin');
@@ -127,14 +140,19 @@ export default class MarkdownAutocompletePlugin extends Plugin {
 
     registerFormattingCommands(this, () => this.settings.calloutTitles);
 
+    this.toolbar = new EditorToolbar(this, () => this.settings.toolbar);
+    this.toolbar.start();
+
     this.addSettingTab(new SettingsTab(this.app, this));
   }
 
   onunload() {
     // Views, commands, the ribbon icon and the settings tab are torn down by
-    // Plugin itself. Icons are the exception: addIcon is a module-level
-    // function outside that lifecycle.
+    // Plugin itself. These two are the exception: addIcon is a module-level
+    // function outside that lifecycle, and the toolbar lives in the markdown
+    // view's own container rather than in anything the plugin owns.
     removeIcons();
+    this.toolbar?.detachAll();
   }
 
   async loadSettings() {
@@ -174,6 +192,13 @@ export default class MarkdownAutocompletePlugin extends Plugin {
         ? this.settings.savedColors
         : DEFAULT_SETTINGS.savedColors
     ).filter((color) => typeof color === 'string');
+
+    const stored = this.settings.toolbar;
+
+    this.settings.toolbar = {
+      enabled: Boolean(stored && stored.enabled),
+      commands: normaliseToolbarCommands(stored && stored.commands),
+    };
   }
 
   async saveSettings() {
@@ -316,6 +341,126 @@ class SettingsTab extends PluginSettingTab {
     });
 
     this.addSavedColorSettings(containerEl);
+    this.addToolbarSettings(containerEl);
+  }
+
+  /**
+   * The toolbar above the note: whether to show it, and which buttons.
+   *
+   * A button is a command id and nothing more, so this list can hold anything
+   * the vault has registered - Obsidian's own commands and other plugins' as
+   * readily as this one's.
+   */
+  private addToolbarSettings(containerEl: HTMLElement) {
+    const toolbar = this.plugin.settings.toolbar;
+
+    new Setting(containerEl)
+      .setName(t('settings.toolbar.name'))
+      .setDesc(t('settings.toolbar.desc'))
+      .addToggle((toggle) =>
+        toggle.setValue(toolbar.enabled).onChange(async (value) => {
+          toolbar.enabled = value;
+          await this.plugin.saveSettings();
+          this.plugin.toolbar.refresh();
+          // Redraw so the button list appears or goes away with the toggle.
+          this.display();
+        }),
+      );
+
+    if (!toolbar.enabled) return;
+
+    const registry = getCommandRegistry(this.plugin);
+
+    const commit = async (commands: string[]) => {
+      toolbar.commands = commands;
+      await this.plugin.saveSettings();
+      this.plugin.toolbar.refresh();
+      this.display();
+    };
+
+    const list = containerEl.createDiv({ cls: 'mfa-toolbar-editor' });
+
+    if (toolbar.commands.length === 0) {
+      list
+        .createDiv({ cls: 'mfa-toolbar-empty' })
+        .setText(t('settings.toolbar.empty'));
+    }
+
+    toolbar.commands.forEach((id, index) => {
+      const command = registry.commands[id];
+      const row = list.createDiv({ cls: 'mfa-toolbar-item' });
+
+      row.draggable = true;
+      row.dataset.index = String(index);
+
+      const icon = row.createSpan({ cls: 'mfa-toolbar-item-icon' });
+
+      if (command && command.icon) {
+        setIcon(icon, command.icon);
+      }
+
+      // A command vanishes when its plugin is disabled or uninstalled. The
+      // entry is kept - it works again when the plugin returns - but saying so
+      // beats showing a blank row.
+      row
+        .createSpan({ cls: 'mfa-toolbar-item-name' })
+        .setText(
+          command ? command.name : t('settings.toolbar.unavailable', { id }),
+        );
+
+      if (!command) row.addClass('is-unavailable');
+
+      const remove = row.createSpan({ cls: 'mfa-toolbar-item-remove' });
+      setIcon(remove, 'x');
+      remove.setAttribute('aria-label', t('settings.toolbar.remove'));
+      remove.onClickEvent(() => {
+        void commit(toolbar.commands.filter((_, at) => at !== index));
+      });
+
+      // Named like the panel's own drag payload rather than with the mfa-
+      // prefix, which throughout this project means a CSS class - and there is
+      // a test that holds it to that.
+      row.ondragstart = (event) => {
+        event.dataTransfer?.setData('toolbarButtonIndex', String(index));
+      };
+
+      row.ondragover = (event) => {
+        event.preventDefault();
+      };
+
+      row.ondrop = (event) => {
+        event.preventDefault();
+
+        const from = Number(event.dataTransfer?.getData('toolbarButtonIndex'));
+
+        // A drop can land on any descendant of the row, and on the container
+        // between rows, so the index is read from the row rather than from the
+        // element the pointer happened to be over. moveCommand ignores an index
+        // that does not resolve.
+        void commit(moveCommand(toolbar.commands, from, index));
+      };
+    });
+
+    new Setting(containerEl)
+      .setName(t('settings.toolbar.add'))
+      .setDesc(
+        t('settings.toolbar.addDesc', { max: String(MAX_TOOLBAR_COMMANDS) }),
+      )
+      .addButton((button) =>
+        button
+          .setButtonText(t('settings.toolbar.add'))
+          .setCta()
+          .setDisabled(toolbar.commands.length >= MAX_TOOLBAR_COMMANDS)
+          .onClick(() => {
+            CommandPickerModal.open(
+              this.app,
+              registry.listCommands(),
+              toolbar.commands,
+              t('settings.toolbar.pick'),
+              (id) => void commit([...toolbar.commands, id]),
+            );
+          }),
+      );
   }
 
   /**

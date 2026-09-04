@@ -33,6 +33,10 @@ export function registerFormattingCommands(
       // The table key rather than the label, so a binding survives a rename.
       id: item.id,
       name: commandName(item.des),
+      // The panel's own icons, registered with addIcon at load. Obsidian shows
+      // these on mobile and in the ribbon, and the editor toolbar reads them
+      // straight off the command rather than keeping a second table.
+      icon: item.icon,
       // editorCallback rather than callback: these all write to a note, and
       // Obsidian then hides them when no editor has focus.
       editorCallback: (editor: Editor) => iconFormatter(editor, item),
@@ -52,6 +56,7 @@ export function registerFormattingCommands(
       // nothing would say so.
       id: `callout-${item.id}`,
       name: `${t('section.callouts')}: ${calloutLabel(item.id)}`,
+      icon: item.icon,
       editorCallback: (editor: Editor) =>
         // Read when the command runs rather than when it is registered, so the
         // setting takes effect without a restart.
