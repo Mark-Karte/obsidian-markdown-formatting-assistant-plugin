@@ -41,6 +41,7 @@ import {
 import * as R from 'ramda';
 import MarkdownAutocompletePlugin from './main';
 import { getTargetEditor } from './generalFunctions';
+import { moveItem } from './reorder';
 import { calloutLabel, sectionLabel, t } from './i18n';
 
 export const SidePanelControlViewType = 'side-panel-control-view';
@@ -659,8 +660,11 @@ export class SidePanelControlView extends ItemView {
           // empty colour and index -1 - which then wrote junk into the list.
           if (startIndex < 0 || endIndex < 0 || startIndex === endIndex) return;
 
-          savedColors[startIndex] = endColor;
-          savedColors[endIndex] = startColor;
+          this.plugin.settings.savedColors = moveItem(
+            savedColors,
+            startIndex,
+            endIndex,
+          );
           await this.plugin.saveSettings();
           drawLastSavedColorIcons();
         };
@@ -841,13 +845,15 @@ export class SidePanelControlView extends ItemView {
       const endIndex = regions.findIndex((region) => region.name === end);
 
       // Headers accept any drag - a note dropped from the file explorer lands
-      // here too, with an empty payload. Both indices must resolve, or the swap
+      // here too, with an empty payload. Both indices must resolve, or the move
       // below would write undefined into the array and persist it.
       if (startIndex < 0 || endIndex < 0) return;
 
-      const startRegion = regions[startIndex];
-      regions[startIndex] = regions[endIndex];
-      regions[endIndex] = startRegion;
+      this.plugin.settings.regionSettings = moveItem(
+        regions,
+        startIndex,
+        endIndex,
+      );
 
       await this.plugin.saveSettings();
       this.drawContentOfRootElement();

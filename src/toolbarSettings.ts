@@ -134,35 +134,3 @@ export function normaliseToolbarCommands(value: unknown): string[] {
   return commands;
 }
 
-/**
- * Moves one button to another position.
- *
- * Written as remove-then-insert rather than as a swap. The panel's own
- * reordering used to swap the two entries, which is only the same thing for
- * neighbours: dragging the first button to the end there sent the last one to
- * the front rather than shifting the rest along.
- */
-export function moveCommand(
-  commands: string[],
-  from: number,
-  to: number,
-): string[] {
-  const next = [...commands];
-
-  if (
-    !Number.isInteger(from) ||
-    !Number.isInteger(to) ||
-    from < 0 ||
-    from >= next.length ||
-    to < 0 ||
-    to >= next.length ||
-    from === to
-  ) {
-    return next;
-  }
-
-  const [moved] = next.splice(from, 1);
-  next.splice(to, 0, moved);
-
-  return next;
-}

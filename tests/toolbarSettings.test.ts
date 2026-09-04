@@ -9,7 +9,6 @@ import {
   MAX_TOOLBAR_COMMANDS,
   PLUGIN_ID,
   TOOLBAR_ALIGNMENTS,
-  moveCommand,
   normaliseToolbarAlignment,
   normaliseToolbarCommands,
   sortedCommands,
@@ -210,51 +209,3 @@ test('every alignment has a translation and a rule', () => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// Reordering
-// ---------------------------------------------------------------------------
-
-test('a button moves to its new position and the rest shift along', () => {
-  // Not a swap: dragging the first button to the end must leave the others in
-  // their order, not send the last one to the front.
-  assert.deepEqual(moveCommand(['a', 'b', 'c', 'd'], 0, 3), [
-    'b',
-    'c',
-    'd',
-    'a',
-  ]);
-});
-
-test('moving backwards works the same way', () => {
-  assert.deepEqual(moveCommand(['a', 'b', 'c', 'd'], 3, 0), [
-    'd',
-    'a',
-    'b',
-    'c',
-  ]);
-});
-
-test('a move between neighbours is a swap, as it happens', () => {
-  assert.deepEqual(moveCommand(['a', 'b', 'c'], 0, 1), ['b', 'a', 'c']);
-});
-
-test('moving onto itself changes nothing', () => {
-  assert.deepEqual(moveCommand(['a', 'b', 'c'], 1, 1), ['a', 'b', 'c']);
-});
-
-test('an index outside the list is ignored rather than corrupting it', () => {
-  // A drop can land anywhere, including on the container itself.
-  const list = ['a', 'b', 'c'];
-
-  assert.deepEqual(moveCommand(list, -1, 1), list);
-  assert.deepEqual(moveCommand(list, 1, 9), list);
-  assert.deepEqual(moveCommand(list, 9, 1), list);
-  assert.deepEqual(moveCommand(list, 0.5 as never, 1), list);
-});
-
-test('the original list is never modified in place', () => {
-  const list = ['a', 'b', 'c'];
-  moveCommand(list, 0, 2);
-
-  assert.deepEqual(list, ['a', 'b', 'c']);
-});

@@ -5,7 +5,7 @@
 
 > If you find a Bug or have a feature request: https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues
 
-This is a maintained fork of [Reocin/obsidian-markdown-formatting-assistant-plugin](https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin), which the original author stopped maintaining. It is MIT licensed, as the original is.
+This is a maintained fork of [Reocin/obsidian-markdown-formatting-assistant-plugin](https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin), which the original author stopped maintaining. It is MIT licensed — the original declared MIT in its `package.json` from its first commit but never shipped the licence text, so [LICENSE](LICENSE) states it explicitly and credits both.
 
 ![](assets/Obsidian_Overview.png)
 

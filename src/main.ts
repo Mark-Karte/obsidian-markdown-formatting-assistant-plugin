@@ -28,11 +28,11 @@ import {
   DEFAULT_TOOLBAR,
   MAX_TOOLBAR_COMMANDS,
   TOOLBAR_ALIGNMENTS,
-  moveCommand,
   normaliseToolbarAlignment,
   normaliseToolbarCommands,
   toolbarSetting,
 } from './toolbarSettings';
+import { moveItem } from './reorder';
 import type { tableAlignment } from './tableFormatter';
 import {
   AUTO_LOCALE,
@@ -43,6 +43,9 @@ import {
   setLocale,
   t,
 } from './i18n';
+
+/** The drag payload for reordering toolbar buttons. */
+const DRAG_PAYLOAD = 'toolbarButtonIndex';
 
 interface RegionSetting {
   name: string;
@@ -90,8 +93,6 @@ export default class MarkdownAutocompletePlugin extends Plugin {
   toolbar: EditorToolbar;
 
   async onload() {
-    console.log('loading obsidian-markdown-formatting-assistant-plugin');
-
     await this.loadSettings();
 
     // Has to happen before anything renders a label.
@@ -389,11 +390,16 @@ class SettingsTab extends PluginSettingTab {
 
     const registry = getCommandRegistry(this.plugin);
 
-    const commit = async (commands: string[]) => {
+    // Redraw before the write, never after. Awaiting first leaves the old rows
+    // on screen and clickable for the whole of it, and each of them closes over
+    // the position it was rendered at - so a second click removes whatever has
+    // since moved into that slot. Double-clicking a button's x used to delete
+    // its neighbour. The saved-colour swatches already work this way.
+    const commit = (commands: string[]) => {
       toolbar.commands = commands;
-      await this.plugin.saveSettings();
-      this.plugin.toolbar.refresh();
       this.display();
+      this.plugin.toolbar.refresh();
+      void this.plugin.saveSettings();
     };
 
     const list = containerEl.createDiv({ cls: 'mfa-toolbar-editor' });
@@ -409,7 +415,6 @@ class SettingsTab extends PluginSettingTab {
       const row = list.createDiv({ cls: 'mfa-toolbar-item' });
 
       row.draggable = true;
-      row.dataset.index = String(index);
 
       const icon = row.createSpan({ cls: 'mfa-toolbar-item-icon' });
 
@@ -432,14 +437,14 @@ class SettingsTab extends PluginSettingTab {
       setIcon(remove, 'x');
       remove.setAttribute('aria-label', t('settings.toolbar.remove'));
       remove.onClickEvent(() => {
-        void commit(toolbar.commands.filter((_, at) => at !== index));
+        commit(toolbar.commands.filter((_, at) => at !== index));
       });
 
       // Named like the panel's own drag payload rather than with the mfa-
       // prefix, which throughout this project means a CSS class - and there is
       // a test that holds it to that.
       row.ondragstart = (event) => {
-        event.dataTransfer?.setData('toolbarButtonIndex', String(index));
+        event.dataTransfer?.setData(DRAG_PAYLOAD, String(index));
       };
 
       row.ondragover = (event) => {
@@ -449,13 +454,15 @@ class SettingsTab extends PluginSettingTab {
       row.ondrop = (event) => {
         event.preventDefault();
 
-        const from = Number(event.dataTransfer?.getData('toolbarButtonIndex'));
+        // Every row accepts any drag, so the payload has to be checked rather
+        // than trusted. getData returns '' for a format that was never set,
+        // and Number('') is 0 - a perfectly valid index, which used to send
+        // the first button wherever a stray text selection was dropped.
+        const payload = event.dataTransfer?.getData(DRAG_PAYLOAD);
 
-        // A drop can land on any descendant of the row, and on the container
-        // between rows, so the index is read from the row rather than from the
-        // element the pointer happened to be over. moveCommand ignores an index
-        // that does not resolve.
-        void commit(moveCommand(toolbar.commands, from, index));
+        if (!payload) return;
+
+        commit(moveItem(toolbar.commands, Number(payload), index));
       };
     });
 
