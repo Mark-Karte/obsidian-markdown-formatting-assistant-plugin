@@ -1,7 +1,7 @@
 # Obsidian Markdown Formatting Assistant
 
 > This Plugin provides easy to use snippets for Markdown, HTML and Latex and a color picker which shows the history of last used colors. Furthermore, it is possible to save any color you want.
-> Version 0.8.1
+> Version 0.9.0
 
 > If you find a Bug or have a feature request: https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues
 
@@ -222,6 +222,23 @@ Run `npm run typecheck` as well as the build. Rollup reports a clean build for c
 Originally written by [Reocin](https://github.com/Reocin). Maintained since version 0.5.0 by Mark Karte and Claude.
 
 ## Changelog
+
+- Version: 0.9.0
+
+  - **Added**
+    - Forty more LaTeX operators: relations, set and logic symbols, arrows, `\lim`, `\nabla`, `\binom`, `\overline`, blackboard bold. Four are on the panel; the rest are in the `ALT+Q` window, where they can be searched by name rather than hunted for among a wall of buttons.
+    - A **page break** for PDF export, and **text alignment** — left, center, right and justify. Both are html, because Obsidian has no markdown for either.
+    - The side panel can be used from the keyboard. Tab reaches every button, Enter and Space press it, and the focused one is visibly focused. Every button has a name, so a screen reader can announce it — most of them hold a drawing and no text, and until now there was nothing to announce at all. The names show as tooltips on hover for everyone else.
+  - **Fixed**
+    - Selecting text and clicking a color replaced the text with the color code. It is wrapped so it takes the color now, in one click and with no options to tick first. Asking for a background gives a `<span>`, since a `<font>` tag can only color text.
+    - Ticking both the style attribute and the html option produced markup that was never valid.
+    - Quotes and lists are applied to whole lines. Starting a selection mid-word used to put the marker there, splitting the line. A bullet added inside a quote goes after the `>`, and a blank line in the middle no longer stops the list being turned off again.
+    - `∑`, `∫`, `√` and `·` appeared as `&sum;`, `&int;`, `&radic;` and `&middot;` since 0.7.0.
+    - A setting typed in the last fraction of a second before quitting Obsidian is no longer lost.
+    - Clicking the words next to the color checkboxes toggles them.
+  - **Changed**
+    - The elements the plugin puts in the document carry prefixed ids. `colorInput` and `lastSavedColorsDiv` were generic enough to collide with another plugin or a theme snippet, and the panel looks several of them up by id — so a collision would have found the wrong element rather than failed.
+    - No fixed styling is written from JavaScript anywhere, including the last icon that set its own size.
 
 - Version: 0.8.1
 

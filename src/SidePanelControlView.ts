@@ -31,13 +31,7 @@ import {
   tableFormatter,
 } from './tableFormatter';
 import type { tableAlignment } from './tableFormatter';
-import {
-  ButtonComponent,
-  ItemView,
-  Notice,
-  TFile,
-  WorkspaceLeaf,
-} from 'obsidian';
+import { ItemView, Notice, WorkspaceLeaf } from 'obsidian';
 
 import * as R from 'ramda';
 import MarkdownAutocompletePlugin from './main';
@@ -82,7 +76,7 @@ export class SidePanelControlView extends ItemView {
     const container = this.containerEl.children[1];
 
     const rootEl = document.createElement('div');
-    rootEl.id = 'SidePaneRootElement';
+    rootEl.id = 'mfa-panel-root';
 
     this.drawContentOfRootElement(rootEl);
 
@@ -91,7 +85,7 @@ export class SidePanelControlView extends ItemView {
   }
 
   private drawContentOfRootElement(rootEl: HTMLElement = null): void {
-    if (!rootEl) rootEl = document.getElementById('SidePaneRootElement');
+    if (!rootEl) rootEl = document.getElementById('mfa-panel-root');
     rootEl.textContent = '';
 
     const getRegion = (name: string) => {
@@ -592,10 +586,10 @@ export class SidePanelControlView extends ItemView {
       };
 
       const options = {
-        color: isChecked('inputColorTagCheckBox'),
-        background: isChecked('inputBackgroundColorTagCheckBox'),
-        styleAttribute: isChecked('inputStyleTagCheckBox'),
-        html: isChecked('inputHtmlTagCheckBox'),
+        color: isChecked('mfa-option-color'),
+        background: isChecked('mfa-option-background'),
+        styleAttribute: isChecked('mfa-option-style'),
+        html: isChecked('mfa-option-html'),
       };
 
       const selection = editor.getSelection();
@@ -615,7 +609,7 @@ export class SidePanelControlView extends ItemView {
 
     const drawLastSelectedColorIcons = (container: HTMLElement = null) => {
       if (!container)
-        container = document.getElementById('lastSelectedColorsDiv');
+        container = document.getElementById('mfa-recent-colors');
       container.textContent = '';
 
       R.reverse(SidePanelControlView.lastColors).forEach((color) => {
@@ -639,13 +633,13 @@ export class SidePanelControlView extends ItemView {
     };
 
     const drawLastSavedColorIcons = (container: HTMLElement = null) => {
-      if (!container) container = document.getElementById('lastSavedColorsDiv');
+      if (!container) container = document.getElementById('mfa-saved-colors');
 
       container.textContent = '';
 
       R.reverse(this.plugin.settings.savedColors).forEach((color) => {
         const colorBox = container.createDiv({ cls: 'mfa-color-icon' });
-        colorBox.id = 'lastSavedColorsDiv' + color;
+        colorBox.id = 'mfa-saved-colors' + color;
         colorBox.style.setProperty('--mfa-swatch', color);
         colorBox.draggable = true;
 
@@ -665,7 +659,7 @@ export class SidePanelControlView extends ItemView {
         colorBox.ondragstart = (event) => {
           // @ts-ignore
           this.dragStartColor = event.target.id.replace(
-            'lastSavedColorsDiv',
+            'mfa-saved-colors',
             '',
           );
         };
@@ -675,12 +669,12 @@ export class SidePanelControlView extends ItemView {
 
           const savedColors = this.plugin.settings.savedColors;
           const startColor = this.dragStartColor;
-          const endColor = target.id.replace('lastSavedColorsDiv', '');
+          const endColor = target.id.replace('mfa-saved-colors', '');
 
           const startIndex = R.indexOf(startColor, savedColors);
           const endIndex = R.indexOf(endColor, savedColors);
 
-          // The container carries the id 'lastSavedColorsDiv' itself, so a drop
+          // The container carries the id 'mfa-saved-colors' itself, so a drop
           // into the empty space next to the swatches used to resolve to an
           // empty colour and index -1 - which then wrote junk into the list.
           if (startIndex < 0 || endIndex < 0 || startIndex === endIndex) return;
@@ -709,7 +703,7 @@ export class SidePanelControlView extends ItemView {
     const colorInput = colorSelector.createEl('input', {
       cls: 'mfa-color-input',
     });
-    colorInput.id = 'colorInput';
+    colorInput.id = 'mfa-color-input';
     colorInput.type = 'color';
     colorInput.value = R.last(SidePanelControlView.lastColors);
     colorInput.addEventListener('input', (ev) => {
@@ -749,7 +743,7 @@ export class SidePanelControlView extends ItemView {
       cls: 'nav-action-text-button mfa-block-button',
     });
     colorButton.appendText(t('colors.select'));
-    colorButton.htmlFor = 'colorInput';
+    colorButton.htmlFor = 'mfa-color-input';
 
     const colorSaveButton = colorSection.createEl('div', {
       cls: 'nav-action-text-button mfa-block-button mfa-color-save',
@@ -779,13 +773,13 @@ export class SidePanelControlView extends ItemView {
       label.appendText(text);
     };
 
-    addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
+    addCheckbox('mfa-option-color', t('colors.optionColor'));
     addCheckbox(
-      'inputBackgroundColorTagCheckBox',
+      'mfa-option-background',
       t('colors.optionBackgroundColor'),
     );
-    addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
-    addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
+    addCheckbox('mfa-option-style', t('colors.optionStyleTag'));
+    addCheckbox('mfa-option-html', t('colors.optionHtmlTag'));
 
     colorSection
       .createEl('p', { cls: 'mfa-swatches-title' })
@@ -794,7 +788,7 @@ export class SidePanelControlView extends ItemView {
     const lastSelectedColors = colorSection.createEl('div', {
       cls: 'mfa-color-swatches',
     });
-    lastSelectedColors.id = 'lastSelectedColorsDiv';
+    lastSelectedColors.id = 'mfa-recent-colors';
 
     drawLastSelectedColorIcons(lastSelectedColors);
 
@@ -809,7 +803,7 @@ export class SidePanelControlView extends ItemView {
     const lastSavedColors = colorSection.createEl('div', {
       cls: 'mfa-color-swatches',
     });
-    lastSavedColors.id = 'lastSavedColorsDiv';
+    lastSavedColors.id = 'mfa-saved-colors';
 
     drawLastSavedColorIcons(lastSavedColors);
 
@@ -830,7 +824,7 @@ export class SidePanelControlView extends ItemView {
     };
 
     const header = mainDiv.createEl('div', { cls: 'mfa-section-header' });
-    header.id = 'lastSavedHeaderDiv' + regionName;
+    header.id = 'mfa-region-' + regionName;
     const hr = mainDiv.createEl('hr', { cls: 'mfa-section-rule' });
     const title = header.createEl('h4', { cls: 'mfa-section-title' });
     const arrowButton = header.createDiv({
@@ -842,7 +836,7 @@ export class SidePanelControlView extends ItemView {
 
     header.ondragstart = (event) => {
       // @ts-ignore
-      const sectionId = event.target.id.replace('lastSavedHeaderDiv', '');
+      const sectionId = event.target.id.replace('mfa-region-', '');
 
       event.dataTransfer.setData('sectionHeaderMoveId', sectionId);
     };
@@ -855,11 +849,11 @@ export class SidePanelControlView extends ItemView {
         const header = path.find(
           (target) =>
             target instanceof HTMLElement &&
-            target.id.startsWith('lastSavedHeaderDiv'),
+            target.id.startsWith('mfa-region-'),
         ) as HTMLElement | undefined;
 
         return header
-          ? header.id.replace('lastSavedHeaderDiv', '')
+          ? header.id.replace('mfa-region-', '')
           : undefined;
       };
 

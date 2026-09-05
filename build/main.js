@@ -2128,7 +2128,10 @@ function splitMarkup(label) {
 }
 
 function pathToSvg(icon) {
-    return "\n    <svg style=\"width:24px;height:24px\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n        <path fill=\"currentColor\" d=\"".concat(icon, "\" />\n    </svg>");
+    // The size comes from the stylesheet rather than from a style attribute
+    // written here - this was the last place the plugin set a fixed style from
+    // JavaScript, which Obsidian's guidelines ask plugins not to do.
+    return "\n    <svg class=\"mfa-icon-svg\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n        <path fill=\"currentColor\" d=\"".concat(icon, "\" />\n    </svg>");
 }
 function importIconPaths() {
     var res = {};
@@ -5433,7 +5436,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
     SidePanelControlView.prototype.draw = function () {
         var container = this.containerEl.children[1];
         var rootEl = document.createElement('div');
-        rootEl.id = 'SidePaneRootElement';
+        rootEl.id = 'mfa-panel-root';
         this.drawContentOfRootElement(rootEl);
         container.empty();
         container.appendChild(rootEl);
@@ -5442,7 +5445,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var _this = this;
         if (rootEl === void 0) { rootEl = null; }
         if (!rootEl)
-            rootEl = document.getElementById('SidePaneRootElement');
+            rootEl = document.getElementById('mfa-panel-root');
         rootEl.textContent = '';
         var getRegion = function (name) {
             return _this.plugin.settings.regionSettings.find(function (item) { return item.name === name; });
@@ -5845,10 +5848,10 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 return box ? box.checked : false;
             };
             var options = {
-                color: isChecked('inputColorTagCheckBox'),
-                background: isChecked('inputBackgroundColorTagCheckBox'),
-                styleAttribute: isChecked('inputStyleTagCheckBox'),
-                html: isChecked('inputHtmlTagCheckBox'),
+                color: isChecked('mfa-option-color'),
+                background: isChecked('mfa-option-background'),
+                styleAttribute: isChecked('mfa-option-style'),
+                html: isChecked('mfa-option-html'),
             };
             var selection = editor.getSelection();
             // Selected text is coloured, not overwritten. Clicking a colour with a
@@ -5863,7 +5866,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var drawLastSelectedColorIcons = function (container) {
             if (container === void 0) { container = null; }
             if (!container)
-                container = document.getElementById('lastSelectedColorsDiv');
+                container = document.getElementById('mfa-recent-colors');
             container.textContent = '';
             reverse(SidePanelControlView.lastColors).forEach(function (color) {
                 var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
@@ -5882,11 +5885,11 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var drawLastSavedColorIcons = function (container) {
             if (container === void 0) { container = null; }
             if (!container)
-                container = document.getElementById('lastSavedColorsDiv');
+                container = document.getElementById('mfa-saved-colors');
             container.textContent = '';
             reverse(_this.plugin.settings.savedColors).forEach(function (color) {
                 var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
-                colorBox.id = 'lastSavedColorsDiv' + color;
+                colorBox.id = 'mfa-saved-colors' + color;
                 colorBox.style.setProperty('--mfa-swatch', color);
                 colorBox.draggable = true;
                 _this.asButton(colorBox, color, function () { return insertColor(color); });
@@ -5908,7 +5911,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 }); };
                 colorBox.ondragstart = function (event) {
                     // @ts-ignore
-                    _this.dragStartColor = event.target.id.replace('lastSavedColorsDiv', '');
+                    _this.dragStartColor = event.target.id.replace('mfa-saved-colors', '');
                 };
                 colorBox.ondrop = function (event) { return __awaiter(_this, void 0, void 0, function () {
                     var target, savedColors, startColor, endColor, startIndex, endIndex;
@@ -5920,10 +5923,10 @@ var SidePanelControlView = /** @class */ (function (_super) {
                                     return [2 /*return*/];
                                 savedColors = this.plugin.settings.savedColors;
                                 startColor = this.dragStartColor;
-                                endColor = target.id.replace('lastSavedColorsDiv', '');
+                                endColor = target.id.replace('mfa-saved-colors', '');
                                 startIndex = indexOf(startColor, savedColors);
                                 endIndex = indexOf(endColor, savedColors);
-                                // The container carries the id 'lastSavedColorsDiv' itself, so a drop
+                                // The container carries the id 'mfa-saved-colors' itself, so a drop
                                 // into the empty space next to the swatches used to resolve to an
                                 // empty colour and index -1 - which then wrote junk into the list.
                                 if (startIndex < 0 || endIndex < 0 || startIndex === endIndex)
@@ -5948,7 +5951,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var colorInput = colorSelector.createEl('input', {
             cls: 'mfa-color-input',
         });
-        colorInput.id = 'colorInput';
+        colorInput.id = 'mfa-color-input';
         colorInput.type = 'color';
         colorInput.value = last(SidePanelControlView.lastColors);
         colorInput.addEventListener('input', function (ev) {
@@ -5975,7 +5978,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             cls: 'nav-action-text-button mfa-block-button',
         });
         colorButton.appendText(t('colors.select'));
-        colorButton.htmlFor = 'colorInput';
+        colorButton.htmlFor = 'mfa-color-input';
         var colorSaveButton = colorSection.createEl('div', {
             cls: 'nav-action-text-button mfa-block-button mfa-color-save',
         });
@@ -5998,17 +6001,17 @@ var SidePanelControlView = /** @class */ (function (_super) {
             label.htmlFor = id;
             label.appendText(text);
         };
-        addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
-        addCheckbox('inputBackgroundColorTagCheckBox', t('colors.optionBackgroundColor'));
-        addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
-        addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
+        addCheckbox('mfa-option-color', t('colors.optionColor'));
+        addCheckbox('mfa-option-background', t('colors.optionBackgroundColor'));
+        addCheckbox('mfa-option-style', t('colors.optionStyleTag'));
+        addCheckbox('mfa-option-html', t('colors.optionHtmlTag'));
         colorSection
             .createEl('p', { cls: 'mfa-swatches-title' })
             .appendText(t('colors.lastUsed'));
         var lastSelectedColors = colorSection.createEl('div', {
             cls: 'mfa-color-swatches',
         });
-        lastSelectedColors.id = 'lastSelectedColorsDiv';
+        lastSelectedColors.id = 'mfa-recent-colors';
         drawLastSelectedColorIcons(lastSelectedColors);
         colorSection
             .createEl('p', { cls: 'mfa-swatches-title' })
@@ -6019,7 +6022,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var lastSavedColors = colorSection.createEl('div', {
             cls: 'mfa-color-swatches',
         });
-        lastSavedColors.id = 'lastSavedColorsDiv';
+        lastSavedColors.id = 'mfa-saved-colors';
         drawLastSavedColorIcons(lastSavedColors);
         this.addNote(colorSection, t('colors.help'), 'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker');
     };
@@ -6030,7 +6033,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             return _this.plugin.settings.regionSettings.find(function (item) { return item.name === name; });
         };
         var header = mainDiv.createEl('div', { cls: 'mfa-section-header' });
-        header.id = 'lastSavedHeaderDiv' + regionName;
+        header.id = 'mfa-region-' + regionName;
         mainDiv.createEl('hr', { cls: 'mfa-section-rule' });
         var title = header.createEl('h4', { cls: 'mfa-section-title' });
         var arrowButton = header.createDiv({
@@ -6040,7 +6043,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         header.draggable = true;
         header.ondragstart = function (event) {
             // @ts-ignore
-            var sectionId = event.target.id.replace('lastSavedHeaderDiv', '');
+            var sectionId = event.target.id.replace('mfa-region-', '');
             event.dataTransfer.setData('sectionHeaderMoveId', sectionId);
         };
         var onDrop = function (event) { return __awaiter(_this, void 0, void 0, function () {
@@ -6052,10 +6055,10 @@ var SidePanelControlView = /** @class */ (function (_super) {
                         getDroppedRegionName = function (path) {
                             var header = path.find(function (target) {
                                 return target instanceof HTMLElement &&
-                                    target.id.startsWith('lastSavedHeaderDiv');
+                                    target.id.startsWith('mfa-region-');
                             });
                             return header
-                                ? header.id.replace('lastSavedHeaderDiv', '')
+                                ? header.id.replace('mfa-region-', '')
                                 : undefined;
                         };
                         event.preventDefault();
@@ -6193,7 +6196,6 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
     };
     // Perform action on the selected suggestion.
     CodeSuggestionModal.prototype.onChooseSuggestion = function (baseFormatterSetting, evt) {
-        // @ts-ignore
         var item = baseFormatterSetting;
         if (item.objectType === 'formatterSetting') {
             // @ts-ignore
@@ -6267,7 +6269,6 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
     };
     // Perform action on the selected suggestion.
     CalloutsSuggestionModal.prototype.onChooseSuggestion = function (calloutsFormatterSetting, evt) {
-        // @ts-ignore
         var item = calloutsFormatterSetting;
         calloutsFormatter(this.editor, item, this.useTitles ? calloutLabel(item.id) : '');
         // new Notice(`Selected ${calloutsFormatterSetting.des}`);
@@ -6824,6 +6825,14 @@ var SettingsTab = /** @class */ (function (_super) {
         _this.plugin = plugin;
         return _this;
     }
+    /**
+     * Obsidian calls this when the tab goes away. Whatever the debounce is still
+     * holding has to be written now: quitting within 400 ms of the last
+     * keystroke used to lose the setting that was just typed.
+     */
+    SettingsTab.prototype.hide = function () {
+        this.saveSoon.run();
+    };
     // Must stay synchronous: other plugins (e.g. Settings Search) call display()
     // and read containerEl straight after, which sees nothing if this returns a
     // promise instead of a filled container.

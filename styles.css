@@ -40,7 +40,7 @@
 }
 
 /* The side panel follows whatever width the user drags its leaf to. */
-#SidePaneRootElement {
+#mfa-panel-root {
   width: 100%;
 }
 
@@ -266,7 +266,8 @@ body.is-mobile .markdown-formatting-assistant-panel .nav-buttons-container {
   vertical-align: middle;
 }
 
-.mfa-icon-image {
+.mfa-icon-image,
+.mfa-icon-svg {
   width: 24px;
   height: 24px;
 }

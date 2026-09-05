@@ -20,8 +20,33 @@ const ROOT = path.join(HERE, '..');
 const withoutComments = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
+/**
+ * Element ids, which share the prefix but are a different namespace.
+ *
+ * They are prefixed for the same reason the classes are - 'colorInput' and
+ * 'lastSavedColorsDiv' were generic enough to collide with another plugin or a
+ * theme snippet, and the panel looks several of them up by id, so a collision
+ * would find the wrong element rather than fail. Listing them here is what
+ * keeps the class check below from demanding a stylesheet rule for each.
+ */
+const ELEMENT_IDS = new Set([
+  'mfa-panel-root',
+  'mfa-region-',
+  'mfa-recent-colors',
+  'mfa-saved-colors',
+  'mfa-color-input',
+  'mfa-option-color',
+  'mfa-option-background',
+  'mfa-option-style',
+  'mfa-option-html',
+]);
+
 const names = (source: string) =>
-  new Set([...withoutComments(source).matchAll(/mfa-[a-z0-9-]+/g)].map((m) => m[0]));
+  new Set(
+    [...withoutComments(source).matchAll(/mfa-[a-z0-9-]+/g)]
+      .map((m) => m[0])
+      .filter((name) => !ELEMENT_IDS.has(name)),
+  );
 
 const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
 const defined = names(css);

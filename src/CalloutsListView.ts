@@ -67,7 +67,6 @@ export class CalloutsSuggestionModal extends SuggestModal<calloutsFormatterSetti
     calloutsFormatterSetting: calloutsFormatterSetting,
     evt: MouseEvent | KeyboardEvent,
   ) {
-    // @ts-ignore
     const item = calloutsFormatterSetting;
     calloutsFormatter(
       this.editor,
