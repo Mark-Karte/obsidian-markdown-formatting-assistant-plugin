@@ -3908,6 +3908,43 @@ function tableFormatter(editor, rows, columns, alignment) {
 }
 
 /**
+ * Moving one item of a list to another position. A leaf module with no imports,
+ * so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * Its own file because three separate lists are reordered by dragging - the
+ * toolbar buttons, the saved colours and the panel's sections - and each used
+ * to carry its own copy of the arithmetic. Two of those copies were wrong in
+ * the same way.
+ */
+/**
+ * Removes the item at `from` and inserts it at `to`.
+ *
+ * Deliberately not a swap. A swap is the same thing only for neighbours: drag
+ * the first item onto the last and a swap sends the last one to the front,
+ * while everything between it stays put. What the gesture asks for is that the
+ * dragged item lands there and the rest close up behind it.
+ *
+ * An index that does not resolve leaves the list alone, because a drop can
+ * arrive from anywhere - another application, a file dragged out of the
+ * explorer, a stray text selection.
+ */
+function moveItem(items, from, to) {
+    var next = __spreadArray([], items, true);
+    if (!Number.isInteger(from) ||
+        !Number.isInteger(to) ||
+        from < 0 ||
+        from >= next.length ||
+        to < 0 ||
+        to >= next.length ||
+        from === to) {
+        return next;
+    }
+    var moved = next.splice(from, 1)[0];
+    next.splice(to, 0, moved);
+    return next;
+}
+
+/**
  * English is the base dictionary: its keys define the translation key type, and
  * every other locale falls back to it for anything it leaves out.
  */
@@ -5660,8 +5697,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
                                 // empty colour and index -1 - which then wrote junk into the list.
                                 if (startIndex < 0 || endIndex < 0 || startIndex === endIndex)
                                     return [2 /*return*/];
-                                savedColors[startIndex] = endColor;
-                                savedColors[endIndex] = startColor;
+                                this.plugin.settings.savedColors = moveItem(savedColors, startIndex, endIndex);
                                 return [4 /*yield*/, this.plugin.saveSettings()];
                             case 1:
                                 _a.sent();
@@ -5782,7 +5818,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             event.dataTransfer.setData('sectionHeaderMoveId', sectionId);
         };
         var onDrop = function (event) { return __awaiter(_this, void 0, void 0, function () {
-            var getDroppedRegionName, regions, start, end, startIndex, endIndex, startRegion;
+            var getDroppedRegionName, regions, start, end, startIndex, endIndex;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -5805,13 +5841,11 @@ var SidePanelControlView = /** @class */ (function (_super) {
                         startIndex = regions.findIndex(function (region) { return region.name === start; });
                         endIndex = regions.findIndex(function (region) { return region.name === end; });
                         // Headers accept any drag - a note dropped from the file explorer lands
-                        // here too, with an empty payload. Both indices must resolve, or the swap
+                        // here too, with an empty payload. Both indices must resolve, or the move
                         // below would write undefined into the array and persist it.
                         if (startIndex < 0 || endIndex < 0)
                             return [2 /*return*/];
-                        startRegion = regions[startIndex];
-                        regions[startIndex] = regions[endIndex];
-                        regions[endIndex] = startRegion;
+                        this.plugin.settings.regionSettings = moveItem(regions, startIndex, endIndex);
                         return [4 /*yield*/, this.plugin.saveSettings()];
                     case 1:
                         _b.sent();
@@ -6267,29 +6301,6 @@ function normaliseToolbarCommands(value) {
     }
     return commands;
 }
-/**
- * Moves one button to another position.
- *
- * Written as remove-then-insert rather than as a swap. The panel's own
- * reordering used to swap the two entries, which is only the same thing for
- * neighbours: dragging the first button to the end there sent the last one to
- * the front rather than shifting the rest along.
- */
-function moveCommand(commands, from, to) {
-    var next = __spreadArray([], commands, true);
-    if (!Number.isInteger(from) ||
-        !Number.isInteger(to) ||
-        from < 0 ||
-        from >= next.length ||
-        to < 0 ||
-        to >= next.length ||
-        from === to) {
-        return next;
-    }
-    var moved = next.splice(from, 1)[0];
-    next.splice(to, 0, moved);
-    return next;
-}
 
 var TOOLBAR_CLASS = 'mfa-toolbar';
 function getCommandRegistry(plugin) {
@@ -6316,6 +6327,15 @@ var EditorToolbar = /** @class */ (function () {
     function EditorToolbar(plugin, settings) {
         this.plugin = plugin;
         this.settings = settings;
+        /**
+         * Every bar this instance built.
+         *
+         * Kept rather than searched for at teardown time. A note moved to its own
+         * window gets a bar too - getLeavesOfType covers floating leaves - and that
+         * window has its own `document`, which a query from here would never reach.
+         * Holding the elements sidesteps the question of which realm each is in.
+         */
+        this.bars = new Set();
     }
     /** Starts watching for panes to decorate. */
     EditorToolbar.prototype.start = function () {
@@ -6331,53 +6351,64 @@ var EditorToolbar = /** @class */ (function () {
     EditorToolbar.prototype.refresh = function () {
         var _this = this;
         var _a = this.settings(), enabled = _a.enabled, commands = _a.commands, alignment = _a.alignment;
-        this.plugin.app.workspace
-            .getLeavesOfType('markdown')
-            .forEach(function (leaf) {
+        this.plugin.app.workspace.getLeavesOfType('markdown').forEach(function (leaf) {
             var view = leaf.view;
             if (!(view instanceof obsidian.MarkdownView))
                 return;
             // Reading mode has no editor to write to, and every button here writes.
             var wanted = enabled && commands.length > 0 && view.getMode() === 'source';
-            _this.apply(view, wanted ? commands : [], alignment);
+            _this.apply(leaf, view, wanted ? commands : [], alignment);
         });
     };
     /** Removes every toolbar this plugin put on the page. */
     EditorToolbar.prototype.detachAll = function () {
-        document
-            .querySelectorAll(".".concat(TOOLBAR_CLASS))
-            .forEach(function (bar) { return bar.remove(); });
+        this.bars.forEach(function (bar) { return bar.remove(); });
+        this.bars.clear();
     };
-    EditorToolbar.prototype.apply = function (view, commands, alignment) {
+    EditorToolbar.prototype.discard = function (bar) {
+        if (!bar)
+            return;
+        this.bars.delete(bar);
+        bar.remove();
+    };
+    EditorToolbar.prototype.apply = function (leaf, view, commands, alignment) {
+        var registry = getCommandRegistry(this.plugin);
         var host = view.contentEl;
         var existing = host.querySelector(":scope > .".concat(TOOLBAR_CLASS));
-        if (commands.length === 0) {
-            existing === null || existing === void 0 ? void 0 : existing.remove();
+        // What can actually be drawn. A command is missing while the plugin that
+        // registered it is disabled, and that has to be part of the comparison
+        // below: otherwise re-enabling that plugin leaves the button missing until
+        // something else forces a rebuild.
+        var drawable = commands.filter(function (id) { return registry.commands[id]; });
+        if (drawable.length === 0) {
+            this.discard(existing);
             return;
         }
         // Rebuilding on every pane switch would be wasteful and would drop the
         // focus ring mid-click, so what was rendered is stamped on the element and
-        // compared first. The alignment is part of that: it is a class on the same
-        // element, and a change to it has to reach a pane that is already showing.
-        var signature = __spreadArray([alignment], commands, true).join('\n');
+        // compared first. The alignment is in the stamp too: it is a class on the
+        // same element, and a change to it has to reach a pane already on screen.
+        var signature = __spreadArray([alignment], drawable, true).join('\n');
         if (existing instanceof HTMLElement) {
             if (existing.dataset.signature === signature)
                 return;
-            existing.remove();
         }
-        var bar = createDiv({ cls: "".concat(TOOLBAR_CLASS, " is-align-").concat(alignment) });
+        this.discard(existing);
+        // Built through the host so it belongs to that pane's document - a popout
+        // window has its own, and an element made here would be foreign to it.
+        var bar = host.createDiv({
+            cls: "".concat(TOOLBAR_CLASS, " is-align-").concat(alignment),
+        });
         bar.dataset.signature = signature;
-        this.fill(bar, commands);
-        // First child, so it sits above the note rather than over it.
-        host.insertBefore(bar, host.firstChild);
+        this.fill(bar, leaf, view, drawable, registry);
+        this.bars.add(bar);
+        // createDiv appends; the bar belongs above the note, not below it.
+        host.prepend(bar);
     };
-    EditorToolbar.prototype.fill = function (bar, commands) {
-        var registry = getCommandRegistry(this.plugin);
+    EditorToolbar.prototype.fill = function (bar, leaf, view, commands, registry) {
+        var _this = this;
         commands.forEach(function (id) {
             var command = registry.commands[id];
-            // A command disappears when its plugin is disabled or removed. The entry
-            // stays in the settings - it will work again when the plugin comes back -
-            // but there is nothing to draw and nothing a click could do.
             if (!command)
                 return;
             var button = bar.createEl('button', {
@@ -6391,10 +6422,18 @@ var EditorToolbar = /** @class */ (function () {
             else {
                 button.setText(shortLabel(command.name));
             }
-            button.addEventListener('click', function (event) {
-                // Without this the editor loses the selection the command is about to
-                // act on.
-                event.preventDefault();
+            // Focus moves on mousedown, before any click handler runs, so this is
+            // the only place it can be stopped. Left alone the caret lands on the
+            // button: the note stops receiving what is typed, and the next Space or
+            // Enter activates the button again and undoes the command.
+            button.addEventListener('mousedown', function (event) { return event.preventDefault(); });
+            button.addEventListener('click', function () {
+                // Commands run against whatever Obsidian considers active, and with
+                // the focus steal suppressed a click no longer makes that this pane.
+                // With two notes side by side the button would otherwise write into
+                // the other one.
+                _this.plugin.app.workspace.setActiveLeaf(leaf, { focus: true });
+                view.editor.focus();
                 registry.executeCommandById(id);
             });
         });
@@ -6402,6 +6441,8 @@ var EditorToolbar = /** @class */ (function () {
     return EditorToolbar;
 }());
 
+/** The drag payload for reordering toolbar buttons. */
+var DRAG_PAYLOAD = 'toolbarButtonIndex';
 /** Preselected in the saved-colours picker, so it never opens on black. */
 var DEFAULT_PICKER_COLOR = '#448aff';
 var DEFAULT_SETTINGS = {
@@ -6463,9 +6504,7 @@ var MarkdownAutocompletePlugin = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        console.log('loading obsidian-markdown-formatting-assistant-plugin');
-                        return [4 /*yield*/, this.loadSettings()];
+                    case 0: return [4 /*yield*/, this.loadSettings()];
                     case 1:
                         _a.sent();
                         // Has to happen before anything renders a label.
@@ -6751,20 +6790,17 @@ var SettingsTab = /** @class */ (function (_super) {
             }); });
         });
         var registry = getCommandRegistry(this.plugin);
-        var commit = function (commands) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        toolbar.commands = commands;
-                        return [4 /*yield*/, this.plugin.saveSettings()];
-                    case 1:
-                        _a.sent();
-                        this.plugin.toolbar.refresh();
-                        this.display();
-                        return [2 /*return*/];
-                }
-            });
-        }); };
+        // Redraw before the write, never after. Awaiting first leaves the old rows
+        // on screen and clickable for the whole of it, and each of them closes over
+        // the position it was rendered at - so a second click removes whatever has
+        // since moved into that slot. Double-clicking a button's x used to delete
+        // its neighbour. The saved-colour swatches already work this way.
+        var commit = function (commands) {
+            toolbar.commands = commands;
+            _this.display();
+            _this.plugin.toolbar.refresh();
+            void _this.plugin.saveSettings();
+        };
         var list = containerEl.createDiv({ cls: 'mfa-toolbar-editor' });
         if (toolbar.commands.length === 0) {
             list
@@ -6775,7 +6811,6 @@ var SettingsTab = /** @class */ (function (_super) {
             var command = registry.commands[id];
             var row = list.createDiv({ cls: 'mfa-toolbar-item' });
             row.draggable = true;
-            row.dataset.index = String(index);
             var icon = row.createSpan({ cls: 'mfa-toolbar-item-icon' });
             if (command && command.icon) {
                 obsidian.setIcon(icon, command.icon);
@@ -6792,14 +6827,14 @@ var SettingsTab = /** @class */ (function (_super) {
             obsidian.setIcon(remove, 'x');
             remove.setAttribute('aria-label', t('settings.toolbar.remove'));
             remove.onClickEvent(function () {
-                void commit(toolbar.commands.filter(function (_, at) { return at !== index; }));
+                commit(toolbar.commands.filter(function (_, at) { return at !== index; }));
             });
             // Named like the panel's own drag payload rather than with the mfa-
             // prefix, which throughout this project means a CSS class - and there is
             // a test that holds it to that.
             row.ondragstart = function (event) {
                 var _a;
-                (_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData('toolbarButtonIndex', String(index));
+                (_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData(DRAG_PAYLOAD, String(index));
             };
             row.ondragover = function (event) {
                 event.preventDefault();
@@ -6807,12 +6842,14 @@ var SettingsTab = /** @class */ (function (_super) {
             row.ondrop = function (event) {
                 var _a;
                 event.preventDefault();
-                var from = Number((_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData('toolbarButtonIndex'));
-                // A drop can land on any descendant of the row, and on the container
-                // between rows, so the index is read from the row rather than from the
-                // element the pointer happened to be over. moveCommand ignores an index
-                // that does not resolve.
-                void commit(moveCommand(toolbar.commands, from, index));
+                // Every row accepts any drag, so the payload has to be checked rather
+                // than trusted. getData returns '' for a format that was never set,
+                // and Number('') is 0 - a perfectly valid index, which used to send
+                // the first button wherever a stray text selection was dropped.
+                var payload = (_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData(DRAG_PAYLOAD);
+                if (!payload)
+                    return;
+                commit(moveItem(toolbar.commands, Number(payload), index));
             };
         });
         new obsidian.Setting(containerEl)

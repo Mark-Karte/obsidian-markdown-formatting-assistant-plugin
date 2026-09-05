@@ -1,11 +1,11 @@
 # Obsidian Markdown Formatting Assistant
 
 > This Plugin provides easy to use snippets for Markdown, HTML and Latex and a color picker which shows the history of last used colors. Furthermore, it is possible to save any color you want.
-> Version 0.8.0
+> Version 0.8.1
 
 > If you find a Bug or have a feature request: https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues
 
-This is a maintained fork of [Reocin/obsidian-markdown-formatting-assistant-plugin](https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin), which the original author stopped maintaining. It is MIT licensed, as the original is.
+This is a maintained fork of [Reocin/obsidian-markdown-formatting-assistant-plugin](https://github.com/Reocin/obsidian-markdown-formatting-assistant-plugin), which the original author stopped maintaining. It is MIT licensed — the original declared MIT in its `package.json` from its first commit but never shipped the licence text, so [LICENSE](LICENSE) states it explicitly and credits both.
 
 ![](assets/Obsidian_Overview.png)
 
@@ -210,6 +210,20 @@ Run `npm run typecheck` as well as the build. Rollup reports a clean build for c
 Originally written by [Reocin](https://github.com/Reocin). Maintained since version 0.5.0 by Mark Karte and Claude.
 
 ## Changelog
+
+- Version: 0.8.1
+
+  - **Fixed**
+    - Removing a toolbar button could remove a different one. Every row stayed clickable while the change was being saved, and each of them remembered the position it was drawn at, so a second click acted on whatever had moved into that slot.
+    - Dropping anything at all onto a row in the toolbar settings — a text selection, a file from outside Obsidian — moved the first button to that position.
+    - Reordering saved colors or side panel sections swapped the two entries instead of moving one. Dragging the first onto the last sent the last one to the front and left everything between them alone.
+    - A toolbar button took the cursor out of the note. Typing went nowhere until you clicked back into the text, and pressing Space or Enter pressed the button again, undoing what it had just done.
+    - A note moved to its own window kept its toolbar after the plugin was disabled, until that window was closed.
+    - A toolbar button whose plugin had been disabled stayed missing after that plugin was enabled again, until Obsidian restarted.
+  - **Added**
+    - A `LICENSE` file. The plugin has declared MIT since its first commit in 2021 but never carried the licence text.
+  - **Changed**
+    - Nothing is written to the developer console on load.
 
 - Version: 0.8.0
 
