@@ -5182,6 +5182,38 @@ function calloutLabel(calloutId) {
     return en[key] ? t(key) : calloutId;
 }
 
+/**
+ * Names for Obsidian's own command palette and hotkey list. A leaf module with
+ * no imports, so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The panel's labels are terse keys like 'code_block'. They work as search
+ * terms in this plugin's own window, but the hotkey list sits next to entries
+ * such as "Toggle bold", so they are widened just enough to be readable -
+ * without inventing and translating a second name for every button.
+ */
+/** Turns a panel label into the name shown in Obsidian's command list. */
+function commandName(label) {
+    var words = (label || '').trim().replace(/_/g, ' ');
+    if (!words)
+        return '';
+    // 'h1' through 'h6' keep their shape on purpose: that is what the panel
+    // button says and what people type when they search for it.
+    return words.charAt(0).toUpperCase() + words.slice(1);
+}
+/**
+ * What to write on a toolbar button for a command that has no icon.
+ *
+ * Obsidian prefixes a command's name with the plugin it came from, so the
+ * useful part is whatever follows the last colon - and even that is often a
+ * sentence. Two characters is what fits a square button; the full name is on
+ * the tooltip either way.
+ */
+function shortLabel(name) {
+    var parts = (name || '').split(':');
+    var tail = parts[parts.length - 1].trim();
+    return tail.slice(0, 2);
+}
+
 var SidePanelControlViewType = 'side-panel-control-view';
 var ISSUES_URL = 'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
 var SidePanelControlView = /** @class */ (function (_super) {
@@ -5302,6 +5334,37 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 regionFunction();
         });
     };
+    /**
+     * Turns one of the panel's divs into something a keyboard and a screen
+     * reader can use.
+     *
+     * The panel is built from divs on purpose: they carry Obsidian's own
+     * `nav-action-button` styling, which is what makes the buttons follow the
+     * user's theme. A real `<button>` would be the better element, but it also
+     * arrives with browser chrome that would have to be fought back off, and the
+     * hover states are the theme's rather than ours. So the div is given the
+     * three things the element type would otherwise have supplied: a role, a
+     * place in the tab order, and activation by Enter and Space.
+     *
+     * The name matters most. Most of these buttons hold nothing but a drawing,
+     * so without a label a screen reader has literally nothing to announce - not
+     * a mislabelled button, no button at all. It also gives everyone else the
+     * hover tooltip the panel never had.
+     */
+    SidePanelControlView.prototype.asButton = function (element, label, activate) {
+        element.setAttribute('role', 'button');
+        element.setAttribute('aria-label', label);
+        element.tabIndex = 0;
+        element.onClickEvent(function () { return activate(); });
+        element.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ')
+                return;
+            // Space scrolls the panel otherwise, which is the one thing a person
+            // pressing it on a button does not want.
+            event.preventDefault();
+            activate();
+        });
+    };
     /** The small centred link that closes several of the sections. */
     SidePanelControlView.prototype.addNote = function (parent, text, href) {
         parent
@@ -5340,13 +5403,16 @@ var SidePanelControlView = /** @class */ (function (_super) {
                     paint(rows, columns);
                     label.setText(t('tables.size', { rows: rows, columns: columns }));
                 });
-                cell.onClickEvent(function () {
+                // The grid is a picture of the table, so each cell says the size it
+                // would insert - the only way to use it without seeing it.
+                this_1.asButton(cell, t('tables.size', { rows: rows, columns: columns }), function () {
                     var editor = getTargetEditor(_this.app.workspace);
                     if (editor)
                         tableFormatter(editor, rows, columns, alignment);
                 });
                 rowCells.push(cell);
             };
+            var this_1 = this;
             for (var columnIndex = 0; columnIndex < MAX_TABLE_COLUMNS; columnIndex++) {
                 _loop_1(columnIndex);
             }
@@ -5366,36 +5432,27 @@ var SidePanelControlView = /** @class */ (function (_super) {
             });
         };
         TABLE_ALIGNMENTS.forEach(function (option) {
+            var label = t("tables.align.".concat(option));
             var button = alignmentRow.createDiv({ cls: 'nav-action-text-button' });
-            button.appendText(t("tables.align.".concat(option)));
-            button.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            alignment = option;
-                            this.plugin.settings.tableAlignment = option;
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            highlightAlignment();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
+            button.appendText(label);
+            _this.asButton(button, label, function () {
+                alignment = option;
+                _this.plugin.settings.tableAlignment = option;
+                highlightAlignment();
+                void _this.plugin.saveSettings();
+            });
             alignmentButtons.push(button);
         });
         highlightAlignment();
     };
     SidePanelControlView.prototype.addHtmlButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = htmlFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    htmlFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = htmlFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                htmlFormatter(editor, formatterSetting);
         };
         var numberOfCols = 3;
         var row = null;
@@ -5406,26 +5463,23 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
             var button = row.createDiv({ cls: 'nav-action-text-button' });
-            addClickEvent(button, key);
             button.appendText(item.des);
+            _this.asButton(button, item.des, function () { return activate(key); });
         });
     };
-    //xxxxx
     SidePanelControlView.prototype.addCalloutsButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = calloutsFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (!editor)
-                    return;
-                // The heading is written into the note so it renders translated; the
-                // keyword inside [!...] stays English either way.
-                calloutsFormatter(editor, formatterSetting, _this.plugin.settings.calloutTitles
-                    ? calloutLabel(formatterSetting.id)
-                    : '');
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = calloutsFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (!editor)
+                return;
+            // The heading is written into the note so it renders translated; the
+            // keyword inside [!...] stays English either way.
+            calloutsFormatter(editor, formatterSetting, _this.plugin.settings.calloutTitles
+                ? calloutLabel(formatterSetting.id)
+                : '');
         };
         var row = null;
         keys(calloutsFormatterSettings).forEach(function (key, index) {
@@ -5441,7 +5495,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             // delivery of them through custom properties.
             button.style.setProperty('--mfa-callout-color', item.color);
             button.style.setProperty('--mfa-callout-background', item.bgColor);
-            addClickEvent(button, key);
+            _this.asButton(button, calloutLabel(item.id), function () { return activate(key); });
             var spanIcon = button.createSpan({ cls: 'mfa-callout-icon' });
             obsidian.setIcon(spanIcon, item.icon);
             button.createSpan().setText(' ' + calloutLabel(item.id));
@@ -5449,14 +5503,12 @@ var SidePanelControlView = /** @class */ (function (_super) {
     };
     SidePanelControlView.prototype.addLatexButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = latexFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    latexFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = latexFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                latexFormatter(editor, formatterSetting);
         };
         var row = null;
         keys(latexFormatterSettings).forEach(function (key, index) {
@@ -5468,7 +5520,8 @@ var SidePanelControlView = /** @class */ (function (_super) {
             var button = row.createDiv({
                 cls: 'nav-action-text-button mfa-centered-button',
             });
-            addClickEvent(button, key);
+            // Half of these are drawn as an svg, so des is the only name they have.
+            _this.asButton(button, commandName(item.des), function () { return activate(key); });
             if (item.type === 'icon') {
                 var svg = svgToElement(item.text);
                 svg.addClass('mfa-inline-svg');
@@ -5481,14 +5534,12 @@ var SidePanelControlView = /** @class */ (function (_super) {
     };
     SidePanelControlView.prototype.addGreekLowerCaseLetters = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = greekLowerCaseFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    greekFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = greekLowerCaseFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                greekFormatter(editor, formatterSetting);
         };
         var numberOfCols = 5;
         var row = null;
@@ -5499,20 +5550,20 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
             var button = row.createDiv({ cls: 'nav-action-button' });
-            addClickEvent(button, key);
+            // A letter drawn as an svg has no text at all, so 'Alpha' is the only
+            // thing there is to announce or to show on hover.
+            _this.asButton(button, commandName(item.des), function () { return activate(key); });
             button.appendChild(svgToElement(item.icon));
         });
     };
     SidePanelControlView.prototype.addGreekUpperCaseLetters = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = greekUpperCaseFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    greekFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = greekUpperCaseFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                greekFormatter(editor, formatterSetting);
         };
         var numberOfCols = 5;
         var row = null;
@@ -5523,81 +5574,65 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
             var button = row.createDiv({ cls: 'nav-action-button' });
-            addClickEvent(button, key);
+            // A letter drawn as an svg has no text at all, so 'Alpha' is the only
+            // thing there is to announce or to show on hover.
+            _this.asButton(button, commandName(item.des), function () { return activate(key); });
             button.appendChild(svgToElement(item.icon));
         });
     };
     SidePanelControlView.prototype.addTextEditButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = formatSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    iconFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = formatSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                iconFormatter(editor, formatterSetting);
         };
-        var row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        for (var _i = 0, _a = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']; _i < _a.length; _i++) {
-            var icon = _a[_i];
-            var button_1 = row.createDiv({ cls: 'nav-action-button' });
-            addClickEvent(button_1, icon);
-            button_1.appendChild(svgToElement(icon));
-        }
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        var button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'bold');
-        button.appendChild(svgToElement('bold'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonBold';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'italic');
-        button.appendChild(svgToElement('italic'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonItalic';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'strikethrough');
-        button.appendChild(svgToElement('strikethrough'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonStrikethrough';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'underline');
-        button.appendChild(svgToElement('underline'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonUnderline';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'highlight');
-        button.appendChild(svgToElement('highlight'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonHighlight';
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'codeInline');
-        button.appendChild(svgToElement('codeInline'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'codeBlock');
-        button.appendChild(svgToElement('codeBlock'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'mermaidBlock');
-        button.appendChild(svgToElement('mermaidBlock'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'link');
-        button.appendChild(svgToElement('link'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'internalLink');
-        button.appendChild(svgToElement('fileLink'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'blockquote');
-        button.appendChild(svgToElement('quote'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'image');
-        button.appendChild(svgToElement('image'));
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'bulletList');
-        button.appendChild(svgToElement('bulletList'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'numberList');
-        button.appendChild(svgToElement('numberList'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'checkList');
-        button.appendChild(svgToElement('checkList'));
+        var rows = [
+            [
+                ['h1', 'h1'],
+                ['h2', 'h2'],
+                ['h3', 'h3'],
+                ['h4', 'h4'],
+                ['h5', 'h5'],
+                ['h6', 'h6'],
+            ],
+            [
+                ['bold', 'bold'],
+                ['italic', 'italic'],
+                ['strikethrough', 'strikethrough'],
+                ['underline', 'underline'],
+                ['highlight', 'highlight'],
+            ],
+            [
+                ['codeInline', 'codeInline'],
+                ['codeBlock', 'codeBlock'],
+                ['mermaidBlock', 'mermaidBlock'],
+                ['link', 'link'],
+                ['internalLink', 'fileLink'],
+                ['blockquote', 'quote'],
+                ['image', 'image'],
+            ],
+            [
+                ['bulletList', 'bulletList'],
+                ['numberList', 'numberList'],
+                ['checkList', 'checkList'],
+            ],
+        ];
+        rows.forEach(function (actions) {
+            var row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
+            actions.forEach(function (_a) {
+                var id = _a[0], icon = _a[1];
+                var button = row.createDiv({ cls: 'nav-action-button' });
+                // These buttons hold a drawing and nothing else, so the label is the
+                // only thing a screen reader has to go on.
+                _this.asButton(button, commandName(formatSettings[id].des), function () {
+                    return activate(id);
+                });
+                button.appendChild(svgToElement(icon));
+            });
+        });
     };
     SidePanelControlView.prototype.addColorBody = function (mainDiv) {
         var _this = this;
@@ -5635,8 +5670,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             reverse(SidePanelControlView.lastColors).forEach(function (color) {
                 var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
                 colorBox.style.setProperty('--mfa-swatch', color);
-                colorBox.setAttribute('aria-label', color);
-                colorBox.onClickEvent(function () { return insertColor(color); });
+                _this.asButton(colorBox, color, function () { return insertColor(color); });
                 // onClickEvent binds 'click' and nothing else, so the removal branch
                 // this used to share with it could never run: right-clicking a colour
                 // simply inserted it. The README promised otherwise.
@@ -5656,9 +5690,8 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
                 colorBox.id = 'lastSavedColorsDiv' + color;
                 colorBox.style.setProperty('--mfa-swatch', color);
-                colorBox.setAttribute('aria-label', color);
                 colorBox.draggable = true;
-                colorBox.onClickEvent(function () { return insertColor(color); });
+                _this.asButton(colorBox, color, function () { return insertColor(color); });
                 // Same dead branch as the last-used swatches above: 'click' was the
                 // only event ever bound, so a saved colour could not be removed here.
                 colorBox.oncontextmenu = function (event) { return __awaiter(_this, void 0, void 0, function () {
@@ -5749,28 +5782,23 @@ var SidePanelControlView = /** @class */ (function (_super) {
             cls: 'nav-action-text-button mfa-block-button mfa-color-save',
         });
         colorSaveButton.appendText(t('colors.save'));
-        colorSaveButton.onClickEvent(function (ev) { return __awaiter(_this, void 0, void 0, function () {
-            var color;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        color = last(SidePanelControlView.lastColors);
-                        this.plugin.settings.savedColors = pipe(without([color]), append(color))(this.plugin.settings.savedColors);
-                        drawLastSavedColorIcons();
-                        return [4 /*yield*/, this.plugin.saveSettings()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.asButton(colorSaveButton, t('colors.save'), function () {
+            var color = last(SidePanelControlView.lastColors);
+            _this.plugin.settings.savedColors = pipe(without([color]), append(color))(_this.plugin.settings.savedColors);
+            drawLastSavedColorIcons();
+            void _this.plugin.saveSettings();
+        });
         var addCheckbox = function (id, text) {
             var div = colorSection.createEl('div');
             var input = div.createEl('input');
             input.id = id;
             input.type = 'checkbox';
             input.name = id;
-            div.createEl('label', { cls: 'mfa-checkbox-label' }).appendText(text);
+            // Tied to the input, which is what lets the words be clicked as well as
+            // the box - and what a screen reader reads out instead of "checkbox".
+            var label = div.createEl('label', { cls: 'mfa-checkbox-label' });
+            label.htmlFor = id;
+            label.appendText(text);
         };
         addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
         addCheckbox('inputBackgroundColorTagCheckBox', t('colors.optionBackgroundColor'));
@@ -5876,24 +5904,19 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var expanded = Boolean(region && region.active && region.visible);
         content.toggleClass('is-collapsed', !expanded);
         drawArrow(expanded);
-        arrowButton.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-            var region;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        region = getRegion(regionName);
-                        if (!region || !region.active)
-                            return [2 /*return*/];
-                        region.visible = !region.visible;
-                        content.toggleClass('is-collapsed', !region.visible);
-                        drawArrow(region.visible);
-                        return [4 /*yield*/, this.plugin.saveSettings()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        // Announced as expanded or collapsed, and updated on every toggle - the
+        // arrow itself is a drawing and says nothing.
+        arrowButton.setAttribute('aria-expanded', String(expanded));
+        this.asButton(arrowButton, sectionTitle, function () {
+            var region = getRegion(regionName);
+            if (!region || !region.active)
+                return;
+            region.visible = !region.visible;
+            content.toggleClass('is-collapsed', !region.visible);
+            drawArrow(region.visible);
+            arrowButton.setAttribute('aria-expanded', String(region.visible));
+            void _this.plugin.saveSettings();
+        });
         return content;
     };
     SidePanelControlView.lastColors = ['#ff0000'];
@@ -6117,38 +6140,6 @@ var CommandPickerModal = /** @class */ (function (_super) {
     };
     return CommandPickerModal;
 }(obsidian.FuzzySuggestModal));
-
-/**
- * Names for Obsidian's own command palette and hotkey list. A leaf module with
- * no imports, so the tests can reach it - see the note in textPlacement.ts.
- *
- * The panel's labels are terse keys like 'code_block'. They work as search
- * terms in this plugin's own window, but the hotkey list sits next to entries
- * such as "Toggle bold", so they are widened just enough to be readable -
- * without inventing and translating a second name for every button.
- */
-/** Turns a panel label into the name shown in Obsidian's command list. */
-function commandName(label) {
-    var words = (label || '').trim().replace(/_/g, ' ');
-    if (!words)
-        return '';
-    // 'h1' through 'h6' keep their shape on purpose: that is what the panel
-    // button says and what people type when they search for it.
-    return words.charAt(0).toUpperCase() + words.slice(1);
-}
-/**
- * What to write on a toolbar button for a command that has no icon.
- *
- * Obsidian prefixes a command's name with the plugin it came from, so the
- * useful part is whatever follows the last colon - and even that is often a
- * sentence. Two characters is what fits a square button; the full name is on
- * the tooltip either way.
- */
-function shortLabel(name) {
-    var parts = (name || '').split(':');
-    var tail = parts[parts.length - 1].trim();
-    return tail.slice(0, 2);
-}
 
 /**
  * One Obsidian command per formatting action, so people can bind their own
