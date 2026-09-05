@@ -49,11 +49,15 @@ A table dropped in the middle of a line moves onto a line of its own, and whatev
 
 `<a>` `<abbr>` `<b>` `<br/>` `<center>` `<details>` `<dfn>` `<div>` `<em>` `<font>` `<hr/>` `<i>` `<img>` `<kbd>` `<mark>` `<p>` `<pre>` `<span>` `<strong>` `<sub>` `<summary>` `<sup>` `<table>` `<tbody>` `<td>` `<tfoot>` `<th>` `<thead>` `<tr>` `<u>`
 
+Two things that are not tags but are written as html because Obsidian has no markdown for them: a **page break** for PDF export, and **text alignment** — left, center, right and justify.
+
 ![](assets/Panel_Overview_Html.png)
 
 ### Latex Section
 
 > Latex Functions only work if they are in a latex equation section like $...$ or $$...$$.
+
+Around seventy operators are available, but only a third of them are on the panel. The rest — relations, set and logic symbols, arrows, `\lim`, `\nabla`, `\binom`, `\overline` and so on — are in the `ALT+Q` window, where they can be searched for by name. A panel showing all of them would be a wall of symbols to read through every time.
 
 ![](assets/Panel_Overview_Latex.png)
 

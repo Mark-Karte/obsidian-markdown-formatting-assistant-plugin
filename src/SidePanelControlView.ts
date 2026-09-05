@@ -429,10 +429,17 @@ export class SidePanelControlView extends ItemView {
       if (editor) latexFormatter(editor, formatterSetting);
     };
 
-    const numberOfCols = 5;
     let row: HTMLElement = null;
 
-    R.keys(latexFormatterSettings).forEach((key, index) => {
+    // The panel shows a chosen few; the rest are reachable through ALT+Q,
+    // which is what issue #21 asked for. Filtered before the index is taken,
+    // or a hidden entry would take its row break with it.
+    const shown = R.keys(latexFormatterSettings).filter(
+      // @ts-ignore
+      (key) => !latexFormatterSettings[key].suggestOnly,
+    );
+
+    shown.forEach((key, index) => {
       // @ts-ignore
       const item = latexFormatterSettings[key];
       if (index === 0 || item.newLine) {
