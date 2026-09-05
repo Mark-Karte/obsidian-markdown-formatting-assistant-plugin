@@ -35,6 +35,8 @@ It is possible to change the order of the sections according to the personal wis
 
 Headings, bold, italic, strikethrough, highlight, quotes, the three list kinds, links, images, code and mermaid blocks.
 
+Quotes and lists work on whole lines, so it does not matter where in the line you started the selection or left the cursor. A selection that covers part of several lines converts all of them; blank lines in between are left alone, and a bullet added inside a quote goes after the `>` rather than in front of it. Pressing the same button again takes the markers off.
+
 ![](assets/Panel_Overview.png)
 
 ### Tables Section

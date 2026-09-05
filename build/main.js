@@ -2236,6 +2236,62 @@ function withIds(settings) {
     return settings;
 }
 
+/**
+ * Turning lines into quotes, bullets, numbers and tasks - and back. A leaf
+ * module with no imports, so the tests can reach it - see the note in
+ * textPlacement.ts.
+ *
+ * All of this is per line by definition: a list marker means something only at
+ * the start of one. The editor's job is to decide which lines are involved;
+ * this decides what happens to them.
+ */
+/**
+ * What may sit in front of a marker.
+ *
+ * For a list that includes any quote markers, because a list inside a quote is
+ * written `> - item`. Putting the bullet first would produce `- > item`, which
+ * is a list containing a quote - a different thing, and not what the button
+ * was asked for.
+ *
+ * A quote marker has only indentation in front of it; it is the outermost
+ * thing on the line by nature.
+ */
+var lead = function (kind) { return (kind === 'quote' ? '\\s*' : '\\s*(?:>\\s*)*'); };
+/** A line with nothing on it takes no marker - an empty bullet helps nobody. */
+var isBlank = function (line) { return line.trim() === ''; };
+/**
+ * Adds the marker to every line, or removes it from every line if they all
+ * have it already.
+ *
+ * Toggling off requires all of them to be marked, so that adding to a
+ * half-converted selection finishes the job rather than undoing it. Blank
+ * lines are not counted either way: one empty line in the middle of a list
+ * would otherwise be enough to make the button stop turning it off.
+ */
+function toggleLineMarker(lines, symbol, kind) {
+    // The symbol goes into a regex, so its own special characters have to be
+    // escaped - '1. ' would otherwise let the dot match anything.
+    var escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var marker = new RegExp('^(' + lead(kind) + ')' + escaped);
+    var prefix = new RegExp('^(' + lead(kind) + ')');
+    var has = function (line) { return marker.test(line); };
+    var add = function (line) {
+        return kind === 'quote'
+            ? symbol + line
+            : line.replace(prefix, function (_full, before) { return before + symbol; });
+    };
+    var remove = function (line) { return line.replace(marker, '$1'); };
+    var written = lines.filter(function (line) { return !isBlank(line); });
+    var allMarked = written.length > 0 && written.every(has);
+    return lines.map(function (line) {
+        if (isBlank(line))
+            return line;
+        if (allMarked)
+            return remove(line);
+        return has(line) ? line : add(line);
+    });
+}
+
 var formatSettings = withIds({
     h1: {
         des: 'h1',
@@ -2454,7 +2510,7 @@ function iconFormatter(editor, item) {
         var isSelection = editor.somethingSelected();
         var selection = editor.getSelection();
         var curserStart = editor.getCursor('from');
-        editor.getCursor('to');
+        var curserEnd = editor.getCursor('to');
         var line = editor.getLine(curserStart.line);
         editor.focus();
         if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(item.id)) {
@@ -2540,38 +2596,19 @@ function iconFormatter(editor, item) {
             }
         }
         else if (['blockquote', 'bulletList', 'numberList', 'checkList'].includes(item.id)) {
-            // The symbol goes into a regex, so its own special characters have to be
-            // escaped - '1. ' would otherwise let the dot match anything.
-            var escapedSymbol = item.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            var markerRe_1 = new RegExp('^(\\s*)' + escapedSymbol);
-            var hasMarker_1 = function (text) { return markerRe_1.test(text); };
-            // Indentation is what makes markdown lists nest, so it has to survive
-            // the toggle in both directions. A quote marker belongs in front of the
-            // whole line, a list marker behind the indentation.
-            var addMarker_1 = function (text) {
-                if (item.id === 'blockquote')
-                    return item.symbol + text;
-                return text.replace(/^(\s*)/, function (_full, indent) { return indent + item.symbol; });
-            };
-            var removeMarker_1 = function (text) { return text.replace(markerRe_1, '$1'); };
-            if (isSelection) {
-                var selectionLines = selection.split('\n');
-                var allAreItems_1 = selectionLines.every(hasMarker_1);
-                var convertedSelectionLines = selectionLines.map(function (selectionLine) {
-                    if (allAreItems_1)
-                        return removeMarker_1(selectionLine);
-                    return hasMarker_1(selectionLine)
-                        ? selectionLine
-                        : addMarker_1(selectionLine);
-                });
-                editor.replaceSelection(convertedSelectionLines.join('\n'));
-            }
-            else {
-                var replacement = hasMarker_1(line)
-                    ? removeMarker_1(line)
-                    : addMarker_1(line);
-                editor.replaceRange(replacement, { line: curserStart.line, ch: 0 }, { line: curserStart.line, ch: line.length });
-            }
+            // These markers only mean anything at the start of a line, so the whole
+            // of every touched line is what gets rewritten - not the selection.
+            // Dragging from the middle of one word to the middle of another used to
+            // put the bullet wherever the drag began.
+            //
+            // A selection ending at column zero stops short of that line rather than
+            // including it, which is what shift+down and a triple click produce.
+            var endsBeforeLastLine = curserEnd.ch === 0 && curserEnd.line > curserStart.line;
+            var lastLine = endsBeforeLastLine ? curserEnd.line - 1 : curserEnd.line;
+            var from = { line: curserStart.line, ch: 0 };
+            var to = { line: lastLine, ch: editor.getLine(lastLine).length };
+            var converted = toggleLineMarker(editor.getRange(from, to).split('\n'), item.symbol, item.id === 'blockquote' ? 'quote' : 'list');
+            editor.replaceRange(converted.join('\n'), from, to);
         }
     }
 }
