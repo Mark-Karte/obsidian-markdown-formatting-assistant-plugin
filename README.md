@@ -1,7 +1,7 @@
 # Obsidian Markdown Formatting Assistant
 
 > This Plugin provides easy to use snippets for Markdown, HTML and Latex and a color picker which shows the history of last used colors. Furthermore, it is possible to save any color you want.
-> Version 0.8.1
+> Version 0.9.0
 
 > If you find a Bug or have a feature request: https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues
 
@@ -35,6 +35,8 @@ It is possible to change the order of the sections according to the personal wis
 
 Headings, bold, italic, strikethrough, highlight, quotes, the three list kinds, links, images, code and mermaid blocks.
 
+Quotes and lists work on whole lines, so it does not matter where in the line you started the selection or left the cursor. A selection that covers part of several lines converts all of them; blank lines in between are left alone, and a bullet added inside a quote goes after the `>` rather than in front of it. Pressing the same button again takes the markers off.
+
 ![](assets/Panel_Overview.png)
 
 ### Tables Section
@@ -47,11 +49,15 @@ A table dropped in the middle of a line moves onto a line of its own, and whatev
 
 `<a>` `<abbr>` `<b>` `<br/>` `<center>` `<details>` `<dfn>` `<div>` `<em>` `<font>` `<hr/>` `<i>` `<img>` `<kbd>` `<mark>` `<p>` `<pre>` `<span>` `<strong>` `<sub>` `<summary>` `<sup>` `<table>` `<tbody>` `<td>` `<tfoot>` `<th>` `<thead>` `<tr>` `<u>`
 
+Two things that are not tags but are written as html because Obsidian has no markdown for them: a **page break** for PDF export, and **text alignment** — left, center, right and justify.
+
 ![](assets/Panel_Overview_Html.png)
 
 ### Latex Section
 
 > Latex Functions only work if they are in a latex equation section like $...$ or $$...$$.
+
+Around seventy operators are available, but only a third of them are on the panel. The rest — relations, set and logic symbols, arrows, `\lim`, `\nabla`, `\binom`, `\overline` and so on — are in the `ALT+Q` window, where they can be searched for by name. A panel showing all of them would be a wall of symbols to read through every time.
 
 ![](assets/Panel_Overview_Latex.png)
 
@@ -135,9 +141,15 @@ All saved colors can be sorted via drop a catch.
 
 Right-click a swatch to remove it, in either the recent or the saved row. Saved colors can also be removed in the settings by clicking a swatch there.
 
+### Coloring selected text
+
+Select some text and click a color — recent, saved, or freshly picked — and the selection is wrapped so it takes that color. One click, no options to tick first.
+
+Ticking `background-color` gives you a background instead, since a `<font>` tag can only set the color of the text.
+
 ### Additional Formats
 
-For a even easier handling you can select additional options to what should be added to the color.
+With **nothing** selected, the options below decide what the click writes at the cursor. They describe a piece of code to paste into a tag you are already writing, which is why they do not apply when there is a selection — there is only one thing "color this text" can mean.
 
 #### Options
 
@@ -210,6 +222,23 @@ Run `npm run typecheck` as well as the build. Rollup reports a clean build for c
 Originally written by [Reocin](https://github.com/Reocin). Maintained since version 0.5.0 by Mark Karte and Claude.
 
 ## Changelog
+
+- Version: 0.9.0
+
+  - **Added**
+    - Forty more LaTeX operators: relations, set and logic symbols, arrows, `\lim`, `\nabla`, `\binom`, `\overline`, blackboard bold. Four are on the panel; the rest are in the `ALT+Q` window, where they can be searched by name rather than hunted for among a wall of buttons.
+    - A **page break** for PDF export, and **text alignment** — left, center, right and justify. Both are html, because Obsidian has no markdown for either.
+    - The side panel can be used from the keyboard. Tab reaches every button, Enter and Space press it, and the focused one is visibly focused. Every button has a name, so a screen reader can announce it — most of them hold a drawing and no text, and until now there was nothing to announce at all. The names show as tooltips on hover for everyone else.
+  - **Fixed**
+    - Selecting text and clicking a color replaced the text with the color code. It is wrapped so it takes the color now, in one click and with no options to tick first. Asking for a background gives a `<span>`, since a `<font>` tag can only color text.
+    - Ticking both the style attribute and the html option produced markup that was never valid.
+    - Quotes and lists are applied to whole lines. Starting a selection mid-word used to put the marker there, splitting the line. A bullet added inside a quote goes after the `>`, and a blank line in the middle no longer stops the list being turned off again.
+    - `∑`, `∫`, `√` and `·` appeared as `&sum;`, `&int;`, `&radic;` and `&middot;` since 0.7.0.
+    - A setting typed in the last fraction of a second before quitting Obsidian is no longer lost.
+    - Clicking the words next to the color checkboxes toggles them.
+  - **Changed**
+    - The elements the plugin puts in the document carry prefixed ids. `colorInput` and `lastSavedColorsDiv` were generic enough to collide with another plugin or a theme snippet, and the panel looks several of them up by id — so a collision would have found the wrong element rather than failed.
+    - No fixed styling is written from JavaScript anywhere, including the last icon that set its own size.
 
 - Version: 0.8.1
 

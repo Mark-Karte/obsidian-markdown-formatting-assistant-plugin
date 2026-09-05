@@ -8,7 +8,48 @@ export interface htmlFormatterSetting extends baseFormatterSetting {
   selectionInput: number;
 }
 
+/**
+ * A pair of tags with the caret placed between them.
+ *
+ * The offset is derived rather than counted: '<div style="text-align: justify">'
+ * is not a length anyone should be working out by hand, and a wrong one puts
+ * the caret in the middle of an attribute.
+ */
+const wrapper = (des: string, open: string, close: string) => ({
+  des,
+  symbol: open + close,
+  shift: open.length,
+  selectionInput: open.length,
+  objectType: 'htmlFormatterSetting',
+});
+
 export const htmlFormatterSettings = withIds({
+  // Obsidian has no page break of its own, so this is the html people were
+  // copying by hand - issues #49 and #35.
+  pageBreak: wrapper(
+    'page break',
+    '<div style="page-break-after: always;">',
+    '</div>',
+  ),
+
+  // Issue #44, which listed exactly these.
+  alignLeft: wrapper('align left', '<div style="text-align: left">', '</div>'),
+  alignCenter: wrapper(
+    'align center',
+    '<div style="text-align: center">',
+    '</div>',
+  ),
+  alignRight: wrapper(
+    'align right',
+    '<div style="text-align: right">',
+    '</div>',
+  ),
+  alignJustify: wrapper(
+    'align justify',
+    '<div style="text-align: justify">',
+    '</div>',
+  ),
+
   br: {
     des: '<br/>',
     symbol: '<br/>',

@@ -2128,7 +2128,10 @@ function splitMarkup(label) {
 }
 
 function pathToSvg(icon) {
-    return "\n    <svg style=\"width:24px;height:24px\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n        <path fill=\"currentColor\" d=\"".concat(icon, "\" />\n    </svg>");
+    // The size comes from the stylesheet rather than from a style attribute
+    // written here - this was the last place the plugin set a fixed style from
+    // JavaScript, which Obsidian's guidelines ask plugins not to do.
+    return "\n    <svg class=\"mfa-icon-svg\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n        <path fill=\"currentColor\" d=\"".concat(icon, "\" />\n    </svg>");
 }
 function importIconPaths() {
     var res = {};
@@ -2234,6 +2237,62 @@ function withIds(settings) {
         settings[key].id = key;
     });
     return settings;
+}
+
+/**
+ * Turning lines into quotes, bullets, numbers and tasks - and back. A leaf
+ * module with no imports, so the tests can reach it - see the note in
+ * textPlacement.ts.
+ *
+ * All of this is per line by definition: a list marker means something only at
+ * the start of one. The editor's job is to decide which lines are involved;
+ * this decides what happens to them.
+ */
+/**
+ * What may sit in front of a marker.
+ *
+ * For a list that includes any quote markers, because a list inside a quote is
+ * written `> - item`. Putting the bullet first would produce `- > item`, which
+ * is a list containing a quote - a different thing, and not what the button
+ * was asked for.
+ *
+ * A quote marker has only indentation in front of it; it is the outermost
+ * thing on the line by nature.
+ */
+var lead = function (kind) { return (kind === 'quote' ? '\\s*' : '\\s*(?:>\\s*)*'); };
+/** A line with nothing on it takes no marker - an empty bullet helps nobody. */
+var isBlank = function (line) { return line.trim() === ''; };
+/**
+ * Adds the marker to every line, or removes it from every line if they all
+ * have it already.
+ *
+ * Toggling off requires all of them to be marked, so that adding to a
+ * half-converted selection finishes the job rather than undoing it. Blank
+ * lines are not counted either way: one empty line in the middle of a list
+ * would otherwise be enough to make the button stop turning it off.
+ */
+function toggleLineMarker(lines, symbol, kind) {
+    // The symbol goes into a regex, so its own special characters have to be
+    // escaped - '1. ' would otherwise let the dot match anything.
+    var escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var marker = new RegExp('^(' + lead(kind) + ')' + escaped);
+    var prefix = new RegExp('^(' + lead(kind) + ')');
+    var has = function (line) { return marker.test(line); };
+    var add = function (line) {
+        return kind === 'quote'
+            ? symbol + line
+            : line.replace(prefix, function (_full, before) { return before + symbol; });
+    };
+    var remove = function (line) { return line.replace(marker, '$1'); };
+    var written = lines.filter(function (line) { return !isBlank(line); });
+    var allMarked = written.length > 0 && written.every(has);
+    return lines.map(function (line) {
+        if (isBlank(line))
+            return line;
+        if (allMarked)
+            return remove(line);
+        return has(line) ? line : add(line);
+    });
 }
 
 var formatSettings = withIds({
@@ -2454,7 +2513,7 @@ function iconFormatter(editor, item) {
         var isSelection = editor.somethingSelected();
         var selection = editor.getSelection();
         var curserStart = editor.getCursor('from');
-        editor.getCursor('to');
+        var curserEnd = editor.getCursor('to');
         var line = editor.getLine(curserStart.line);
         editor.focus();
         if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(item.id)) {
@@ -2540,43 +2599,46 @@ function iconFormatter(editor, item) {
             }
         }
         else if (['blockquote', 'bulletList', 'numberList', 'checkList'].includes(item.id)) {
-            // The symbol goes into a regex, so its own special characters have to be
-            // escaped - '1. ' would otherwise let the dot match anything.
-            var escapedSymbol = item.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            var markerRe_1 = new RegExp('^(\\s*)' + escapedSymbol);
-            var hasMarker_1 = function (text) { return markerRe_1.test(text); };
-            // Indentation is what makes markdown lists nest, so it has to survive
-            // the toggle in both directions. A quote marker belongs in front of the
-            // whole line, a list marker behind the indentation.
-            var addMarker_1 = function (text) {
-                if (item.id === 'blockquote')
-                    return item.symbol + text;
-                return text.replace(/^(\s*)/, function (_full, indent) { return indent + item.symbol; });
-            };
-            var removeMarker_1 = function (text) { return text.replace(markerRe_1, '$1'); };
-            if (isSelection) {
-                var selectionLines = selection.split('\n');
-                var allAreItems_1 = selectionLines.every(hasMarker_1);
-                var convertedSelectionLines = selectionLines.map(function (selectionLine) {
-                    if (allAreItems_1)
-                        return removeMarker_1(selectionLine);
-                    return hasMarker_1(selectionLine)
-                        ? selectionLine
-                        : addMarker_1(selectionLine);
-                });
-                editor.replaceSelection(convertedSelectionLines.join('\n'));
-            }
-            else {
-                var replacement = hasMarker_1(line)
-                    ? removeMarker_1(line)
-                    : addMarker_1(line);
-                editor.replaceRange(replacement, { line: curserStart.line, ch: 0 }, { line: curserStart.line, ch: line.length });
-            }
+            // These markers only mean anything at the start of a line, so the whole
+            // of every touched line is what gets rewritten - not the selection.
+            // Dragging from the middle of one word to the middle of another used to
+            // put the bullet wherever the drag began.
+            //
+            // A selection ending at column zero stops short of that line rather than
+            // including it, which is what shift+down and a triple click produce.
+            var endsBeforeLastLine = curserEnd.ch === 0 && curserEnd.line > curserStart.line;
+            var lastLine = endsBeforeLastLine ? curserEnd.line - 1 : curserEnd.line;
+            var from = { line: curserStart.line, ch: 0 };
+            var to = { line: lastLine, ch: editor.getLine(lastLine).length };
+            var converted = toggleLineMarker(editor.getRange(from, to).split('\n'), item.symbol, item.id === 'blockquote' ? 'quote' : 'list');
+            editor.replaceRange(converted.join('\n'), from, to);
         }
     }
 }
 
+/**
+ * A pair of tags with the caret placed between them.
+ *
+ * The offset is derived rather than counted: '<div style="text-align: justify">'
+ * is not a length anyone should be working out by hand, and a wrong one puts
+ * the caret in the middle of an attribute.
+ */
+var wrapper = function (des, open, close) { return ({
+    des: des,
+    symbol: open + close,
+    shift: open.length,
+    selectionInput: open.length,
+    objectType: 'htmlFormatterSetting',
+}); };
 var htmlFormatterSettings = withIds({
+    // Obsidian has no page break of its own, so this is the html people were
+    // copying by hand - issues #49 and #35.
+    pageBreak: wrapper('page break', '<div style="page-break-after: always;">', '</div>'),
+    // Issue #44, which listed exactly these.
+    alignLeft: wrapper('align left', '<div style="text-align: left">', '</div>'),
+    alignCenter: wrapper('align center', '<div style="text-align: center">', '</div>'),
+    alignRight: wrapper('align right', '<div style="text-align: right">', '</div>'),
+    alignJustify: wrapper('align justify', '<div style="text-align: justify">', '</div>'),
     br: {
         des: '<br/>',
         symbol: '<br/>',
@@ -3144,6 +3206,46 @@ function greekFormatter(editor, item) {
     }
 }
 
+/**
+ * An operator inserted whole, with the caret left after it.
+ *
+ * The offsets are derived rather than counted. Every one of them used to be a
+ * hand-written number, which is fine until '\\Leftrightarrow' needs one.
+ *
+ * Most of these are `suggestOnly`. Issue #21 asked for many more operators
+ * "only to the command suggestions to avoid saturating the side panel", which
+ * is the right instinct: the useful set is far larger than a panel of buttons
+ * can show without becoming a wall of symbols.
+ */
+var operator = function (des, symbol, text, inPanel) {
+    if (inPanel === void 0) { inPanel = false; }
+    return ({
+        des: des,
+        text: text,
+        symbol: symbol,
+        shift: symbol.length,
+        selectionInput: symbol.length,
+        type: 'text',
+        newLine: false,
+        suggestOnly: !inPanel,
+        objectType: 'latexFormatterSetting',
+    });
+};
+/** An operator with braces to fill in, with the caret inside the first pair. */
+var braced = function (des, before, after, text, inPanel) {
+    if (inPanel === void 0) { inPanel = false; }
+    return ({
+        des: des,
+        text: text,
+        symbol: before + after,
+        shift: before.length,
+        selectionInput: before.length,
+        type: 'text',
+        newLine: false,
+        suggestOnly: !inPanel,
+        objectType: 'latexFormatterSetting',
+    });
+};
 var latexFormatterSettings = withIds({
     inlineEquation: {
         des: 'inline equation',
@@ -3176,7 +3278,7 @@ var latexFormatterSettings = withIds({
         objectType: 'latexFormatterSetting',
     },
     multiplication: {
-        des: 'times',
+        des: 'times cross product',
         text: 'multiplication',
         symbol: '\\times',
         shift: 6,
@@ -3379,7 +3481,7 @@ var latexFormatterSettings = withIds({
     },
     sum: {
         des: 'sum',
-        text: '&sum;',
+        text: '∑',
         symbol: '\\sum_{}^{}',
         shift: 6,
         selectionInput: 6,
@@ -3389,7 +3491,7 @@ var latexFormatterSettings = withIds({
     },
     integral: {
         des: 'integral',
-        text: '&int;',
+        text: '∫',
         symbol: '\\int_{}^{}',
         shift: 6,
         selectionInput: 6,
@@ -3399,7 +3501,7 @@ var latexFormatterSettings = withIds({
     },
     sqrt: {
         des: 'square root',
-        text: '&radic;',
+        text: '√',
         symbol: '\\sqrt{}',
         shift: 6,
         selectionInput: 6,
@@ -3409,7 +3511,7 @@ var latexFormatterSettings = withIds({
     },
     cdot: {
         des: 'cdot',
-        text: '&middot;',
+        text: '·',
         symbol: '\\cdot',
         shift: 5,
         selectionInput: 5,
@@ -3427,6 +3529,50 @@ var latexFormatterSettings = withIds({
         newLine: false,
         objectType: 'latexFormatterSetting',
     },
+    // ---- calculus, on the panel ------------------------------------------
+    // Named in issues #38 and #21 as the gap that made the section "quite
+    // limited". Four is what fits without turning the panel into a wall.
+    infinity: braced('infinity', '\\infty', '', '∞', true),
+    limit: braced('limit', '\\lim_{', '}', 'lim', true),
+    partial: operator('partial derivative', '\\partial', '∂', true),
+    product: braced('product', '\\prod_{', '}^{}', '∏', true),
+    // ---- everything below is ALT+Q only ----------------------------------
+    nabla: operator('nabla del', '\\nabla', '∇'),
+    contourIntegral: braced('contour integral', '\\oint_{', '}^{}', '∮'),
+    doubleIntegral: braced('double integral', '\\iint_{', '}^{}', '∬'),
+    leq: operator('less than or equal', '\\leq', '≤'),
+    geq: operator('greater than or equal', '\\geq', '≥'),
+    neq: operator('not equal', '\\neq', '≠'),
+    approx: operator('approximately equal', '\\approx', '≈'),
+    equiv: operator('equivalent', '\\equiv', '≡'),
+    propto: operator('proportional to', '\\propto', '∝'),
+    simeq: operator('similar to', '\\sim', '∼'),
+    elementOf: operator('element of', '\\in', '∈'),
+    notElementOf: operator('not element of', '\\notin', '∉'),
+    subset: operator('subset', '\\subset', '⊂'),
+    subseteq: operator('subset or equal', '\\subseteq', '⊆'),
+    union: operator('union', '\\cup', '∪'),
+    intersection: operator('intersection', '\\cap', '∩'),
+    emptySet: operator('empty set', '\\emptyset', '∅'),
+    forAll: operator('for all', '\\forall', '∀'),
+    exists: operator('there exists', '\\exists', '∃'),
+    negation: operator('not negation', '\\neg', '¬'),
+    logicalAnd: operator('logical and', '\\land', '∧'),
+    logicalOr: operator('logical or', '\\lor', '∨'),
+    arrowTo: operator('arrow to', '\\to', '→'),
+    implies: operator('implies', '\\Rightarrow', '⇒'),
+    iff: operator('if and only if', '\\Leftrightarrow', '⇔'),
+    mapsTo: operator('maps to', '\\mapsto', '↦'),
+    plusMinus: operator('plus minus', '\\pm', '±'),
+    minusPlus: operator('minus plus', '\\mp', '∓'),
+    angle: operator('angle', '\\angle', '∠'),
+    degree: operator('degree', '^\\circ', '°'),
+    ellipsis: operator('dots ellipsis', '\\dots', '…'),
+    binomial: braced('binomial coefficient', '\\binom{', '}{}', 'binom'),
+    overline: braced('overline', '\\overline{', '}', 'overline'),
+    underline: braced('underline', '\\underline{', '}', 'underline'),
+    textMode: braced('text inside maths', '\\text{', '}', 'text'),
+    blackboardBold: braced('blackboard bold', '\\mathbb{', '}', 'ℝ'),
     vec: {
         des: 'vector',
         text: 'vec',
@@ -3893,6 +4039,57 @@ function colorFormatter(editor, color) {
     // cursor when nothing is selected.
     editor.replaceSelection(color);
     editor.setCursor(curserStart);
+}
+
+/**
+ * What clicking a colour writes into the note. A leaf module with no imports,
+ * so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The four checkboxes in the Colors section describe two quite different
+ * jobs, and the old code ran them together. Three of them build a fragment of
+ * CSS to be pasted into a tag you are already writing; the fourth wraps text.
+ * Splitting them is what lets a selection be coloured rather than destroyed.
+ */
+function declarations(color, options) {
+    if (options.color && options.background) {
+        return "color: ".concat(color, "; background-color: ").concat(color);
+    }
+    if (options.background)
+        return "background-color: ".concat(color);
+    if (options.color)
+        return "color: ".concat(color);
+    return color;
+}
+/**
+ * The code to insert when nothing is selected.
+ *
+ * `<font color>` takes a colour and not a declaration, so it uses the colour
+ * as picked. Ticking the style attribute together with the tag used to emit
+ * `<font color="style="color: #fff"">`, which is not markup at all.
+ */
+function colorCode(color, options) {
+    if (options.html)
+        return "<font color=\"".concat(color, "\"></font>");
+    var body = declarations(color, options);
+    return options.styleAttribute ? "style=\"".concat(body, "\"") : body;
+}
+/**
+ * How to colour text that is selected.
+ *
+ * There is only one useful answer to "colour this", so it does not depend on
+ * whether the tag checkbox happens to be ticked: a fragment like
+ * `color: #ff0000` cannot wrap anything, and writing it over the selection is
+ * what used to lose people their text.
+ *
+ * The background is the one choice that changes the wrapper. `<font color>`
+ * can only set the text colour, so asking for a background has to produce a
+ * span - otherwise the click would quietly do something else.
+ */
+function wrapWithColor(color, selection, options) {
+    if (options.background) {
+        return "<span style=\"".concat(declarations(color, options), "\">").concat(selection, "</span>");
+    }
+    return "<font color=\"".concat(color, "\">").concat(selection, "</font>");
 }
 
 function tableFormatter(editor, rows, columns, alignment) {
@@ -5182,6 +5379,38 @@ function calloutLabel(calloutId) {
     return en[key] ? t(key) : calloutId;
 }
 
+/**
+ * Names for Obsidian's own command palette and hotkey list. A leaf module with
+ * no imports, so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The panel's labels are terse keys like 'code_block'. They work as search
+ * terms in this plugin's own window, but the hotkey list sits next to entries
+ * such as "Toggle bold", so they are widened just enough to be readable -
+ * without inventing and translating a second name for every button.
+ */
+/** Turns a panel label into the name shown in Obsidian's command list. */
+function commandName(label) {
+    var words = (label || '').trim().replace(/_/g, ' ');
+    if (!words)
+        return '';
+    // 'h1' through 'h6' keep their shape on purpose: that is what the panel
+    // button says and what people type when they search for it.
+    return words.charAt(0).toUpperCase() + words.slice(1);
+}
+/**
+ * What to write on a toolbar button for a command that has no icon.
+ *
+ * Obsidian prefixes a command's name with the plugin it came from, so the
+ * useful part is whatever follows the last colon - and even that is often a
+ * sentence. Two characters is what fits a square button; the full name is on
+ * the tooltip either way.
+ */
+function shortLabel(name) {
+    var parts = (name || '').split(':');
+    var tail = parts[parts.length - 1].trim();
+    return tail.slice(0, 2);
+}
+
 var SidePanelControlViewType = 'side-panel-control-view';
 var ISSUES_URL = 'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin/issues';
 var SidePanelControlView = /** @class */ (function (_super) {
@@ -5207,7 +5436,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
     SidePanelControlView.prototype.draw = function () {
         var container = this.containerEl.children[1];
         var rootEl = document.createElement('div');
-        rootEl.id = 'SidePaneRootElement';
+        rootEl.id = 'mfa-panel-root';
         this.drawContentOfRootElement(rootEl);
         container.empty();
         container.appendChild(rootEl);
@@ -5216,7 +5445,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var _this = this;
         if (rootEl === void 0) { rootEl = null; }
         if (!rootEl)
-            rootEl = document.getElementById('SidePaneRootElement');
+            rootEl = document.getElementById('mfa-panel-root');
         rootEl.textContent = '';
         var getRegion = function (name) {
             return _this.plugin.settings.regionSettings.find(function (item) { return item.name === name; });
@@ -5302,6 +5531,37 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 regionFunction();
         });
     };
+    /**
+     * Turns one of the panel's divs into something a keyboard and a screen
+     * reader can use.
+     *
+     * The panel is built from divs on purpose: they carry Obsidian's own
+     * `nav-action-button` styling, which is what makes the buttons follow the
+     * user's theme. A real `<button>` would be the better element, but it also
+     * arrives with browser chrome that would have to be fought back off, and the
+     * hover states are the theme's rather than ours. So the div is given the
+     * three things the element type would otherwise have supplied: a role, a
+     * place in the tab order, and activation by Enter and Space.
+     *
+     * The name matters most. Most of these buttons hold nothing but a drawing,
+     * so without a label a screen reader has literally nothing to announce - not
+     * a mislabelled button, no button at all. It also gives everyone else the
+     * hover tooltip the panel never had.
+     */
+    SidePanelControlView.prototype.asButton = function (element, label, activate) {
+        element.setAttribute('role', 'button');
+        element.setAttribute('aria-label', label);
+        element.tabIndex = 0;
+        element.onClickEvent(function () { return activate(); });
+        element.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ')
+                return;
+            // Space scrolls the panel otherwise, which is the one thing a person
+            // pressing it on a button does not want.
+            event.preventDefault();
+            activate();
+        });
+    };
     /** The small centred link that closes several of the sections. */
     SidePanelControlView.prototype.addNote = function (parent, text, href) {
         parent
@@ -5340,13 +5600,16 @@ var SidePanelControlView = /** @class */ (function (_super) {
                     paint(rows, columns);
                     label.setText(t('tables.size', { rows: rows, columns: columns }));
                 });
-                cell.onClickEvent(function () {
+                // The grid is a picture of the table, so each cell says the size it
+                // would insert - the only way to use it without seeing it.
+                this_1.asButton(cell, t('tables.size', { rows: rows, columns: columns }), function () {
                     var editor = getTargetEditor(_this.app.workspace);
                     if (editor)
                         tableFormatter(editor, rows, columns, alignment);
                 });
                 rowCells.push(cell);
             };
+            var this_1 = this;
             for (var columnIndex = 0; columnIndex < MAX_TABLE_COLUMNS; columnIndex++) {
                 _loop_1(columnIndex);
             }
@@ -5366,36 +5629,27 @@ var SidePanelControlView = /** @class */ (function (_super) {
             });
         };
         TABLE_ALIGNMENTS.forEach(function (option) {
+            var label = t("tables.align.".concat(option));
             var button = alignmentRow.createDiv({ cls: 'nav-action-text-button' });
-            button.appendText(t("tables.align.".concat(option)));
-            button.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            alignment = option;
-                            this.plugin.settings.tableAlignment = option;
-                            return [4 /*yield*/, this.plugin.saveSettings()];
-                        case 1:
-                            _a.sent();
-                            highlightAlignment();
-                            return [2 /*return*/];
-                    }
-                });
-            }); });
+            button.appendText(label);
+            _this.asButton(button, label, function () {
+                alignment = option;
+                _this.plugin.settings.tableAlignment = option;
+                highlightAlignment();
+                void _this.plugin.saveSettings();
+            });
             alignmentButtons.push(button);
         });
         highlightAlignment();
     };
     SidePanelControlView.prototype.addHtmlButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = htmlFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    htmlFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = htmlFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                htmlFormatter(editor, formatterSetting);
         };
         var numberOfCols = 3;
         var row = null;
@@ -5406,26 +5660,23 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
             var button = row.createDiv({ cls: 'nav-action-text-button' });
-            addClickEvent(button, key);
             button.appendText(item.des);
+            _this.asButton(button, item.des, function () { return activate(key); });
         });
     };
-    //xxxxx
     SidePanelControlView.prototype.addCalloutsButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = calloutsFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (!editor)
-                    return;
-                // The heading is written into the note so it renders translated; the
-                // keyword inside [!...] stays English either way.
-                calloutsFormatter(editor, formatterSetting, _this.plugin.settings.calloutTitles
-                    ? calloutLabel(formatterSetting.id)
-                    : '');
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = calloutsFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (!editor)
+                return;
+            // The heading is written into the note so it renders translated; the
+            // keyword inside [!...] stays English either way.
+            calloutsFormatter(editor, formatterSetting, _this.plugin.settings.calloutTitles
+                ? calloutLabel(formatterSetting.id)
+                : '');
         };
         var row = null;
         keys(calloutsFormatterSettings).forEach(function (key, index) {
@@ -5441,7 +5692,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             // delivery of them through custom properties.
             button.style.setProperty('--mfa-callout-color', item.color);
             button.style.setProperty('--mfa-callout-background', item.bgColor);
-            addClickEvent(button, key);
+            _this.asButton(button, calloutLabel(item.id), function () { return activate(key); });
             var spanIcon = button.createSpan({ cls: 'mfa-callout-icon' });
             obsidian.setIcon(spanIcon, item.icon);
             button.createSpan().setText(' ' + calloutLabel(item.id));
@@ -5449,17 +5700,21 @@ var SidePanelControlView = /** @class */ (function (_super) {
     };
     SidePanelControlView.prototype.addLatexButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = latexFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    latexFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = latexFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                latexFormatter(editor, formatterSetting);
         };
         var row = null;
-        keys(latexFormatterSettings).forEach(function (key, index) {
+        // The panel shows a chosen few; the rest are reachable through ALT+Q,
+        // which is what issue #21 asked for. Filtered before the index is taken,
+        // or a hidden entry would take its row break with it.
+        var shown = keys(latexFormatterSettings).filter(
+        // @ts-ignore
+        function (key) { return !latexFormatterSettings[key].suggestOnly; });
+        shown.forEach(function (key, index) {
             // @ts-ignore
             var item = latexFormatterSettings[key];
             if (index === 0 || item.newLine) {
@@ -5468,7 +5723,8 @@ var SidePanelControlView = /** @class */ (function (_super) {
             var button = row.createDiv({
                 cls: 'nav-action-text-button mfa-centered-button',
             });
-            addClickEvent(button, key);
+            // Half of these are drawn as an svg, so des is the only name they have.
+            _this.asButton(button, commandName(item.des), function () { return activate(key); });
             if (item.type === 'icon') {
                 var svg = svgToElement(item.text);
                 svg.addClass('mfa-inline-svg');
@@ -5481,14 +5737,12 @@ var SidePanelControlView = /** @class */ (function (_super) {
     };
     SidePanelControlView.prototype.addGreekLowerCaseLetters = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = greekLowerCaseFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    greekFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = greekLowerCaseFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                greekFormatter(editor, formatterSetting);
         };
         var numberOfCols = 5;
         var row = null;
@@ -5499,20 +5753,20 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
             var button = row.createDiv({ cls: 'nav-action-button' });
-            addClickEvent(button, key);
+            // A letter drawn as an svg has no text at all, so 'Alpha' is the only
+            // thing there is to announce or to show on hover.
+            _this.asButton(button, commandName(item.des), function () { return activate(key); });
             button.appendChild(svgToElement(item.icon));
         });
     };
     SidePanelControlView.prototype.addGreekUpperCaseLetters = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = greekUpperCaseFormatterSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    greekFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = greekUpperCaseFormatterSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                greekFormatter(editor, formatterSetting);
         };
         var numberOfCols = 5;
         var row = null;
@@ -5523,81 +5777,65 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
             }
             var button = row.createDiv({ cls: 'nav-action-button' });
-            addClickEvent(button, key);
+            // A letter drawn as an svg has no text at all, so 'Alpha' is the only
+            // thing there is to announce or to show on hover.
+            _this.asButton(button, commandName(item.des), function () { return activate(key); });
             button.appendChild(svgToElement(item.icon));
         });
     };
     SidePanelControlView.prototype.addTextEditButtons = function (mainDiv) {
         var _this = this;
-        var addClickEvent = function (btn, type) {
-            btn.onClickEvent(function () {
-                // @ts-ignore
-                var formatterSetting = formatSettings[type];
-                var editor = getTargetEditor(_this.app.workspace);
-                if (editor)
-                    iconFormatter(editor, formatterSetting);
-            });
+        var activate = function (type) {
+            // @ts-ignore
+            var formatterSetting = formatSettings[type];
+            var editor = getTargetEditor(_this.app.workspace);
+            if (editor)
+                iconFormatter(editor, formatterSetting);
         };
-        var row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        for (var _i = 0, _a = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']; _i < _a.length; _i++) {
-            var icon = _a[_i];
-            var button_1 = row.createDiv({ cls: 'nav-action-button' });
-            addClickEvent(button_1, icon);
-            button_1.appendChild(svgToElement(icon));
-        }
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        var button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'bold');
-        button.appendChild(svgToElement('bold'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonBold';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'italic');
-        button.appendChild(svgToElement('italic'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonItalic';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'strikethrough');
-        button.appendChild(svgToElement('strikethrough'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonStrikethrough';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'underline');
-        button.appendChild(svgToElement('underline'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonUnderline';
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'highlight');
-        button.appendChild(svgToElement('highlight'));
-        button.id = 'obsidianMarkdownFormattingAssistantPluginButtonHighlight';
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'codeInline');
-        button.appendChild(svgToElement('codeInline'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'codeBlock');
-        button.appendChild(svgToElement('codeBlock'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'mermaidBlock');
-        button.appendChild(svgToElement('mermaidBlock'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'link');
-        button.appendChild(svgToElement('link'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'internalLink');
-        button.appendChild(svgToElement('fileLink'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'blockquote');
-        button.appendChild(svgToElement('quote'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'image');
-        button.appendChild(svgToElement('image'));
-        row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'bulletList');
-        button.appendChild(svgToElement('bulletList'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'numberList');
-        button.appendChild(svgToElement('numberList'));
-        button = row.createDiv({ cls: 'nav-action-button' });
-        addClickEvent(button, 'checkList');
-        button.appendChild(svgToElement('checkList'));
+        var rows = [
+            [
+                ['h1', 'h1'],
+                ['h2', 'h2'],
+                ['h3', 'h3'],
+                ['h4', 'h4'],
+                ['h5', 'h5'],
+                ['h6', 'h6'],
+            ],
+            [
+                ['bold', 'bold'],
+                ['italic', 'italic'],
+                ['strikethrough', 'strikethrough'],
+                ['underline', 'underline'],
+                ['highlight', 'highlight'],
+            ],
+            [
+                ['codeInline', 'codeInline'],
+                ['codeBlock', 'codeBlock'],
+                ['mermaidBlock', 'mermaidBlock'],
+                ['link', 'link'],
+                ['internalLink', 'fileLink'],
+                ['blockquote', 'quote'],
+                ['image', 'image'],
+            ],
+            [
+                ['bulletList', 'bulletList'],
+                ['numberList', 'numberList'],
+                ['checkList', 'checkList'],
+            ],
+        ];
+        rows.forEach(function (actions) {
+            var row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
+            actions.forEach(function (_a) {
+                var id = _a[0], icon = _a[1];
+                var button = row.createDiv({ cls: 'nav-action-button' });
+                // These buttons hold a drawing and nothing else, so the label is the
+                // only thing a screen reader has to go on.
+                _this.asButton(button, commandName(formatSettings[id].des), function () {
+                    return activate(id);
+                });
+                button.appendChild(svgToElement(icon));
+            });
+        });
     };
     SidePanelControlView.prototype.addColorBody = function (mainDiv) {
         var _this = this;
@@ -5609,34 +5847,31 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 var box = document.getElementById(id);
                 return box ? box.checked : false;
             };
-            var addColor = isChecked('inputColorTagCheckBox');
-            var addBackgroundColor = isChecked('inputBackgroundColorTagCheckBox');
-            var addStyle = isChecked('inputStyleTagCheckBox');
-            var addHtml = isChecked('inputHtmlTagCheckBox');
-            var res = color;
-            if (addColor)
-                res = "color: ".concat(color);
-            if (addBackgroundColor)
-                res = "background-color: ".concat(color);
-            if (addColor && addBackgroundColor)
-                res = "color: ".concat(color, "; background-color: ").concat(color);
-            if (addStyle)
-                res = "style=\"".concat(res, "\"");
-            if (addHtml)
-                res = "<font color=\"".concat(res, "\">").concat(editor.getSelection(), "</font>");
-            colorFormatter(editor, res);
+            var options = {
+                color: isChecked('mfa-option-color'),
+                background: isChecked('mfa-option-background'),
+                styleAttribute: isChecked('mfa-option-style'),
+                html: isChecked('mfa-option-html'),
+            };
+            var selection = editor.getSelection();
+            // Selected text is coloured, not overwritten. Clicking a colour with a
+            // word selected used to replace that word with '#ff0000' - three reports
+            // on the tracker are people working around exactly this, two of them
+            // with patches of their own.
+            colorFormatter(editor, selection
+                ? wrapWithColor(color, selection, options)
+                : colorCode(color, options));
             editor.focus();
         };
         var drawLastSelectedColorIcons = function (container) {
             if (container === void 0) { container = null; }
             if (!container)
-                container = document.getElementById('lastSelectedColorsDiv');
+                container = document.getElementById('mfa-recent-colors');
             container.textContent = '';
             reverse(SidePanelControlView.lastColors).forEach(function (color) {
                 var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
                 colorBox.style.setProperty('--mfa-swatch', color);
-                colorBox.setAttribute('aria-label', color);
-                colorBox.onClickEvent(function () { return insertColor(color); });
+                _this.asButton(colorBox, color, function () { return insertColor(color); });
                 // onClickEvent binds 'click' and nothing else, so the removal branch
                 // this used to share with it could never run: right-clicking a colour
                 // simply inserted it. The README promised otherwise.
@@ -5650,15 +5885,14 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var drawLastSavedColorIcons = function (container) {
             if (container === void 0) { container = null; }
             if (!container)
-                container = document.getElementById('lastSavedColorsDiv');
+                container = document.getElementById('mfa-saved-colors');
             container.textContent = '';
             reverse(_this.plugin.settings.savedColors).forEach(function (color) {
                 var colorBox = container.createDiv({ cls: 'mfa-color-icon' });
-                colorBox.id = 'lastSavedColorsDiv' + color;
+                colorBox.id = 'mfa-saved-colors' + color;
                 colorBox.style.setProperty('--mfa-swatch', color);
-                colorBox.setAttribute('aria-label', color);
                 colorBox.draggable = true;
-                colorBox.onClickEvent(function () { return insertColor(color); });
+                _this.asButton(colorBox, color, function () { return insertColor(color); });
                 // Same dead branch as the last-used swatches above: 'click' was the
                 // only event ever bound, so a saved colour could not be removed here.
                 colorBox.oncontextmenu = function (event) { return __awaiter(_this, void 0, void 0, function () {
@@ -5677,7 +5911,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 }); };
                 colorBox.ondragstart = function (event) {
                     // @ts-ignore
-                    _this.dragStartColor = event.target.id.replace('lastSavedColorsDiv', '');
+                    _this.dragStartColor = event.target.id.replace('mfa-saved-colors', '');
                 };
                 colorBox.ondrop = function (event) { return __awaiter(_this, void 0, void 0, function () {
                     var target, savedColors, startColor, endColor, startIndex, endIndex;
@@ -5689,10 +5923,10 @@ var SidePanelControlView = /** @class */ (function (_super) {
                                     return [2 /*return*/];
                                 savedColors = this.plugin.settings.savedColors;
                                 startColor = this.dragStartColor;
-                                endColor = target.id.replace('lastSavedColorsDiv', '');
+                                endColor = target.id.replace('mfa-saved-colors', '');
                                 startIndex = indexOf(startColor, savedColors);
                                 endIndex = indexOf(endColor, savedColors);
-                                // The container carries the id 'lastSavedColorsDiv' itself, so a drop
+                                // The container carries the id 'mfa-saved-colors' itself, so a drop
                                 // into the empty space next to the swatches used to resolve to an
                                 // empty colour and index -1 - which then wrote junk into the list.
                                 if (startIndex < 0 || endIndex < 0 || startIndex === endIndex)
@@ -5717,7 +5951,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var colorInput = colorSelector.createEl('input', {
             cls: 'mfa-color-input',
         });
-        colorInput.id = 'colorInput';
+        colorInput.id = 'mfa-color-input';
         colorInput.type = 'color';
         colorInput.value = last(SidePanelControlView.lastColors);
         colorInput.addEventListener('input', function (ev) {
@@ -5744,45 +5978,40 @@ var SidePanelControlView = /** @class */ (function (_super) {
             cls: 'nav-action-text-button mfa-block-button',
         });
         colorButton.appendText(t('colors.select'));
-        colorButton.htmlFor = 'colorInput';
+        colorButton.htmlFor = 'mfa-color-input';
         var colorSaveButton = colorSection.createEl('div', {
             cls: 'nav-action-text-button mfa-block-button mfa-color-save',
         });
         colorSaveButton.appendText(t('colors.save'));
-        colorSaveButton.onClickEvent(function (ev) { return __awaiter(_this, void 0, void 0, function () {
-            var color;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        color = last(SidePanelControlView.lastColors);
-                        this.plugin.settings.savedColors = pipe(without([color]), append(color))(this.plugin.settings.savedColors);
-                        drawLastSavedColorIcons();
-                        return [4 /*yield*/, this.plugin.saveSettings()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.asButton(colorSaveButton, t('colors.save'), function () {
+            var color = last(SidePanelControlView.lastColors);
+            _this.plugin.settings.savedColors = pipe(without([color]), append(color))(_this.plugin.settings.savedColors);
+            drawLastSavedColorIcons();
+            void _this.plugin.saveSettings();
+        });
         var addCheckbox = function (id, text) {
             var div = colorSection.createEl('div');
             var input = div.createEl('input');
             input.id = id;
             input.type = 'checkbox';
             input.name = id;
-            div.createEl('label', { cls: 'mfa-checkbox-label' }).appendText(text);
+            // Tied to the input, which is what lets the words be clicked as well as
+            // the box - and what a screen reader reads out instead of "checkbox".
+            var label = div.createEl('label', { cls: 'mfa-checkbox-label' });
+            label.htmlFor = id;
+            label.appendText(text);
         };
-        addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
-        addCheckbox('inputBackgroundColorTagCheckBox', t('colors.optionBackgroundColor'));
-        addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
-        addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
+        addCheckbox('mfa-option-color', t('colors.optionColor'));
+        addCheckbox('mfa-option-background', t('colors.optionBackgroundColor'));
+        addCheckbox('mfa-option-style', t('colors.optionStyleTag'));
+        addCheckbox('mfa-option-html', t('colors.optionHtmlTag'));
         colorSection
             .createEl('p', { cls: 'mfa-swatches-title' })
             .appendText(t('colors.lastUsed'));
         var lastSelectedColors = colorSection.createEl('div', {
             cls: 'mfa-color-swatches',
         });
-        lastSelectedColors.id = 'lastSelectedColorsDiv';
+        lastSelectedColors.id = 'mfa-recent-colors';
         drawLastSelectedColorIcons(lastSelectedColors);
         colorSection
             .createEl('p', { cls: 'mfa-swatches-title' })
@@ -5793,7 +6022,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var lastSavedColors = colorSection.createEl('div', {
             cls: 'mfa-color-swatches',
         });
-        lastSavedColors.id = 'lastSavedColorsDiv';
+        lastSavedColors.id = 'mfa-saved-colors';
         drawLastSavedColorIcons(lastSavedColors);
         this.addNote(colorSection, t('colors.help'), 'https://github.com/Mark-Karte/obsidian-markdown-formatting-assistant-plugin#color-picker');
     };
@@ -5804,7 +6033,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
             return _this.plugin.settings.regionSettings.find(function (item) { return item.name === name; });
         };
         var header = mainDiv.createEl('div', { cls: 'mfa-section-header' });
-        header.id = 'lastSavedHeaderDiv' + regionName;
+        header.id = 'mfa-region-' + regionName;
         mainDiv.createEl('hr', { cls: 'mfa-section-rule' });
         var title = header.createEl('h4', { cls: 'mfa-section-title' });
         var arrowButton = header.createDiv({
@@ -5814,7 +6043,7 @@ var SidePanelControlView = /** @class */ (function (_super) {
         header.draggable = true;
         header.ondragstart = function (event) {
             // @ts-ignore
-            var sectionId = event.target.id.replace('lastSavedHeaderDiv', '');
+            var sectionId = event.target.id.replace('mfa-region-', '');
             event.dataTransfer.setData('sectionHeaderMoveId', sectionId);
         };
         var onDrop = function (event) { return __awaiter(_this, void 0, void 0, function () {
@@ -5826,10 +6055,10 @@ var SidePanelControlView = /** @class */ (function (_super) {
                         getDroppedRegionName = function (path) {
                             var header = path.find(function (target) {
                                 return target instanceof HTMLElement &&
-                                    target.id.startsWith('lastSavedHeaderDiv');
+                                    target.id.startsWith('mfa-region-');
                             });
                             return header
-                                ? header.id.replace('lastSavedHeaderDiv', '')
+                                ? header.id.replace('mfa-region-', '')
                                 : undefined;
                         };
                         event.preventDefault();
@@ -5876,24 +6105,19 @@ var SidePanelControlView = /** @class */ (function (_super) {
         var expanded = Boolean(region && region.active && region.visible);
         content.toggleClass('is-collapsed', !expanded);
         drawArrow(expanded);
-        arrowButton.onClickEvent(function () { return __awaiter(_this, void 0, void 0, function () {
-            var region;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        region = getRegion(regionName);
-                        if (!region || !region.active)
-                            return [2 /*return*/];
-                        region.visible = !region.visible;
-                        content.toggleClass('is-collapsed', !region.visible);
-                        drawArrow(region.visible);
-                        return [4 /*yield*/, this.plugin.saveSettings()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        // Announced as expanded or collapsed, and updated on every toggle - the
+        // arrow itself is a drawing and says nothing.
+        arrowButton.setAttribute('aria-expanded', String(expanded));
+        this.asButton(arrowButton, sectionTitle, function () {
+            var region = getRegion(regionName);
+            if (!region || !region.active)
+                return;
+            region.visible = !region.visible;
+            content.toggleClass('is-collapsed', !region.visible);
+            drawArrow(region.visible);
+            arrowButton.setAttribute('aria-expanded', String(region.visible));
+            void _this.plugin.saveSettings();
+        });
         return content;
     };
     SidePanelControlView.lastColors = ['#ff0000'];
@@ -5972,7 +6196,6 @@ var CodeSuggestionModal = /** @class */ (function (_super) {
     };
     // Perform action on the selected suggestion.
     CodeSuggestionModal.prototype.onChooseSuggestion = function (baseFormatterSetting, evt) {
-        // @ts-ignore
         var item = baseFormatterSetting;
         if (item.objectType === 'formatterSetting') {
             // @ts-ignore
@@ -6046,7 +6269,6 @@ var CalloutsSuggestionModal = /** @class */ (function (_super) {
     };
     // Perform action on the selected suggestion.
     CalloutsSuggestionModal.prototype.onChooseSuggestion = function (calloutsFormatterSetting, evt) {
-        // @ts-ignore
         var item = calloutsFormatterSetting;
         calloutsFormatter(this.editor, item, this.useTitles ? calloutLabel(item.id) : '');
         // new Notice(`Selected ${calloutsFormatterSetting.des}`);
@@ -6117,38 +6339,6 @@ var CommandPickerModal = /** @class */ (function (_super) {
     };
     return CommandPickerModal;
 }(obsidian.FuzzySuggestModal));
-
-/**
- * Names for Obsidian's own command palette and hotkey list. A leaf module with
- * no imports, so the tests can reach it - see the note in textPlacement.ts.
- *
- * The panel's labels are terse keys like 'code_block'. They work as search
- * terms in this plugin's own window, but the hotkey list sits next to entries
- * such as "Toggle bold", so they are widened just enough to be readable -
- * without inventing and translating a second name for every button.
- */
-/** Turns a panel label into the name shown in Obsidian's command list. */
-function commandName(label) {
-    var words = (label || '').trim().replace(/_/g, ' ');
-    if (!words)
-        return '';
-    // 'h1' through 'h6' keep their shape on purpose: that is what the panel
-    // button says and what people type when they search for it.
-    return words.charAt(0).toUpperCase() + words.slice(1);
-}
-/**
- * What to write on a toolbar button for a command that has no icon.
- *
- * Obsidian prefixes a command's name with the plugin it came from, so the
- * useful part is whatever follows the last colon - and even that is often a
- * sentence. Two characters is what fits a square button; the full name is on
- * the tooltip either way.
- */
-function shortLabel(name) {
-    var parts = (name || '').split(':');
-    var tail = parts[parts.length - 1].trim();
-    return tail.slice(0, 2);
-}
 
 /**
  * One Obsidian command per formatting action, so people can bind their own
@@ -6635,6 +6825,14 @@ var SettingsTab = /** @class */ (function (_super) {
         _this.plugin = plugin;
         return _this;
     }
+    /**
+     * Obsidian calls this when the tab goes away. Whatever the debounce is still
+     * holding has to be written now: quitting within 400 ms of the last
+     * keystroke used to lose the setting that was just typed.
+     */
+    SettingsTab.prototype.hide = function () {
+        this.saveSoon.run();
+    };
     // Must stay synchronous: other plugins (e.g. Settings Search) call display()
     // and read containerEl straight after, which sees nothing if this returns a
     // promise instead of a filled container.

@@ -96,7 +96,6 @@ export class CodeSuggestionModal extends SuggestModal<baseFormatterSetting> {
     baseFormatterSetting: baseFormatterSetting,
     evt: MouseEvent | KeyboardEvent,
   ) {
-    // @ts-ignore
     const item = baseFormatterSetting;
 
     if (item.objectType === 'formatterSetting') {

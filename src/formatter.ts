@@ -1,6 +1,7 @@
 import { Editor } from 'obsidian';
 import * as R from 'ramda';
 import { withIds } from './generalFunctions';
+import { toggleLineMarker } from './lineMarkers';
 
 export interface baseFormatterSetting {
   /** Stable identifier, derived from the table key. Never translated. */
@@ -350,46 +351,27 @@ export function iconFormatter(editor: Editor, item: formatterSetting) {
     } else if (
       ['blockquote', 'bulletList', 'numberList', 'checkList'].includes(item.id)
     ) {
-      // The symbol goes into a regex, so its own special characters have to be
-      // escaped - '1. ' would otherwise let the dot match anything.
-      const escapedSymbol = item.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const markerRe = new RegExp('^(\\s*)' + escapedSymbol);
+      // These markers only mean anything at the start of a line, so the whole
+      // of every touched line is what gets rewritten - not the selection.
+      // Dragging from the middle of one word to the middle of another used to
+      // put the bullet wherever the drag began.
+      //
+      // A selection ending at column zero stops short of that line rather than
+      // including it, which is what shift+down and a triple click produce.
+      const endsBeforeLastLine =
+        curserEnd.ch === 0 && curserEnd.line > curserStart.line;
+      const lastLine = endsBeforeLastLine ? curserEnd.line - 1 : curserEnd.line;
 
-      const hasMarker = (text: string) => markerRe.test(text);
+      const from = { line: curserStart.line, ch: 0 };
+      const to = { line: lastLine, ch: editor.getLine(lastLine).length };
 
-      // Indentation is what makes markdown lists nest, so it has to survive
-      // the toggle in both directions. A quote marker belongs in front of the
-      // whole line, a list marker behind the indentation.
-      const addMarker = (text: string) => {
-        if (item.id === 'blockquote') return item.symbol + text;
-        return text.replace(/^(\s*)/, (_full, indent) => indent + item.symbol);
-      };
+      const converted = toggleLineMarker(
+        editor.getRange(from, to).split('\n'),
+        item.symbol,
+        item.id === 'blockquote' ? 'quote' : 'list',
+      );
 
-      const removeMarker = (text: string) => text.replace(markerRe, '$1');
-
-      if (isSelection) {
-        const selectionLines = selection.split('\n');
-        const allAreItems = selectionLines.every(hasMarker);
-
-        const convertedSelectionLines = selectionLines.map((selectionLine) => {
-          if (allAreItems) return removeMarker(selectionLine);
-          return hasMarker(selectionLine)
-            ? selectionLine
-            : addMarker(selectionLine);
-        });
-
-        editor.replaceSelection(convertedSelectionLines.join('\n'));
-      } else {
-        const replacement = hasMarker(line)
-          ? removeMarker(line)
-          : addMarker(line);
-
-        editor.replaceRange(
-          replacement,
-          { line: curserStart.line, ch: 0 },
-          { line: curserStart.line, ch: line.length },
-        );
-      }
+      editor.replaceRange(converted.join('\n'), from, to);
     }
   }
 }

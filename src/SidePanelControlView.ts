@@ -23,6 +23,7 @@ import {
   calloutsFormatterSetting,
 } from './calloutsFormatter';
 import { colorFormatter } from '../formatters/colorFormatter';
+import { colorCode, wrapWithColor } from './colorMarkup';
 import {
   MAX_TABLE_COLUMNS,
   MAX_TABLE_ROWS,
@@ -30,19 +31,14 @@ import {
   tableFormatter,
 } from './tableFormatter';
 import type { tableAlignment } from './tableFormatter';
-import {
-  ButtonComponent,
-  ItemView,
-  Notice,
-  TFile,
-  WorkspaceLeaf,
-} from 'obsidian';
+import { ItemView, Notice, WorkspaceLeaf } from 'obsidian';
 
 import * as R from 'ramda';
 import MarkdownAutocompletePlugin from './main';
 import { getTargetEditor } from './generalFunctions';
 import { moveItem } from './reorder';
 import { calloutLabel, sectionLabel, t } from './i18n';
+import { commandName } from './commandNames';
 
 export const SidePanelControlViewType = 'side-panel-control-view';
 
@@ -80,7 +76,7 @@ export class SidePanelControlView extends ItemView {
     const container = this.containerEl.children[1];
 
     const rootEl = document.createElement('div');
-    rootEl.id = 'SidePaneRootElement';
+    rootEl.id = 'mfa-panel-root';
 
     this.drawContentOfRootElement(rootEl);
 
@@ -89,7 +85,7 @@ export class SidePanelControlView extends ItemView {
   }
 
   private drawContentOfRootElement(rootEl: HTMLElement = null): void {
-    if (!rootEl) rootEl = document.getElementById('SidePaneRootElement');
+    if (!rootEl) rootEl = document.getElementById('mfa-panel-root');
     rootEl.textContent = '';
 
     const getRegion = (name: string) => {
@@ -204,6 +200,44 @@ export class SidePanelControlView extends ItemView {
     });
   }
 
+  /**
+   * Turns one of the panel's divs into something a keyboard and a screen
+   * reader can use.
+   *
+   * The panel is built from divs on purpose: they carry Obsidian's own
+   * `nav-action-button` styling, which is what makes the buttons follow the
+   * user's theme. A real `<button>` would be the better element, but it also
+   * arrives with browser chrome that would have to be fought back off, and the
+   * hover states are the theme's rather than ours. So the div is given the
+   * three things the element type would otherwise have supplied: a role, a
+   * place in the tab order, and activation by Enter and Space.
+   *
+   * The name matters most. Most of these buttons hold nothing but a drawing,
+   * so without a label a screen reader has literally nothing to announce - not
+   * a mislabelled button, no button at all. It also gives everyone else the
+   * hover tooltip the panel never had.
+   */
+  private asButton(
+    element: HTMLElement,
+    label: string,
+    activate: () => void,
+  ): void {
+    element.setAttribute('role', 'button');
+    element.setAttribute('aria-label', label);
+    element.tabIndex = 0;
+
+    element.onClickEvent(() => activate());
+
+    element.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+
+      // Space scrolls the panel otherwise, which is the one thing a person
+      // pressing it on a button does not want.
+      event.preventDefault();
+      activate();
+    });
+  }
+
   /** The small centred link that closes several of the sections. */
   private addNote(parent: HTMLElement, text: string, href: string): void {
     parent
@@ -256,7 +290,9 @@ export class SidePanelControlView extends ItemView {
           label.setText(t('tables.size', { rows, columns }));
         });
 
-        cell.onClickEvent(() => {
+        // The grid is a picture of the table, so each cell says the size it
+        // would insert - the only way to use it without seeing it.
+        this.asButton(cell, t('tables.size', { rows, columns }), () => {
           const editor = getTargetEditor(this.app.workspace);
           if (editor) tableFormatter(editor, rows, columns, alignment);
         });
@@ -288,13 +324,15 @@ export class SidePanelControlView extends ItemView {
     };
 
     TABLE_ALIGNMENTS.forEach((option) => {
+      const label = t(`tables.align.${option}` as never);
       const button = alignmentRow.createDiv({ cls: 'nav-action-text-button' });
-      button.appendText(t(`tables.align.${option}` as never));
-      button.onClickEvent(async () => {
+
+      button.appendText(label);
+      this.asButton(button, label, () => {
         alignment = option;
         this.plugin.settings.tableAlignment = option;
-        await this.plugin.saveSettings();
         highlightAlignment();
+        void this.plugin.saveSettings();
       });
       alignmentButtons.push(button);
     });
@@ -303,14 +341,12 @@ export class SidePanelControlView extends ItemView {
   }
 
   private addHtmlButtons(mainDiv: HTMLElement) {
-    const addClickEvent = (btn: HTMLElement, type: string) => {
-      btn.onClickEvent(() => {
-        // @ts-ignore
-        const formatterSetting = htmlFormatterSettings[type];
+    const activate = (type: string) => {
+      // @ts-ignore
+      const formatterSetting = htmlFormatterSettings[type];
 
-        const editor = getTargetEditor(this.app.workspace);
-        if (editor) htmlFormatter(editor, formatterSetting);
-      });
+      const editor = getTargetEditor(this.app.workspace);
+      if (editor) htmlFormatter(editor, formatterSetting);
     };
 
     const numberOfCols = 3;
@@ -324,32 +360,30 @@ export class SidePanelControlView extends ItemView {
           row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
         }
 
-        let button = row.createDiv({ cls: 'nav-action-text-button' });
-        addClickEvent(button, key);
+        const button = row.createDiv({ cls: 'nav-action-text-button' });
         button.appendText(item.des);
+        this.asButton(button, item.des, () => activate(key));
       },
     );
   }
-//xxxxx
+
   private addCalloutsButtons(mainDiv: HTMLElement) {
-    const addClickEvent = (btn: HTMLElement, type: string) => {
-      btn.onClickEvent(() => {
-        // @ts-ignore
-        const formatterSetting = calloutsFormatterSettings[type];
+    const activate = (type: string) => {
+      // @ts-ignore
+      const formatterSetting = calloutsFormatterSettings[type];
 
-        const editor = getTargetEditor(this.app.workspace);
-        if (!editor) return;
+      const editor = getTargetEditor(this.app.workspace);
+      if (!editor) return;
 
-        // The heading is written into the note so it renders translated; the
-        // keyword inside [!...] stays English either way.
-        calloutsFormatter(
-          editor,
-          formatterSetting,
-          this.plugin.settings.calloutTitles
-            ? calloutLabel(formatterSetting.id)
-            : '',
-        );
-      });
+      // The heading is written into the note so it renders translated; the
+      // keyword inside [!...] stays English either way.
+      calloutsFormatter(
+        editor,
+        formatterSetting,
+        this.plugin.settings.calloutTitles
+          ? calloutLabel(formatterSetting.id)
+          : '',
+      );
     };
 
     const numberOfCols = 5;
@@ -371,7 +405,7 @@ export class SidePanelControlView extends ItemView {
       button.style.setProperty('--mfa-callout-color', item.color);
       button.style.setProperty('--mfa-callout-background', item.bgColor);
 
-      addClickEvent(button, key);
+      this.asButton(button, calloutLabel(item.id), () => activate(key));
 
       const spanIcon = button.createSpan({ cls: 'mfa-callout-icon' });
       setIcon(spanIcon, item.icon);
@@ -381,20 +415,25 @@ export class SidePanelControlView extends ItemView {
   }
 
   private addLatexButtons(mainDiv: HTMLElement) {
-    const addClickEvent = (btn: HTMLElement, type: string) => {
-      btn.onClickEvent(() => {
-        // @ts-ignore
-        const formatterSetting = latexFormatterSettings[type];
+    const activate = (type: string) => {
+      // @ts-ignore
+      const formatterSetting = latexFormatterSettings[type];
 
-        const editor = getTargetEditor(this.app.workspace);
-        if (editor) latexFormatter(editor, formatterSetting);
-      });
+      const editor = getTargetEditor(this.app.workspace);
+      if (editor) latexFormatter(editor, formatterSetting);
     };
 
-    const numberOfCols = 5;
     let row: HTMLElement = null;
 
-    R.keys(latexFormatterSettings).forEach((key, index) => {
+    // The panel shows a chosen few; the rest are reachable through ALT+Q,
+    // which is what issue #21 asked for. Filtered before the index is taken,
+    // or a hidden entry would take its row break with it.
+    const shown = R.keys(latexFormatterSettings).filter(
+      // @ts-ignore
+      (key) => !latexFormatterSettings[key].suggestOnly,
+    );
+
+    shown.forEach((key, index) => {
       // @ts-ignore
       const item = latexFormatterSettings[key];
       if (index === 0 || item.newLine) {
@@ -405,7 +444,8 @@ export class SidePanelControlView extends ItemView {
         cls: 'nav-action-text-button mfa-centered-button',
       });
 
-      addClickEvent(button, key);
+      // Half of these are drawn as an svg, so des is the only name they have.
+      this.asButton(button, commandName(item.des), () => activate(key));
 
       if (item.type === 'icon') {
         const svg = svgToElement(item.text);
@@ -418,14 +458,12 @@ export class SidePanelControlView extends ItemView {
   }
 
   private addGreekLowerCaseLetters(mainDiv: HTMLElement) {
-    const addClickEvent = (btn: HTMLElement, type: string) => {
-      btn.onClickEvent(() => {
-        // @ts-ignore
-        const formatterSetting = greekLowerCaseFormatterSettings[type];
+    const activate = (type: string) => {
+      // @ts-ignore
+      const formatterSetting = greekLowerCaseFormatterSettings[type];
 
-        const editor = getTargetEditor(this.app.workspace);
-        if (editor) greekFormatter(editor, formatterSetting);
-      });
+      const editor = getTargetEditor(this.app.workspace);
+      if (editor) greekFormatter(editor, formatterSetting);
     };
 
     const numberOfCols = 5;
@@ -438,21 +476,22 @@ export class SidePanelControlView extends ItemView {
         row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
       }
 
-      let button = row.createDiv({ cls: 'nav-action-button' });
-      addClickEvent(button, key);
+      const button = row.createDiv({ cls: 'nav-action-button' });
+
+      // A letter drawn as an svg has no text at all, so 'Alpha' is the only
+      // thing there is to announce or to show on hover.
+      this.asButton(button, commandName(item.des), () => activate(key));
       button.appendChild(svgToElement(item.icon));
     });
   }
 
   private addGreekUpperCaseLetters(mainDiv: HTMLElement) {
-    const addClickEvent = (btn: HTMLElement, type: string) => {
-      btn.onClickEvent(() => {
-        // @ts-ignore
-        const formatterSetting = greekUpperCaseFormatterSettings[type];
+    const activate = (type: string) => {
+      // @ts-ignore
+      const formatterSetting = greekUpperCaseFormatterSettings[type];
 
-        const editor = getTargetEditor(this.app.workspace);
-        if (editor) greekFormatter(editor, formatterSetting);
-      });
+      const editor = getTargetEditor(this.app.workspace);
+      if (editor) greekFormatter(editor, formatterSetting);
     };
 
     const numberOfCols = 5;
@@ -465,98 +504,75 @@ export class SidePanelControlView extends ItemView {
         row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
       }
 
-      let button = row.createDiv({ cls: 'nav-action-button' });
-      addClickEvent(button, key);
+      const button = row.createDiv({ cls: 'nav-action-button' });
+
+      // A letter drawn as an svg has no text at all, so 'Alpha' is the only
+      // thing there is to announce or to show on hover.
+      this.asButton(button, commandName(item.des), () => activate(key));
       button.appendChild(svgToElement(item.icon));
     });
   }
 
   private addTextEditButtons(mainDiv: HTMLElement) {
-    const addClickEvent = (btn: HTMLElement, type: string) => {
-      btn.onClickEvent(() => {
-        // @ts-ignore
-        const formatterSetting = formatSettings[type];
+    const activate = (type: string) => {
+      // @ts-ignore
+      const formatterSetting = formatSettings[type];
 
-        const editor = getTargetEditor(this.app.workspace);
-        if (editor) iconFormatter(editor, formatterSetting);
-      });
+      const editor = getTargetEditor(this.app.workspace);
+      if (editor) iconFormatter(editor, formatterSetting);
     };
 
-    let row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
+    // Each row of the section, as [action, icon] pairs. Written out because
+    // three of them draw an icon under a different name than the action, and
+    // the grouping into rows is a layout decision rather than data.
+    type textAction = keyof typeof formatSettings;
 
-    for (let icon of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
-      const button = row.createDiv({ cls: 'nav-action-button' });
-      addClickEvent(button, icon);
-      button.appendChild(svgToElement(icon));
-    }
+    const rows: Array<Array<[textAction, string]>> = [
+      [
+        ['h1', 'h1'],
+        ['h2', 'h2'],
+        ['h3', 'h3'],
+        ['h4', 'h4'],
+        ['h5', 'h5'],
+        ['h6', 'h6'],
+      ],
+      [
+        ['bold', 'bold'],
+        ['italic', 'italic'],
+        ['strikethrough', 'strikethrough'],
+        ['underline', 'underline'],
+        ['highlight', 'highlight'],
+      ],
+      [
+        ['codeInline', 'codeInline'],
+        ['codeBlock', 'codeBlock'],
+        ['mermaidBlock', 'mermaidBlock'],
+        ['link', 'link'],
+        ['internalLink', 'fileLink'],
+        ['blockquote', 'quote'],
+        ['image', 'image'],
+      ],
+      [
+        ['bulletList', 'bulletList'],
+        ['numberList', 'numberList'],
+        ['checkList', 'checkList'],
+      ],
+    ];
 
-    row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-    let button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'bold');
-    button.appendChild(svgToElement('bold'));
-    button.id = 'obsidianMarkdownFormattingAssistantPluginButtonBold';
+    rows.forEach((actions) => {
+      const row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
 
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'italic');
-    button.appendChild(svgToElement('italic'));
-    button.id = 'obsidianMarkdownFormattingAssistantPluginButtonItalic';
+      actions.forEach(([id, icon]) => {
+        const button = row.createDiv({ cls: 'nav-action-button' });
 
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'strikethrough');
-    button.appendChild(svgToElement('strikethrough'));
-    button.id = 'obsidianMarkdownFormattingAssistantPluginButtonStrikethrough';
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'underline');
-    button.appendChild(svgToElement('underline'));
-    button.id = 'obsidianMarkdownFormattingAssistantPluginButtonUnderline';
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'highlight');
-    button.appendChild(svgToElement('highlight'));
-    button.id = 'obsidianMarkdownFormattingAssistantPluginButtonHighlight';
-
-    row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'codeInline');
-    button.appendChild(svgToElement('codeInline'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'codeBlock');
-    button.appendChild(svgToElement('codeBlock'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'mermaidBlock');
-    button.appendChild(svgToElement('mermaidBlock'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'link');
-    button.appendChild(svgToElement('link'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'internalLink');
-    button.appendChild(svgToElement('fileLink'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'blockquote');
-    button.appendChild(svgToElement('quote'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'image');
-    button.appendChild(svgToElement('image'));
-
-    row = mainDiv.createDiv({ cls: 'nav-buttons-container' });
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'bulletList');
-    button.appendChild(svgToElement('bulletList'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'numberList');
-    button.appendChild(svgToElement('numberList'));
-
-    button = row.createDiv({ cls: 'nav-action-button' });
-    addClickEvent(button, 'checkList');
-    button.appendChild(svgToElement('checkList'));
+        // These buttons hold a drawing and nothing else, so the label is the
+        // only thing a screen reader has to go on.
+        this.asButton(button, commandName(formatSettings[id].des), () =>
+          activate(id),
+        );
+        button.appendChild(svgToElement(icon));
+      });
+    });
   }
 
   private addColorBody(mainDiv: HTMLElement) {
@@ -569,34 +585,38 @@ export class SidePanelControlView extends ItemView {
         return box ? box.checked : false;
       };
 
-      const addColor = isChecked('inputColorTagCheckBox');
-      const addBackgroundColor = isChecked('inputBackgroundColorTagCheckBox');
-      const addStyle = isChecked('inputStyleTagCheckBox');
-      const addHtml = isChecked('inputHtmlTagCheckBox');
+      const options = {
+        color: isChecked('mfa-option-color'),
+        background: isChecked('mfa-option-background'),
+        styleAttribute: isChecked('mfa-option-style'),
+        html: isChecked('mfa-option-html'),
+      };
 
-      let res = color;
-      if (addColor) res = `color: ${color}`;
-      if (addBackgroundColor) res = `background-color: ${color}`;
-      if (addColor && addBackgroundColor)
-        res = `color: ${color}; background-color: ${color}`;
-      if (addStyle) res = `style="${res}"`;
-      if (addHtml) res = `<font color="${res}">${editor.getSelection()}</font>`;
+      const selection = editor.getSelection();
 
-      colorFormatter(editor, res);
+      // Selected text is coloured, not overwritten. Clicking a colour with a
+      // word selected used to replace that word with '#ff0000' - three reports
+      // on the tracker are people working around exactly this, two of them
+      // with patches of their own.
+      colorFormatter(
+        editor,
+        selection
+          ? wrapWithColor(color, selection, options)
+          : colorCode(color, options),
+      );
       editor.focus();
     };
 
     const drawLastSelectedColorIcons = (container: HTMLElement = null) => {
       if (!container)
-        container = document.getElementById('lastSelectedColorsDiv');
+        container = document.getElementById('mfa-recent-colors');
       container.textContent = '';
 
       R.reverse(SidePanelControlView.lastColors).forEach((color) => {
         const colorBox = container.createDiv({ cls: 'mfa-color-icon' });
         colorBox.style.setProperty('--mfa-swatch', color);
-        colorBox.setAttribute('aria-label', color);
 
-        colorBox.onClickEvent(() => insertColor(color));
+        this.asButton(colorBox, color, () => insertColor(color));
 
         // onClickEvent binds 'click' and nothing else, so the removal branch
         // this used to share with it could never run: right-clicking a colour
@@ -613,18 +633,17 @@ export class SidePanelControlView extends ItemView {
     };
 
     const drawLastSavedColorIcons = (container: HTMLElement = null) => {
-      if (!container) container = document.getElementById('lastSavedColorsDiv');
+      if (!container) container = document.getElementById('mfa-saved-colors');
 
       container.textContent = '';
 
       R.reverse(this.plugin.settings.savedColors).forEach((color) => {
         const colorBox = container.createDiv({ cls: 'mfa-color-icon' });
-        colorBox.id = 'lastSavedColorsDiv' + color;
+        colorBox.id = 'mfa-saved-colors' + color;
         colorBox.style.setProperty('--mfa-swatch', color);
-        colorBox.setAttribute('aria-label', color);
         colorBox.draggable = true;
 
-        colorBox.onClickEvent(() => insertColor(color));
+        this.asButton(colorBox, color, () => insertColor(color));
 
         // Same dead branch as the last-used swatches above: 'click' was the
         // only event ever bound, so a saved colour could not be removed here.
@@ -640,7 +659,7 @@ export class SidePanelControlView extends ItemView {
         colorBox.ondragstart = (event) => {
           // @ts-ignore
           this.dragStartColor = event.target.id.replace(
-            'lastSavedColorsDiv',
+            'mfa-saved-colors',
             '',
           );
         };
@@ -650,12 +669,12 @@ export class SidePanelControlView extends ItemView {
 
           const savedColors = this.plugin.settings.savedColors;
           const startColor = this.dragStartColor;
-          const endColor = target.id.replace('lastSavedColorsDiv', '');
+          const endColor = target.id.replace('mfa-saved-colors', '');
 
           const startIndex = R.indexOf(startColor, savedColors);
           const endIndex = R.indexOf(endColor, savedColors);
 
-          // The container carries the id 'lastSavedColorsDiv' itself, so a drop
+          // The container carries the id 'mfa-saved-colors' itself, so a drop
           // into the empty space next to the swatches used to resolve to an
           // empty colour and index -1 - which then wrote junk into the list.
           if (startIndex < 0 || endIndex < 0 || startIndex === endIndex) return;
@@ -684,7 +703,7 @@ export class SidePanelControlView extends ItemView {
     const colorInput = colorSelector.createEl('input', {
       cls: 'mfa-color-input',
     });
-    colorInput.id = 'colorInput';
+    colorInput.id = 'mfa-color-input';
     colorInput.type = 'color';
     colorInput.value = R.last(SidePanelControlView.lastColors);
     colorInput.addEventListener('input', (ev) => {
@@ -724,20 +743,20 @@ export class SidePanelControlView extends ItemView {
       cls: 'nav-action-text-button mfa-block-button',
     });
     colorButton.appendText(t('colors.select'));
-    colorButton.htmlFor = 'colorInput';
+    colorButton.htmlFor = 'mfa-color-input';
 
     const colorSaveButton = colorSection.createEl('div', {
       cls: 'nav-action-text-button mfa-block-button mfa-color-save',
     });
     colorSaveButton.appendText(t('colors.save'));
-    colorSaveButton.onClickEvent(async (ev) => {
+    this.asButton(colorSaveButton, t('colors.save'), () => {
       const color = R.last(SidePanelControlView.lastColors);
       this.plugin.settings.savedColors = R.pipe(
         R.without([color]),
         R.append(color),
       )(this.plugin.settings.savedColors);
       drawLastSavedColorIcons();
-      await this.plugin.saveSettings();
+      void this.plugin.saveSettings();
     });
 
     const addCheckbox = (id: string, text: string) => {
@@ -746,16 +765,21 @@ export class SidePanelControlView extends ItemView {
       input.id = id;
       input.type = 'checkbox';
       input.name = id;
-      div.createEl('label', { cls: 'mfa-checkbox-label' }).appendText(text);
+
+      // Tied to the input, which is what lets the words be clicked as well as
+      // the box - and what a screen reader reads out instead of "checkbox".
+      const label = div.createEl('label', { cls: 'mfa-checkbox-label' });
+      label.htmlFor = id;
+      label.appendText(text);
     };
 
-    addCheckbox('inputColorTagCheckBox', t('colors.optionColor'));
+    addCheckbox('mfa-option-color', t('colors.optionColor'));
     addCheckbox(
-      'inputBackgroundColorTagCheckBox',
+      'mfa-option-background',
       t('colors.optionBackgroundColor'),
     );
-    addCheckbox('inputStyleTagCheckBox', t('colors.optionStyleTag'));
-    addCheckbox('inputHtmlTagCheckBox', t('colors.optionHtmlTag'));
+    addCheckbox('mfa-option-style', t('colors.optionStyleTag'));
+    addCheckbox('mfa-option-html', t('colors.optionHtmlTag'));
 
     colorSection
       .createEl('p', { cls: 'mfa-swatches-title' })
@@ -764,7 +788,7 @@ export class SidePanelControlView extends ItemView {
     const lastSelectedColors = colorSection.createEl('div', {
       cls: 'mfa-color-swatches',
     });
-    lastSelectedColors.id = 'lastSelectedColorsDiv';
+    lastSelectedColors.id = 'mfa-recent-colors';
 
     drawLastSelectedColorIcons(lastSelectedColors);
 
@@ -779,7 +803,7 @@ export class SidePanelControlView extends ItemView {
     const lastSavedColors = colorSection.createEl('div', {
       cls: 'mfa-color-swatches',
     });
-    lastSavedColors.id = 'lastSavedColorsDiv';
+    lastSavedColors.id = 'mfa-saved-colors';
 
     drawLastSavedColorIcons(lastSavedColors);
 
@@ -800,7 +824,7 @@ export class SidePanelControlView extends ItemView {
     };
 
     const header = mainDiv.createEl('div', { cls: 'mfa-section-header' });
-    header.id = 'lastSavedHeaderDiv' + regionName;
+    header.id = 'mfa-region-' + regionName;
     const hr = mainDiv.createEl('hr', { cls: 'mfa-section-rule' });
     const title = header.createEl('h4', { cls: 'mfa-section-title' });
     const arrowButton = header.createDiv({
@@ -812,7 +836,7 @@ export class SidePanelControlView extends ItemView {
 
     header.ondragstart = (event) => {
       // @ts-ignore
-      const sectionId = event.target.id.replace('lastSavedHeaderDiv', '');
+      const sectionId = event.target.id.replace('mfa-region-', '');
 
       event.dataTransfer.setData('sectionHeaderMoveId', sectionId);
     };
@@ -825,11 +849,11 @@ export class SidePanelControlView extends ItemView {
         const header = path.find(
           (target) =>
             target instanceof HTMLElement &&
-            target.id.startsWith('lastSavedHeaderDiv'),
+            target.id.startsWith('mfa-region-'),
         ) as HTMLElement | undefined;
 
         return header
-          ? header.id.replace('lastSavedHeaderDiv', '')
+          ? header.id.replace('mfa-region-', '')
           : undefined;
       };
 
@@ -886,8 +910,11 @@ export class SidePanelControlView extends ItemView {
 
     content.toggleClass('is-collapsed', !expanded);
     drawArrow(expanded);
+    // Announced as expanded or collapsed, and updated on every toggle - the
+    // arrow itself is a drawing and says nothing.
+    arrowButton.setAttribute('aria-expanded', String(expanded));
 
-    arrowButton.onClickEvent(async () => {
+    this.asButton(arrowButton, sectionTitle, () => {
       const region = getRegion(regionName);
 
       if (!region || !region.active) return;
@@ -895,8 +922,9 @@ export class SidePanelControlView extends ItemView {
       region.visible = !region.visible;
       content.toggleClass('is-collapsed', !region.visible);
       drawArrow(region.visible);
+      arrowButton.setAttribute('aria-expanded', String(region.visible));
 
-      await this.plugin.saveSettings();
+      void this.plugin.saveSettings();
     });
 
     return content;

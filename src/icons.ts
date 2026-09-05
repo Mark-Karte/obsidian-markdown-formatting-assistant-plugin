@@ -6,8 +6,11 @@ import * as iconPaths from './iconPaths';
 import { splitMarkup } from './markup';
 
 function pathToSvg(icon: string) {
+  // The size comes from the stylesheet rather than from a style attribute
+  // written here - this was the last place the plugin set a fixed style from
+  // JavaScript, which Obsidian's guidelines ask plugins not to do.
   return `
-    <svg style="width:24px;height:24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg class="mfa-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill="currentColor" d="${icon}" />
     </svg>`;
 }

@@ -2,15 +2,12 @@ import {
   App,
   Editor,
   MarkdownView,
-  Modal,
   Notice,
   Plugin,
   PluginSettingTab,
   Setting,
   debounce,
   setIcon,
-  Workspace,
-  EditorPosition,
 } from 'obsidian';
 
 import { addIcons, removeIcons } from './icons';
@@ -255,6 +252,15 @@ class SettingsTab extends PluginSettingTab {
   constructor(app: App, plugin: MarkdownAutocompletePlugin) {
     super(app, plugin);
     this.plugin = plugin;
+  }
+
+  /**
+   * Obsidian calls this when the tab goes away. Whatever the debounce is still
+   * holding has to be written now: quitting within 400 ms of the last
+   * keystroke used to lose the setting that was just typed.
+   */
+  hide() {
+    this.saveSoon.run();
   }
 
   // Must stay synchronous: other plugins (e.g. Settings Search) call display()
