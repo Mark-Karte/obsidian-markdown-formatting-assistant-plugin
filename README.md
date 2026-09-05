@@ -135,9 +135,15 @@ All saved colors can be sorted via drop a catch.
 
 Right-click a swatch to remove it, in either the recent or the saved row. Saved colors can also be removed in the settings by clicking a swatch there.
 
+### Coloring selected text
+
+Select some text and click a color — recent, saved, or freshly picked — and the selection is wrapped so it takes that color. One click, no options to tick first.
+
+Ticking `background-color` gives you a background instead, since a `<font>` tag can only set the color of the text.
+
 ### Additional Formats
 
-For a even easier handling you can select additional options to what should be added to the color.
+With **nothing** selected, the options below decide what the click writes at the cursor. They describe a piece of code to paste into a tag you are already writing, which is why they do not apply when there is a selection — there is only one thing "color this text" can mean.
 
 #### Options
 

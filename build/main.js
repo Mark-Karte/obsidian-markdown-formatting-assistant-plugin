@@ -3895,6 +3895,57 @@ function colorFormatter(editor, color) {
     editor.setCursor(curserStart);
 }
 
+/**
+ * What clicking a colour writes into the note. A leaf module with no imports,
+ * so the tests can reach it - see the note in textPlacement.ts.
+ *
+ * The four checkboxes in the Colors section describe two quite different
+ * jobs, and the old code ran them together. Three of them build a fragment of
+ * CSS to be pasted into a tag you are already writing; the fourth wraps text.
+ * Splitting them is what lets a selection be coloured rather than destroyed.
+ */
+function declarations(color, options) {
+    if (options.color && options.background) {
+        return "color: ".concat(color, "; background-color: ").concat(color);
+    }
+    if (options.background)
+        return "background-color: ".concat(color);
+    if (options.color)
+        return "color: ".concat(color);
+    return color;
+}
+/**
+ * The code to insert when nothing is selected.
+ *
+ * `<font color>` takes a colour and not a declaration, so it uses the colour
+ * as picked. Ticking the style attribute together with the tag used to emit
+ * `<font color="style="color: #fff"">`, which is not markup at all.
+ */
+function colorCode(color, options) {
+    if (options.html)
+        return "<font color=\"".concat(color, "\"></font>");
+    var body = declarations(color, options);
+    return options.styleAttribute ? "style=\"".concat(body, "\"") : body;
+}
+/**
+ * How to colour text that is selected.
+ *
+ * There is only one useful answer to "colour this", so it does not depend on
+ * whether the tag checkbox happens to be ticked: a fragment like
+ * `color: #ff0000` cannot wrap anything, and writing it over the selection is
+ * what used to lose people their text.
+ *
+ * The background is the one choice that changes the wrapper. `<font color>`
+ * can only set the text colour, so asking for a background has to produce a
+ * span - otherwise the click would quietly do something else.
+ */
+function wrapWithColor(color, selection, options) {
+    if (options.background) {
+        return "<span style=\"".concat(declarations(color, options), "\">").concat(selection, "</span>");
+    }
+    return "<font color=\"".concat(color, "\">").concat(selection, "</font>");
+}
+
 function tableFormatter(editor, rows, columns, alignment) {
     if (!editor)
         return;
@@ -5644,22 +5695,20 @@ var SidePanelControlView = /** @class */ (function (_super) {
                 var box = document.getElementById(id);
                 return box ? box.checked : false;
             };
-            var addColor = isChecked('inputColorTagCheckBox');
-            var addBackgroundColor = isChecked('inputBackgroundColorTagCheckBox');
-            var addStyle = isChecked('inputStyleTagCheckBox');
-            var addHtml = isChecked('inputHtmlTagCheckBox');
-            var res = color;
-            if (addColor)
-                res = "color: ".concat(color);
-            if (addBackgroundColor)
-                res = "background-color: ".concat(color);
-            if (addColor && addBackgroundColor)
-                res = "color: ".concat(color, "; background-color: ").concat(color);
-            if (addStyle)
-                res = "style=\"".concat(res, "\"");
-            if (addHtml)
-                res = "<font color=\"".concat(res, "\">").concat(editor.getSelection(), "</font>");
-            colorFormatter(editor, res);
+            var options = {
+                color: isChecked('inputColorTagCheckBox'),
+                background: isChecked('inputBackgroundColorTagCheckBox'),
+                styleAttribute: isChecked('inputStyleTagCheckBox'),
+                html: isChecked('inputHtmlTagCheckBox'),
+            };
+            var selection = editor.getSelection();
+            // Selected text is coloured, not overwritten. Clicking a colour with a
+            // word selected used to replace that word with '#ff0000' - three reports
+            // on the tracker are people working around exactly this, two of them
+            // with patches of their own.
+            colorFormatter(editor, selection
+                ? wrapWithColor(color, selection, options)
+                : colorCode(color, options));
             editor.focus();
         };
         var drawLastSelectedColorIcons = function (container) {

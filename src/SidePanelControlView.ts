@@ -23,6 +23,7 @@ import {
   calloutsFormatterSetting,
 } from './calloutsFormatter';
 import { colorFormatter } from '../formatters/colorFormatter';
+import { colorCode, wrapWithColor } from './colorMarkup';
 import {
   MAX_TABLE_COLUMNS,
   MAX_TABLE_ROWS,
@@ -583,20 +584,25 @@ export class SidePanelControlView extends ItemView {
         return box ? box.checked : false;
       };
 
-      const addColor = isChecked('inputColorTagCheckBox');
-      const addBackgroundColor = isChecked('inputBackgroundColorTagCheckBox');
-      const addStyle = isChecked('inputStyleTagCheckBox');
-      const addHtml = isChecked('inputHtmlTagCheckBox');
+      const options = {
+        color: isChecked('inputColorTagCheckBox'),
+        background: isChecked('inputBackgroundColorTagCheckBox'),
+        styleAttribute: isChecked('inputStyleTagCheckBox'),
+        html: isChecked('inputHtmlTagCheckBox'),
+      };
 
-      let res = color;
-      if (addColor) res = `color: ${color}`;
-      if (addBackgroundColor) res = `background-color: ${color}`;
-      if (addColor && addBackgroundColor)
-        res = `color: ${color}; background-color: ${color}`;
-      if (addStyle) res = `style="${res}"`;
-      if (addHtml) res = `<font color="${res}">${editor.getSelection()}</font>`;
+      const selection = editor.getSelection();
 
-      colorFormatter(editor, res);
+      // Selected text is coloured, not overwritten. Clicking a colour with a
+      // word selected used to replace that word with '#ff0000' - three reports
+      // on the tracker are people working around exactly this, two of them
+      // with patches of their own.
+      colorFormatter(
+        editor,
+        selection
+          ? wrapWithColor(color, selection, options)
+          : colorCode(color, options),
+      );
       editor.focus();
     };
 
